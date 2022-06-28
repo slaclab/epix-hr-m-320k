@@ -4,3 +4,6 @@
 [submodule "firmware/submodules/surf"]
 	path = firmware/submodules/surf
 	url = git@github.com:slaclab/surf
+[submodule "firmware/submodules/axi-pcie-core"]
+	path = firmware/submodules/axi-pcie-core
+	url = git@github.com:slaclab/axi-pcie-core
