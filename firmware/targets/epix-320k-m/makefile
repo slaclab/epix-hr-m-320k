@@ -1,5 +1,5 @@
 # Applications must define the 32-bitFirmware Version Number
-export PRJ_VERSION = 0x00000001
+export PRJ_VERSION = 0x00_00_00_01
 
 # COMMON_NAME is defined by application
 export COMMON_NAME = epix320kM
