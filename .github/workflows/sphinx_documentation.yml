@@ -3,7 +3,10 @@
 # secrets.GH_TOKEN
 
 name: ePix 320k M Documentation
-on: [push]
+on: 
+  push:
+    branches:
+      - init
 
 jobs:
 
