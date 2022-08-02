@@ -6,7 +6,7 @@ name: ePix 320k M Documentation
 on: 
   push:
     branches:
-      - init
+      - main
 
 jobs:
 
