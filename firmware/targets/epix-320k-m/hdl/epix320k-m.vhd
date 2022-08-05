@@ -58,28 +58,6 @@ entity Epix320kM is
     spareM            : inout slv(1 downto 0);
     spareP            : inout slv(1 downto 0);
 
-    -- Digital board env monitor
-    adcMonSpiClk      : out  sl;
-    adcSpiData        : in   sl;
-    adcMonClkP        : out  sl;
-    adcMonClkM        : out  sl;
-    adcMonPdwn        : out  sl;
-    adcMonSpiCsb      : out  sl;
-    slowAdcDout       : in   sl;
-    slowAdcDrdyL      : in   sl;
-    slowAdcSyncL      : out  sl;
-    slowAdcSclk       : out  sl;
-    slowAdcCsb        : out  sl;
-    slowAdcDin        : out  sl;
-    slowAdcRefClk     : out  sl;
-
-    -- Power 
-    syncDcdc            : out slv(6 downto 0);
-    ldoShtdnL           : out slv(1 downto 0);
-    dcdcSync            : out sl;
-    pcbSync             : out sl;
-    pcbLocalSupplyGood  : in sl;
-
     -- Timing/Clocks
     lcls2TimingClkP   : in     sl;
     lcls2TimingClkM   : in     sl;
@@ -99,7 +77,6 @@ entity Epix320kM is
     clkSda            : inout  sl;
     rdClkSel          : out    sl;
 
-
     -- Bias Dac
     biasDacDin        : out sl;
     biasDacSclk       : out sl;
@@ -113,40 +90,27 @@ entity Epix320kM is
     hsLdacb           : out sl; 
     
     -- Clock Jitter Cleaner
-    jitclnrCsL        : out sl;        
-    jitclnrIntrL      : in sl;
-    jitclnrLolL       : in sl;
-    jitclnrOeL        : out sl;
-    jitclnrRstL       : out sl;
-    jitclnrSclk       : out sl;
+    jitclnrCsL        : out   sl;
+    jitclnrIntrL      : in    sl;
+    jitclnrLolL       : in    sl;
+    jitclnrOeL        : out   sl;
+    jitclnrRstL       : out   sl;
+    jitclnrSclk       : out   sl;
     jitclnrSdio       : inout sl;
-    jitclnrSdo        : out sl;
-    jitclnrSel        : out slv(1 downto 0);
-
-    -- Serial number
-    serialNumber      : inout slv(2 downto 0);
+    jitclnrSdo        : out   sl;
+    jitclnrSel        : out   slv(1 downto 0);
 
     -- Digital Monitor
-    digMon            : in slv(1 downto 0);
+    digMon            : in  slv(1 downto 0);
 
     -- External trigger Connector
-    runToFpga         : in sl;
-    daqToFpga         : in sl;
-    ttlToFpga         : in sl;
+    runToFpga         : in  sl;
+    daqToFpga         : in  sl;
+    ttlToFpga         : in  sl;
     fpgaTtlOut        : out sl; 
     fpgaMps           : out sl;
     fpgaTg            : out sl;
     
-
-    -- Power and communication env Monitor
-    pcbAdcDrdyL       : in sl;
-    pcbAdcDout        : in sl;
-    pcbAdcCsb         : out sl;
-    pcbAdcSclk        : out sl;
-    pcbAdcDin         : out sl;
-    pcbAdcSyncL       : out sl;
-    pcbAdcRefClk      : out sl;
-
     -----------------------
     --     Core Ports    --
     -----------------------
@@ -164,7 +128,41 @@ entity Epix320kM is
     fpgaClkInP        : in  sl;
     fpgaClkInM        : in  sl;
     fpgaClkOutP       : out sl;
-    fpgaClkOutM       : out sl
+    fpgaClkOutM       : out sl;
+
+    -- Power and communication env Monitor
+    pcbAdcDrdyL       : in  sl;
+    pcbAdcDout        : in  sl;
+    pcbAdcCsb         : out sl;
+    pcbAdcSclk        : out sl;
+    pcbAdcDin         : out sl;
+    pcbAdcSyncL       : out sl;
+    pcbAdcRefClk      : out sl;
+
+    -- Serial number
+    serialNumber      : inout slv(2 downto 0);
+
+    -- Power 
+    syncDcdc           : out slv(6 downto 0);
+    ldoShtdnL          : out slv(1 downto 0);
+    dcdcSync           : out sl;
+    pcbSync            : out sl;
+    pcbLocalSupplyGood : in  sl;
+
+    -- Digital board env monitor
+    adcSpiClk      : out  sl;
+    adcSpiData        : in   sl;
+    adcMonClkP        : out  sl;
+    adcMonClkM        : out  sl;
+    adcMonPdwn        : out  sl;
+    adcMonSpiCsb      : out  sl;
+    slowAdcDout       : in   sl;
+    slowAdcDrdyL      : in   sl;
+    slowAdcSyncL      : out  sl;
+    slowAdcSclk       : out  sl;
+    slowAdcCsb        : out  sl;
+    slowAdcDin        : out  sl;
+    slowAdcRefClk     : out  sl
   );
 
 architecture topLevel of Epix320kM is
@@ -177,9 +175,9 @@ architecture topLevel of Epix320kM is
   signal axilReadSlave   : AxiLiteReadSlaveType;
   signal axilWriteMaster : AxiLiteWriteMasterType;
   signal axilWriteSlave  : AxiLiteWriteSlaveType;
-  -- AXI Stream, one per QSFP lane (sysClk domain)
-  signal axisMasters     : AxiStreamMasterArray(3 downto 0);
-  signal axisSlaves      : AxiStreamSlaveArray(3 downto 0);
+  -- AXI Stream, one per OBT lane (sysClk domain)
+  signal axisMasters     : AxiStreamMasterArray(11 downto 0);
+  signal axisSlaves      : AxiStreamSlaveArray(11 downto 0);
   -- Auxiliary AXI Stream, (sysClk domain)
   signal sAuxAxisMasters : AxiStreamMasterArray(1 downto 0);
   signal sAuxAxisSlaves  : AxiStreamSlaveArray(1 downto 0);
@@ -197,7 +195,101 @@ begin
       ROGUE_SIM_PORT_NUM_G  => ROGUE_SIM_PORT_NUM_G
     )
     port map (
-        
+      -- System Clock and Reset
+      sysClk                => sysClk,
+      sysRst                => sysRst,
+      -- AXI-Lite Regis     ter Interface (sysClk domain)
+      -- Register Address Range = [0x80000000:0xFFFFFFFF]
+      sAxilReadMaster       => axilReadMaster,
+      sAxilReadSlave        => axilReadSlave,
+      sAxilWriteMaster      => axilWriteMaster,
+      sAxilWriteSlave       => axilWriteSlave,
+      -- AXI Stream, one per QSFP lane (sysClk domain)
+      mAxisMasters          => axisMasters,
+      mAxisSlaves           => axisSlaves,
+      -- Auxiliary AXI Stream, (sysClk domain)
+      sAuxAxisMasters       => sAuxAxisMasters,
+      sAuxAxisSlaves        => sAuxAxisSlaves,
+      -- ASIC Data Outs
+      asic3DoutP            =>  asic3DoutP,
+      asic3DoutM            =>  asic3DoutM,
+      asic2DoutP            =>  asic2DoutP,
+      asic2DoutM            =>  asic2DoutM,
+      asic1DoutP            =>  asic1DoutP,
+      asic1DoutM            =>  asic1DoutM,
+      asic0DoutP            =>  asic0DoutP,
+      asic0DoutM            =>  asic0DoutM,
+      adcMonDoutP           =>  adcMonDoutP,
+      adcMonDoutM           =>  adcMonDoutM,
+      adcDoClkP             =>  adcDoClkP,
+      adcDoClkM             =>  adcDoClkM,
+      adcFrameClkP          =>  adcFrameClkP,
+      adcFrameClkM          =>  adcFrameClkM,
+      -- ASIC Control Ports
+      asicR0                =>  asicR0,
+      asicGlblRst           =>  asicGlblRst,
+      asicSync              =>  asicSync,
+      asicAcq               =>  asicAcq,
+      asicRoClkP            =>  asicRoClkP,
+      asicRoClkN            =>  asicRoClkN,
+      asicSro               =>  asicSro,
+      asicClkEn             =>  asicClkEn,
+      -- SACI Ports
+      asicSaciCmd           =>  asicSaciCmd,
+      asicSaciClk           =>  asicSaciClk,
+      asicSaciSel           =>  asicSaciSel,
+      asicSaciRsp           =>  asicSaciRsp,
+      -- Spare ports both to carrier and to p&cb
+      pcbSpare              =>  pcbSpare,
+      spareM                =>  spareM,
+      spareP                =>  spareP,
+      -- Timing/Clocks
+      lcls2TimingClkP       => lcls2TimingClkP,
+      lcls2TimingClkM       => lcls2TimingClkM,
+      altTimingClkP         => altTimingClkP,
+      altTimingClkM         => altTimingClkM,
+      pllClkP               => pllClkP,
+      pllClkM               => pllClkM,
+      refClkP               => refClkP,
+      refClkM               => refClkM,
+      fpgaClkInP            => fpgaClkInP,
+      fpgaClkInM            => fpgaClkInM,
+      fpgaClkOutP           => fpgaClkOutP,
+      fpgaClkOutM           => fpgaClkOutM,
+      fpgaRdClkP            => fpgaRdClkP,
+      fpgaRdClkM            => fpgaRdClkM,
+      clkScl                => clkScl,
+      clkSda                => clkSda,
+      rdClkSel              => rdClkSel,
+      -- Bias Dac
+      biasDacDin            => biasDacDin,
+      biasDacSclk           => biasDacSclk,
+      biasDacCsb            => biasDacCsb,
+      biasDacClrb           => biasDacClrb,
+      -- High speed dac
+      hsDacSclk             =>  hsDacSclk,
+      hsDacDin              =>  hsDacDin,
+      hsCsb                 =>  hsCsb,
+      hsLdacb               =>  hsLdacb,
+      -- Clock Jitter Cleaner
+      jitclnrCsL            => jitclnrCsL,
+      jitclnrIntrL          => jitclnrIntrL,
+      jitclnrLolL           => jitclnrLolL,
+      jitclnrOeL            => jitclnrOeL,
+      jitclnrRstL           => jitclnrRstL,
+      jitclnrSclk           => jitclnrSclk,
+      jitclnrSdio           => jitclnrSdio,
+      jitclnrSdo            => jitclnrSdo,
+      jitclnrSel            => jitclnrSel,
+      -- Digital Monitor
+      digMon                => digMon,
+      -- External trigger Connector
+      runToFpga             => runToFpga,
+      daqToFpga             => daqToFpga,
+      ttlToFpga             => ttlToFpga,
+      fpgaTtlOut            => fpgaTtlOut,
+      fpgaMps               => fpgaMps,
+      fpgaTg                => fpgaTg
     );
 
   U_Core: work.Core
@@ -208,7 +300,65 @@ begin
       ROGUE_SIM_PORT_NUM_G  => ROGUE_SIM_PORT_NUM_G
     )
     port map (
-        
+      -- System Clock and Reset
+      sysClk                => sysClk,
+      sysRst                => sysRst,
+      -- AXI-Lite Register Interface (sysClk domain)
+      -- Register Address Range = [0x80000000:0xFFFFFFFF]
+      sAxilReadMaster       => axilReadMaster,
+      sAxilReadSlave        => axilReadSlave,
+      sAxilWriteMaster      => axilWriteMaster,
+      sAxilWriteSlave       => axilWriteSlave,
+      -- AXI Stream, one per QSFP lane (sysClk domain)
+      mAxisMasters          => axisMasters,
+      mAxisSlaves           => axisSlaves,
+      -- Auxiliary AXI Stream, (sysClk domain)
+      sAuxAxisMasters       => sAuxAxisMasters,
+      sAuxAxisSlaves        => sAuxAxisSlaves,
+      -- Transceiver high speed lanes
+      fpgaOutObTransInP     => fpgaOutObTransInP,
+      fpgaOutObTransInM     => fpgaOutObTransInM,
+      fpgaInObTransOutP     => fpgaInObTransOutP,
+      fpgaInObTransOutM     => fpgaInObTransOutM,
+      -- Transceiver low speed control
+      obTransScl            => obTransScl,
+      obTransSda            => obTransSda,
+      obTransResetL         => obTransResetL,
+      obTransIntL           => obTransIntL,
+      fpgaClkInP            => fpgaClkInP,
+      fpgaClkInM            => fpgaClkInM,
+      fpgaClkOutP           => fpgaClkOutP,
+      fpgaClkOutM           => fpgaClkOutM,
+      -- Digital board env monitor
+      adcMonSpiClk          => adcMonSpiClk,
+      adcSpiData            => adcSpiData,
+      adcMonClkP            => adcMonClkP,
+      adcMonClkM            => adcMonClkM,
+      adcMonPdwn            => adcMonPdwn,
+      adcMonSpiCsb          => adcMonSpiCsb,
+      slowAdcDout           => slowAdcDout,
+      slowAdcDrdyL          => slowAdcDrdyL,
+      slowAdcSyncL          => slowAdcSyncL,
+      slowAdcSclk           => slowAdcSclk,
+      slowAdcCsb            => slowAdcCsb,
+      slowAdcDin            => slowAdcDin,
+      slowAdcRefClk         => slowAdcRefClk,
+      -- Power
+      syncDcdc              => syncDcdc,
+      ldoShtdnL             => ldoShtdnL,
+      dcdcSync              => dcdcSync,
+      pcbSync               => pcbSync,
+      pcbLocalSupplyGood    => pcbLocalSupplyGood,
+      -- Power and communication env Monitor
+      pcbAdcDrdyL           => pcbAdcDrdyL,
+      pcbAdcDout            => pcbAdcDout,
+      pcbAdcCsb             => pcbAdcCsb,
+      pcbAdcSclk            => pcbAdcSclk,
+      pcbAdcDin             => pcbAdcDin,
+      pcbAdcSyncL           => pcbAdcSyncL,
+      pcbAdcRefClk          => pcbAdcRefClk,
+      -- Serial number
+      serialNumber          => serialNumber
     );
     
 end architecture topLevel;
