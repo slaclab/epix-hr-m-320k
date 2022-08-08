@@ -116,7 +116,7 @@ entity Epix320kM is
     -----------------------
     -- Transceiver high speed lanes
     fpgaOutObTransInP : out slv(11 downto 0);
-    fpgaInObTransOutP : in  slv(11 downto 0)
+    fpgaInObTransOutP : in  slv(11 downto 0);
 
     -- Transceiver low speed control
     obTransScl        : out sl;
@@ -164,6 +164,8 @@ entity Epix320kM is
     slowAdcDin        : out  sl;
     slowAdcRefClk     : out  sl
   );
+end entity;
+
 
 architecture topLevel of Epix320kM is
 
@@ -187,7 +189,7 @@ architecture topLevel of Epix320kM is
 
 begin
 
-  U_App: work.Application
+  U_App: entity work.Application
     generic map (
       TPD_G                 => TPD_G,
       BUILD_INFO_G          => BUILD_INFO_G,
@@ -289,11 +291,10 @@ begin
       ttlToFpga             => ttlToFpga,
       fpgaTtlOut            => fpgaTtlOut,
       fpgaMps               => fpgaMps,
-      fpgaTg                => fpgaTg
-    );
+      fpgaTg                => fpgaTg);
 
-  U_Core: work.Core
-    generic (
+  U_Core: entity work.Core
+    generic map(
       TPD_G                 => TPD_G,
       BUILD_INFO_G          => BUILD_INFO_G,
       ROUGE_SIM_EN          => ROUGE_SIM_EN,
@@ -358,7 +359,6 @@ begin
       pcbAdcSyncL           => pcbAdcSyncL,
       pcbAdcRefClk          => pcbAdcRefClk,
       -- Serial number
-      serialNumber          => serialNumber
-    );
+      serialNumber          => serialNumber);
     
-end architecture topLevel;
+end topLevel;

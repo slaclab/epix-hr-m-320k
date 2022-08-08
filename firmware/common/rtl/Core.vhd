@@ -48,7 +48,7 @@ entity Core is
     -----------------------
     -- Transceiver high speed lanes
     fpgaOutObTransInP : out slv(11 downto 0);
-    fpgaInObTransOutP : in  slv(11 downto 0)
+    fpgaInObTransOutP : in  slv(11 downto 0);
 
     -- Transceiver low speed control
     obTransScl        : out sl;
@@ -96,10 +96,10 @@ entity Core is
     slowAdcDin        : out  sl;
     slowAdcRefClk     : out  sl
   );
-
+end entity;
 
   architecture rtl of Core is
     
   begin
   
-  end architecture ; -- rtl
+  end rtl ; -- rtl

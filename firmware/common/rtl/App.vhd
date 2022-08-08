@@ -137,9 +137,11 @@ entity Application is
     fpgaMps           : out sl;
     fpgaTg            : out sl
 	);
+end entity;
+
 
 architecture rtl of Application is
 
 begin
 
-end architecture ; -- rtl
+end rtl; -- rtl
