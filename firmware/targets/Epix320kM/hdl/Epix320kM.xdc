@@ -179,6 +179,13 @@ set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {asic2DoutP[0]}]
 #####################################################
 ##	                Bank 69
 #####################################################
+set_property -dict { PACKAGE_PIN AA25 IOSTANDARD LVCMOS18} [get_ports {serialNumber[1]}]
+
+set_property -dict { PACKAGE_PIN Y23 IOSTANDARD LVCMOS33} [get_ports {obTransScl}]
+set_property -dict { PACKAGE_PIN AA23 IOSTANDARD LVCMOS33} [get_ports {obTransSda}]
+set_property -dict { PACKAGE_PIN AB21 IOSTANDARD LVCMOS33} [get_ports {obTransResetL}]
+set_property -dict { PACKAGE_PIN AC21 IOSTANDARD LVCMOS33} [get_ports {obTransIntL}]
+
 set_property -dict { PACKAGE_PIN AA20 IOSTANDARD LVCMOS18} [get_ports {pcbSync}]
 set_property -dict { PACKAGE_PIN AB20 IOSTANDARD LVCMOS18} [get_ports {dcdcSync}]
 set_property -dict { PACKAGE_PIN AC22 IOSTANDARD LVCMOS18} [get_ports {pcbAdcDrdyL}]
@@ -201,7 +208,6 @@ set_property -dict { PACKAGE_PIN AD26 IOSTANDARD LVCMOS18} [get_ports {pcbAdcDin
 
 set_property -dict { PACKAGE_PIN Y26 IOSTANDARD LVCMOS18} [get_ports {pcbAdcSyncL}]
 set_property -dict { PACKAGE_PIN Y27 IOSTANDARD LVCMOS18} [get_ports {pcbAdcRefClk}]
-
 
 
 #####################################################
@@ -374,14 +380,19 @@ set_property -dict { PACKAGE_PIN L13 IOSTANDARD LVDS} [get_ports {adcMonDoutP[9]
 set_property -dict { PACKAGE_PIN K13 IOSTANDARD LVDS} [get_ports {adcMonDoutM[9]}]
 set_property -dict { PACKAGE_PIN K11 IOSTANDARD LVDS} [get_ports {adcMonDoutP[8]}]
 set_property -dict { PACKAGE_PIN J11 IOSTANDARD LVDS} [get_ports {adcMonDoutM[8]}]
+
 set_property -dict { PACKAGE_PIN H12 IOSTANDARD LVDS} [get_ports {adcDoClkP[1]}]
 set_property -dict { PACKAGE_PIN G12 IOSTANDARD LVDS} [get_ports {adcDoClkM[1]}]
+
 set_property -dict { PACKAGE_PIN H11 IOSTANDARD LVDS} [get_ports {adcFrameClkP[1]}]
 set_property -dict { PACKAGE_PIN G11 IOSTANDARD LVDS} [get_ports {adcFrameClkM[1]}]
+
 set_property -dict { PACKAGE_PIN G10 IOSTANDARD LVDS} [get_ports {adcDoClkP[0]}]
 set_property -dict { PACKAGE_PIN F10 IOSTANDARD LVDS} [get_ports {adcDoClkM[0]}]
+
 set_property -dict { PACKAGE_PIN G9  IOSTANDARD LVDS} [get_ports {adcFrameClkP[0]}]
 set_property -dict { PACKAGE_PIN F9  IOSTANDARD LVDS} [get_ports {adcFrameClkM[0]}]
+
 set_property -dict { PACKAGE_PIN J9  IOSTANDARD LVDS} [get_ports {adcMonDoutP[7]}]
 set_property -dict { PACKAGE_PIN H9  IOSTANDARD LVDS} [get_ports {adcMonDoutM[7]}]
 set_property -dict { PACKAGE_PIN L8  IOSTANDARD LVDS} [get_ports {adcMonDoutP[6]}]
@@ -419,40 +430,10 @@ set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[0]}]
 #####################################################
 ##	               Bank 65
 #####################################################
-set_property -dict { PACKAGE_PIN N22 IOSTANDARD LVCMOS18} [get_ports {spareM[1]}]
-set_property -dict { PACKAGE_PIN M22 IOSTANDARD LVCMOS18} [get_ports {spareP[1]}]
-
-set_property -dict { PACKAGE_PIN R23 IOSTANDARD LVCMOS18} [get_ports {spareM[0]}]
-set_property -dict { PACKAGE_PIN P23 IOSTANDARD LVCMOS18} [get_ports {spareP[0]}]
-
-set_property -dict { PACKAGE_PIN R26 IOSTANDARD LVCMOS18} [get_ports {serialNumber[2]}]
-set_property -dict { PACKAGE_PIN T24 IOSTANDARD LVCMOS18} [get_ports {serialNumber[1]}]
-set_property -dict { PACKAGE_PIN T25 IOSTANDARD LVCMOS18} [get_ports {serialNumber[0]}]
-
 set_property -dict { PACKAGE_PIN M25 IOSTANDARD LVCMOS18} [get_ports {fpgaRdClkP}]
 set_property -dict { PACKAGE_PIN M26 IOSTANDARD LVCMOS18} [get_ports {fpgaRdClkM}]
 
 set_property -dict { PACKAGE_PIN K25 IOSTANDARD LVCMOS18} [get_ports {rdClkSel}]
-set_property -dict { PACKAGE_PIN L23 IOSTANDARD LVCMOS18} [get_ports {digMon[1]}]
-set_property -dict { PACKAGE_PIN L24 IOSTANDARD LVCMOS18} [get_ports {digMon[2]}]
-
-set_property -dict { PACKAGE_PIN M27 IOSTANDARD LVCMOS18} [get_ports {sRo}]
-set_property -dict { PACKAGE_PIN L27 IOSTANDARD LVCMOS18} [get_ports {clkEn}]
-set_property -dict { PACKAGE_PIN J23 IOSTANDARD LVCMOS18} [get_ports {asicGlblRst}]
-set_property -dict { PACKAGE_PIN H24 IOSTANDARD LVCMOS18} [get_ports {r0}]
-
-set_property -dict { PACKAGE_PIN J26 IOSTANDARD LVCMOS18} [get_ports {acq}]
-set_property -dict { PACKAGE_PIN H26 IOSTANDARD LVCMOS18} [get_ports {sync}]
-set_property -dict { PACKAGE_PIN J25 IOSTANDARD LVCMOS18} [get_ports {saciRsp}]
-
-set_property -dict { PACKAGE_PIN K26 IOSTANDARD LVCMOS18} [get_ports {saciSel[3]}]
-set_property -dict { PACKAGE_PIN K27 IOSTANDARD LVCMOS18} [get_ports {saciSel[2]}]
-set_property -dict { PACKAGE_PIN G25 IOSTANDARD LVCMOS18} [get_ports {saciSel[1]}]
-set_property -dict { PACKAGE_PIN G26 IOSTANDARD LVCMOS18} [get_ports {saciSel[0]}]
-
-set_property -dict { PACKAGE_PIN H27 IOSTANDARD LVCMOS18} [get_ports {saciCmd}]
-set_property -dict { PACKAGE_PIN G27 IOSTANDARD LVCMOS18} [get_ports {saciClk}]
-
 
 #####################################################
 ##	               Bank 64
@@ -500,21 +481,44 @@ set_property -dict { PACKAGE_PIN AN14 IOSTANDARD LVCMOS18} [get_ports {clkScl}]
 set_property -dict { PACKAGE_PIN AP14 IOSTANDARD LVCMOS18} [get_ports {clkSda}]
 
 #####################################################
-##	               Bank 91
+##	               Bank 91/ Bank 90
 #####################################################
-set_property -dict { PACKAGE_PIN AK8 IOSTANDARD LVCMOS33} [get_ports {obTransScl}]
-set_property -dict { PACKAGE_PIN AL8 IOSTANDARD LVCMOS33} [get_ports {obTransSda}]
-set_property -dict { PACKAGE_PIN AJ9 IOSTANDARD LVCMOS33} [get_ports {obTransReset]
-set_property -dict { PACKAGE_PIN AJ8 IOSTANDARD LVCMOS33} [get_ports {obTransIntL}]
-set_property -dict { PACKAGE_PIN AN8 IOSTANDARD LVCMOS33} [get_ports {pcbLocalSupplyGood}]
-set_property -dict { PACKAGE_PIN AP8 IOSTANDARD LVCMOS33} [get_ports {analogPwrGood}]
 
-#####################################################
-##            	   Bank 90
-#####################################################
-set_property -dict { PACKAGE_PIN AP13 IOSTANDARD LVCMOS33} [get_ports {fpgaTtlOut}]
-set_property -dict { PACKAGE_PIN AP11 IOSTANDARD LVCMOS33} [get_ports {fpgaTg]}]
-set_property -dict { PACKAGE_PIN AP10 IOSTANDARD LVCMOS33} [get_ports {fpgaMps}]
+set_property -dict { PACKAGE_PIN AN8 IOSTANDARD LVCMOS25} [get_ports {pcbLocalSupplyGood}]
+set_property -dict { PACKAGE_PIN AP8 IOSTANDARD LVCMOS25} [get_ports {analogPwrGood}]
+
+set_property -dict { PACKAGE_PIN AG9 IOSTANDARD LVCMOS25} [get_ports {serialNumber[2]}]
+set_property -dict { PACKAGE_PIN AG10 IOSTANDARD LVCMOS25} [get_ports {serialNumber[0]}]
+
+set_property -dict { PACKAGE_PIN AG11 IOSTANDARD LVCMOS25} [get_ports {spareM[1]}]
+set_property -dict { PACKAGE_PIN AH11 IOSTANDARD LVCMOS25} [get_ports {spareP[1]}]
+
+set_property -dict { PACKAGE_PIN AG12 IOSTANDARD LVCMOS25} [get_ports {spareM[0]}]
+set_property -dict { PACKAGE_PIN AH12 IOSTANDARD LVCMOS25} [get_ports {spareP[0]}]
+
+set_property -dict { PACKAGE_PIN AE11 IOSTANDARD LVCMOS25} [get_ports {digMon[1]}]
+set_property -dict { PACKAGE_PIN AE12 IOSTANDARD LVCMOS25} [get_ports {digMon[2]}]
+
+set_property -dict { PACKAGE_PIN AF12 IOSTANDARD LVCMOS25} [get_ports {sRo}]
+set_property -dict { PACKAGE_PIN AH13 IOSTANDARD LVCMOS25} [get_ports {clkEn}]
+set_property -dict { PACKAGE_PIN AJ13 IOSTANDARD LVCMOS25} [get_ports {asicGlblRst}]
+set_property -dict { PACKAGE_PIN AE13 IOSTANDARD LVCMOS25} [get_ports {r0}]
+
+set_property -dict { PACKAGE_PIN AF13 IOSTANDARD LVCMOS25} [get_ports {acq}]
+set_property -dict { PACKAGE_PIN AK13 IOSTANDARD LVCMOS25} [get_ports {sync}]
+set_property -dict { PACKAGE_PIN AL13 IOSTANDARD LVCMOS25} [get_ports {saciRsp}]
+
+set_property -dict { PACKAGE_PIN AK12 IOSTANDARD LVCMOS25} [get_ports {saciSel[3]}]
+set_property -dict { PACKAGE_PIN AL12 IOSTANDARD LVCMOS25} [get_ports {saciSel[2]}]
+set_property -dict { PACKAGE_PIN AM12 IOSTANDARD LVCMOS25} [get_ports {saciSel[1]}]
+set_property -dict { PACKAGE_PIN AN12 IOSTANDARD LVCMOS25} [get_ports {saciSel[0]}]
+
+set_property -dict { PACKAGE_PIN AM11 IOSTANDARD LVCMOS25} [get_ports {saciCmd}]
+set_property -dict { PACKAGE_PIN AN11 IOSTANDARD LVCMOS25} [get_ports {saciClk}]
+
+set_property -dict { PACKAGE_PIN AP13 IOSTANDARD LVCMOS25} [get_ports {fpgaTtlOut}]
+set_property -dict { PACKAGE_PIN AP11 IOSTANDARD LVCMOS25} [get_ports {fpgaTg}]
+set_property -dict { PACKAGE_PIN AP10 IOSTANDARD LVCMOS25} [get_ports {fpgaMps}]
 
 #####################################################
 ##	               Bank 129
@@ -559,8 +563,8 @@ set_property -dict { PACKAGE_PIN R3  IOSTANDARD LVDS} [get_ports {fpgaOutObTrans
 set_property -dict { PACKAGE_PIN P2  IOSTANDARD LVDS} [get_ports {fpgaInObTransOutP[7]}]
 set_property -dict { PACKAGE_PIN P1  IOSTANDARD LVDS} [get_ports {fpgaInObTransOutM[7]}]
 
-set_property -dict { PACKAGE_PIN V6  IOSTANDARD LVCMOS18} [get_ports {pllClkP[1]]}]
-set_property -dict { PACKAGE_PIN V5  IOSTANDARD LVCMOS18} [get_ports {pllClkM[1]]}]
+set_property -dict { PACKAGE_PIN V6  IOSTANDARD LVCMOS18} [get_ports {pllClkP[1]}]
+set_property -dict { PACKAGE_PIN V5  IOSTANDARD LVCMOS18} [get_ports {pllClkM[1]}]
 
 set_property -dict { PACKAGE_PIN T6  IOSTANDARD LVCMOS18} [get_ports {refClkP[1]}]
 set_property -dict { PACKAGE_PIN T5  IOSTANDARD LVCMOS18} [get_ports {refClkM[1]}]
