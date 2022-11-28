@@ -2,10 +2,11 @@
 export PRJ_VERSION = 0x00000001
 
 # COMMON_NAME is defined by application
-export COMMON_NAME = 
+# export COMMON_NAME = 
 
-export COMM_TYPE = pgp4
-export INCLUDE_PGP4_10G = 1
+# export COMM_TYPE = pgp4
+# export INCLUDE_PGP4_10G = 1
+
 # Define the Microblaze source path
 #export SDK_SRC_PATH = $(PROJ_DIR)/../../common/$(COMMON_NAME)/src
 
