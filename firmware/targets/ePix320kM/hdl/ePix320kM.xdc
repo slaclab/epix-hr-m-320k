@@ -288,14 +288,14 @@ set_property -dict { IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALI
 ##########################
 ##	Bank 66
 ##########################
-set_property -dict { PACKAGE_PIN J13 IOSTANDARD LVDS } [get_ports {adcMonDoutP[11]}]
-set_property -dict { PACKAGE_PIN H13 IOSTANDARD LVDS } [get_ports {adcMonDoutM[11]}]
-set_property -dict { PACKAGE_PIN L12 IOSTANDARD LVDS } [get_ports {adcMonDoutP[10]}]
-set_property -dict { PACKAGE_PIN K12 IOSTANDARD LVDS } [get_ports {adcMonDoutM[10]}]
-set_property -dict { PACKAGE_PIN L13 IOSTANDARD LVDS } [get_ports {adcMonDoutP[9]}]
-set_property -dict { PACKAGE_PIN K13 IOSTANDARD LVDS } [get_ports {adcMonDoutM[9]}]
-set_property -dict { PACKAGE_PIN K11 IOSTANDARD LVDS } [get_ports {adcMonDoutP[8]}]
-set_property -dict { PACKAGE_PIN J11 IOSTANDARD LVDS } [get_ports {adcMonDoutM[8]}]
+set_property -dict { PACKAGE_PIN J13 IOSTANDARD LVDS } [get_ports {adcMonDataP[11]}]
+set_property -dict { PACKAGE_PIN H13 IOSTANDARD LVDS } [get_ports {adcMonDataM[11]}]
+set_property -dict { PACKAGE_PIN L12 IOSTANDARD LVDS } [get_ports {adcMonDataP[10]}]
+set_property -dict { PACKAGE_PIN K12 IOSTANDARD LVDS } [get_ports {adcMonDataM[10]}]
+set_property -dict { PACKAGE_PIN L13 IOSTANDARD LVDS } [get_ports {adcMonDataP[9]}]
+set_property -dict { PACKAGE_PIN K13 IOSTANDARD LVDS } [get_ports {adcMonDataM[9]}]
+set_property -dict { PACKAGE_PIN K11 IOSTANDARD LVDS } [get_ports {adcMonDataP[8]}]
+set_property -dict { PACKAGE_PIN J11 IOSTANDARD LVDS } [get_ports {adcMonDataM[8]}]
 set_property -dict { PACKAGE_PIN H12 IOSTANDARD LVDS } [get_ports {adcDoClkP[1]}]
 set_property -dict { PACKAGE_PIN G12 IOSTANDARD LVDS } [get_ports {adcDoClkM[1]}]
 set_property -dict { PACKAGE_PIN H11 IOSTANDARD LVDS } [get_ports {adcFrameClkP[1]}]
@@ -304,39 +304,31 @@ set_property -dict { PACKAGE_PIN G10 IOSTANDARD LVDS } [get_ports {adcDoClkP[0]}
 set_property -dict { PACKAGE_PIN F10 IOSTANDARD LVDS } [get_ports {adcDoClkM[0]}]
 set_property -dict { PACKAGE_PIN G9  IOSTANDARD LVDS } [get_ports {adcFrameClkP[0]}]
 set_property -dict { PACKAGE_PIN F9  IOSTANDARD LVDS } [get_ports {adcFrameClkM[0]}]
-set_property -dict { PACKAGE_PIN J9  IOSTANDARD LVDS } [get_ports {adcMonDoutP[7]}]
-set_property -dict { PACKAGE_PIN H9  IOSTANDARD LVDS } [get_ports {adcMonDoutM[7]}]
-set_property -dict { PACKAGE_PIN L8  IOSTANDARD LVDS } [get_ports {adcMonDoutP[6]}]
-set_property -dict { PACKAGE_PIN K8  IOSTANDARD LVDS } [get_ports {adcMonDoutM[6]}]
-set_property -dict { PACKAGE_PIN E10 IOSTANDARD LVDS } [get_ports {adcMonDoutP[5]}]
-set_property -dict { PACKAGE_PIN D10 IOSTANDARD LVDS } [get_ports {adcMonDoutM[5]}]
-set_property -dict { PACKAGE_PIN D9  IOSTANDARD LVDS } [get_ports {adcMonDoutP[4]}]
-set_property -dict { PACKAGE_PIN C9  IOSTANDARD LVDS } [get_ports {adcMonDoutM[4]}]
-set_property -dict { PACKAGE_PIN B10 IOSTANDARD LVDS } [get_ports {adcMonDoutP[3]}]
-set_property -dict { PACKAGE_PIN A10 IOSTANDARD LVDS } [get_ports {adcMonDoutM[3]}]
-set_property -dict { PACKAGE_PIN D8  IOSTANDARD LVDS } [get_ports {adcMonDoutP[2]}]
-set_property -dict { PACKAGE_PIN C8  IOSTANDARD LVDS } [get_ports {adcMonDoutM[2]}]
-set_property -dict { PACKAGE_PIN B9  IOSTANDARD LVDS } [get_ports {adcMonDoutP[1]}]
-set_property -dict { PACKAGE_PIN A9  IOSTANDARD LVDS } [get_ports {adcMonDoutM[1]}]
-set_property -dict { PACKAGE_PIN F8  IOSTANDARD LVDS } [get_ports {adcMonDoutP[0]}]
-set_property -dict { PACKAGE_PIN E8  IOSTANDARD LVDS } [get_ports {adcMonDoutM[0]}]
+set_property -dict { PACKAGE_PIN J9  IOSTANDARD LVDS } [get_ports {adcMonDataP[7]}]
+set_property -dict { PACKAGE_PIN H9  IOSTANDARD LVDS } [get_ports {adcMonDataM[7]}]
+set_property -dict { PACKAGE_PIN L8  IOSTANDARD LVDS } [get_ports {adcMonDataP[6]}]
+set_property -dict { PACKAGE_PIN K8  IOSTANDARD LVDS } [get_ports {adcMonDataM[6]}]
+set_property -dict { PACKAGE_PIN E10 IOSTANDARD LVDS } [get_ports {adcMonDataP[5]}]
+set_property -dict { PACKAGE_PIN D10 IOSTANDARD LVDS } [get_ports {adcMonDataM[5]}]
+set_property -dict { PACKAGE_PIN D9  IOSTANDARD LVDS } [get_ports {adcMonDataP[4]}]
+set_property -dict { PACKAGE_PIN C9  IOSTANDARD LVDS } [get_ports {adcMonDataM[4]}]
+set_property -dict { PACKAGE_PIN B10 IOSTANDARD LVDS } [get_ports {adcMonDataP[3]}]
+set_property -dict { PACKAGE_PIN A10 IOSTANDARD LVDS } [get_ports {adcMonDataM[3]}]
+set_property -dict { PACKAGE_PIN D8  IOSTANDARD LVDS } [get_ports {adcMonDataP[2]}]
+set_property -dict { PACKAGE_PIN C8  IOSTANDARD LVDS } [get_ports {adcMonDataM[2]}]
+set_property -dict { PACKAGE_PIN B9  IOSTANDARD LVDS } [get_ports {adcMonDataP[1]}]
+set_property -dict { PACKAGE_PIN A9  IOSTANDARD LVDS } [get_ports {adcMonDataM[1]}]
+set_property -dict { PACKAGE_PIN F8  IOSTANDARD LVDS } [get_ports {adcMonDataP[0]}]
+set_property -dict { PACKAGE_PIN E8  IOSTANDARD LVDS } [get_ports {adcMonDataM[0]}]
 
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[11]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[10]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[9]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[8]}]
+set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDataP[*]}]
+set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDataM[*]}]
+
 set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcDoClkP[1]}]
 set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcFrameClkP[1]}]
 set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcDoClkP[0]}]
 set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcFrameClkP[0]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[7]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[6]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[5]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[4]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[3]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[2]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[1]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonDoutP[0]}]
+
 
 ##########################
 ##	Bank 65
@@ -487,14 +479,12 @@ set_property -dict { PACKAGE_PIN V5  IOSTANDARD LVCMOS18} [get_ports {gtPllClkM[
 set_property -dict { PACKAGE_PIN T6  IOSTANDARD LVCMOS18} [get_ports {gtRefClkP[1]}]
 set_property -dict { PACKAGE_PIN T5  IOSTANDARD LVCMOS18} [get_ports {gtRefClkM[1]}]
 
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[4]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[4]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[5]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInN[5]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[6]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[6]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[7]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[7]}]
+set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[*]}]
+set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInM[*]}]
+
+set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[*]}]
+set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutM[*]}]
+
 
 ##########################
 ##	Bank 227
@@ -525,15 +515,6 @@ set_property -dict { PACKAGE_PIN P5 IOSTANDARD LVCMOS18} [get_ports {altTimingCl
 set_property -dict { PACKAGE_PIN M6 IOSTANDARD LVCMOS18} [get_ports {gtLclsClkP}]
 set_property -dict { PACKAGE_PIN M5 IOSTANDARD LVCMOS18} [get_ports {gtLclsClkM}]
 
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[8]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[8]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[9]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[9]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[10]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[10]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[11]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[11]}]
-
 ##########################
 ##	Bank 228
 ##########################
@@ -562,14 +543,3 @@ set_property -dict { PACKAGE_PIN K5 IOSTANDARD LVCMOS18} [get_ports {gtPllClkM[0
 
 set_property -dict { PACKAGE_PIN H6 IOSTANDARD LVCMOS18} [get_ports {gtRefClkP[0]}]
 set_property -dict { PACKAGE_PIN H5 IOSTANDARD LVCMOS18} [get_ports {gtRefClkM[0]}]
-
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[0]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[0]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[1]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[1]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[2]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[2]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[2]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[2]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaOutObTransInP[3]}]
-set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {fpgaInObTransOutP[3]}]

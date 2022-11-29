@@ -1,3 +1,18 @@
+-------------------------------------------------------------------------------
+-- Company    : SLAC National Accelerator Laboratory
+-------------------------------------------------------------------------------
+-- Description: Core Interface for ePix320kM
+-------------------------------------------------------------------------------
+-- This file is part of 'ePix320kM firmware'.
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'Simple-PGPv4-KCU105-Example', including this file,
+-- may be copied, modified, propagated, or distributed except according to
+-- the terms contained in the LICENSE.txt file.
+-------------------------------------------------------------------------------
+
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -29,7 +44,7 @@ entity Core is
       --          Top Level Ports
       --------------------------------------------
       -- AXI-Lite Register Interface (sysClk domain)
-      -- Register Address Range = [0x80000000:0xFFFFFFFF]
+      -- Register Address Range = [0x00000000:0x80000000]
       AxilReadMaster  : out   AxiLiteReadMasterType;
       AxilReadSlave   : in    AxiLiteReadSlaveType;
       AxilWriteMaster : out   AxiLiteWriteMasterType;
@@ -145,13 +160,15 @@ architecture rtl of Core is
          generic map (
             REFCLK_EN_TX_PATH  => '0',
             REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
-            REFCLK_ICNTL_RX    => "00")
+            REFCLK_ICNTL_RX    => "00"
+         )
          port map (
             I     => gtRefClkP,
             IB    => gtRefClkM,
             CEB   => '0',
             ODIV2 => fabRefClk,
-            O     => gtRefClk);
+            O     => gtRefClk
+         );
 
       U_BUFG_GT : BUFG_GT
          port map (
@@ -161,15 +178,18 @@ architecture rtl of Core is
             CLR     => '0',
             CLRMASK => '1',
             DIV     => "000",           -- Divide by 1
-            O       => fabClock);
+            O       => fabClock
+         );
 
       U_PwrUpRst : entity surf.PwrUpRst
          generic map(
             TPD_G         => TPD_G,
-            SIM_SPEEDUP_G => SIMULATION_G)
+            SIM_SPEEDUP_G => SIMULATION_G
+         )
          port map(
             clk    => fabClock,
-            rstOut => fabReset);
+            rstOut => fabReset
+         );
 
       U_axilClock : entity surf.ClockManagerUltraScale
          generic map(
@@ -183,7 +203,8 @@ architecture rtl of Core is
             -- MMCM attributes
             CLKIN_PERIOD_G    => 6.4,   -- 156.25 MHz
             CLKFBOUT_MULT_G   => 8,     -- 1.25GHz = 8 x 156.25 MHz
-            CLKOUT0_DIVIDE_G  => 8)     -- 156.25 MHz = 1.25GHz/8
+            CLKOUT0_DIVIDE_G  => 8      -- 156.25 MHz = 1.25GHz/8
+         )
          port map(
             -- Clock Input
             clkIn     => fabClock,
@@ -191,7 +212,8 @@ architecture rtl of Core is
             -- Clock Outputs
             clkOut(0) => axilClock,
             -- Reset Outputs
-            rstOut(0) => axilReset);
+            rstOut(0) => axilReset
+         );
 
       ---------------------------------------
       --          PGP Module
@@ -235,7 +257,8 @@ architecture rtl of Core is
             leapRxN          => fpgaInObTransOutM,
 
             -- SW trigger
-            ssiCmd           => ssiCmd);
+            ssiCmd           => ssiCmd
+         );
 
    end generate;
 
@@ -245,22 +268,26 @@ architecture rtl of Core is
          generic map (
             CLK_PERIOD_G      => 6.4 ns,
             RST_START_DELAY_G => 0 ns,
-            RST_HOLD_TIME_G   => 1 us)
+            RST_HOLD_TIME_G   => 1 us
+         )
          port map (
             clkP => axilClock,
-            rst  => axilReset);
+            rst  => axilReset
+         );
 
       U_axiLite : entity surf.RogueTcpMemoryWrap
          generic map (
             TPD_G      => TPD_G,
-            PORT_NUM_G => 24000)        -- TCP Ports [24000:24001]
+            PORT_NUM_G => 24000        -- TCP Ports [24000:24001]
+         )
          port map (
             axilClk         => axilClock,
             axilRst         => axilReset,
             axilReadMaster  => mAxilReadMaster,
             axilReadSlave   => mAxilReadSlave,
             axilWriteMaster => mAxilWriteMaster,
-            axilWriteSlave  => mAxilWriteSlave);
+            axilWriteSlave  => mAxilWriteSlave
+         );
 
       GEN_VEC :
       for i in 4 downto 0 generate
@@ -269,14 +296,16 @@ architecture rtl of Core is
                TPD_G         => TPD_G,
                PORT_NUM_G    => 24002+2*i,  -- TCP Ports [24002:24011]
                SSI_EN_G      => true,
-               AXIS_CONFIG_G => APP_AXIS_CONFIG_C)
+               AXIS_CONFIG_G => APP_AXIS_CONFIG_C
+            )
             port map (
                axisClk     => axilClock,
                axisRst     => axilReset,
                sAxisMaster => asicDataMasters(i),
                sAxisSlave  => asicDataSlaves(i),
                mAxisMaster => open,
-               mAxisSlave  => AXI_STREAM_SLAVE_FORCE_C);
+               mAxisSlave  => AXI_STREAM_SLAVE_FORCE_C
+            );
       end generate GEN_VEC;
 
       U_ssiCmdData : entity surf.RogueTcpStreamWrap
@@ -284,20 +313,23 @@ architecture rtl of Core is
          TPD_G         => TPD_G,
          PORT_NUM_G    => 24012,  -- TCP Ports [24002:24011]
          SSI_EN_G      => true,
-         AXIS_CONFIG_G => APP_AXIS_CONFIG_C)
+         AXIS_CONFIG_G => APP_AXIS_CONFIG_C
+      )
       port map (
          axisClk     => axilClock,
          axisRst     => axilReset,
          sAxisMaster => AXI_STREAM_MASTER_INIT_C,
          sAxisSlave  => open,
          mAxisMaster => ssiCmdMaster,
-         mAxisSlave  => ssiCmdSlave);
+         mAxisSlave  => ssiCmdSlave
+      );
 
       U_SsiCmdMaster : entity surf.SsiCmdMaster
       generic map (
          TPD_G               => TPD_G,
          AXI_STREAM_CONFIG_G => PGP4_AXIS_CONFIG_C,
-         SLAVE_READY_EN_G    => SIMULATION_G)
+         SLAVE_READY_EN_G    => SIMULATION_G
+      )
       port map (
          -- Streaming Data Interface
          axisClk     => axilClock,
@@ -308,7 +340,8 @@ architecture rtl of Core is
          -- Command signals
          cmdClk      => axilClock,
          cmdRst      => axilReset,
-         cmdMaster   => ssiCmd);      
+         cmdMaster   => ssiCmd
+      );      
    end generate;
 
    ---------------------------
@@ -319,7 +352,8 @@ architecture rtl of Core is
          TPD_G              => TPD_G,
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
-         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
+         MASTERS_CONFIG_G   => XBAR_CONFIG_C
+      )
       port map (
          sAxiWriteMasters(0) => mAxilWriteMaster,
          sAxiWriteSlaves(0)  => mAxilWriteSlave,
@@ -330,7 +364,8 @@ architecture rtl of Core is
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves,
          axiClk              => axilClock,
-         axiClkRst           => axilReset);
+         axiClkRst           => axilReset
+      );
 
    ----------------------------------
    --       System Devices
@@ -340,7 +375,8 @@ architecture rtl of Core is
          TPD_G            => TPD_G,
          SIMULATION_G     => SIMULATION_G,
          BUILD_INFO_G     => BUILD_INFO_G,
-         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(SYSDEV_INDEX_C).baseAddr)
+         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(SYSDEV_INDEX_C).baseAddr
+      )
       port map(
          -- AXI-Lite Interface
          axilClk         => axilClock,
@@ -375,7 +411,8 @@ architecture rtl of Core is
 
          -- SYSMON Ports
          vPIn            => vPIn,
-         vNIn            => vNIn);
+         vNIn            => vNIn
+      );
 
    ----------------------------------------------------------------------
    --             Map the Application AXI-Lite Bus

@@ -1,8 +1,20 @@
+-------------------------------------------------------------------------------
+-- Company    : SLAC National Accelerator Laboratory
+-------------------------------------------------------------------------------
+-- Description: Application interface for ePix320kM
+-------------------------------------------------------------------------------
+-- This file is part of 'ePix320kM firmware'.
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'Simple-PGPv4-KCU105-Example', including this file,
+-- may be copied, modified, propagated, or distributed except according to
+-- the terms contained in the LICENSE.txt file.
+-------------------------------------------------------------------------------
+
+
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-use ieee.std_logic_arith.all;
-use ieee.numeric_std.all;
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -16,143 +28,172 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity Application is
-  generic (
-    TPD_G           : time := 1 ns;
-    BUILD_INFO_G    : BuildInfoType;
-    SIMULATION_G    : boolean := false
-    );
-  port (
-		-----------------------
-  	-- Top Level Ports --
-  	-----------------------
-  	sysClk : in sl;
-  	sysRst : in sl;
-	  -- AXI-Lite Register Interface (sysClk domain)
-    -- Register Address Range = [0x80000000:0xFFFFFFFF]
-    sAxilReadMaster  : in    AxiLiteReadMasterType;
-    sAxilReadSlave   : out   AxiLiteReadSlaveType;
-    sAxilWriteMaster : in    AxiLiteWriteMasterType;
-    sAxilWriteSlave  : out   AxiLiteWriteSlaveType;
-    -- AXI Stream, one per QSFP lane (sysClk domain)
-    mAxisMasters     : out   AxiStreamMasterArray(3 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
-    mAxisSlaves      : in    AxiStreamSlaveArray(3 downto 0);
-    -- Auxiliary AXI Stream, (sysClk domain)
-    -- 0 is pseudo scope, 1 is slow adc monitoring
-    sAuxAxisMasters  : out   AxiStreamMasterArray(1 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
-    sAuxAxisSlaves   : in    AxiStreamSlaveArray(1 downto 0);
-    -- ssi commands (Lane and Vc 0)
-    ssiCmd           : in    SsiCmdMasterType;
+   generic (
+      TPD_G        : time := 1 ns;
+      BUILD_INFO_G : BuildInfoType;
+      SIMULATION_G : boolean := false
+   );
+   port (
+      ----------------------
+      -- Top Level Ports --
+      ----------------------
+      xilClk : in sl;
+      xilRst : in sl;
 
-    -- ASIC Data Outs
-    asicDataP         : in  Slv24Array(3 downto 0);
-    asicDataM         : in  Slv24Array(3 downto 0);
+      -- AXI-Lite Register Interface (sysClk domain)
+      -- Register Address Range = [0x80000000:0xFFFFFFFF]
+      sAxilReadMaster  : in  AxiLiteReadMasterType;
+      sAxilReadSlave   : out AxiLiteReadSlaveType;
+      sAxilWriteMaster : in  AxiLiteWriteMasterType;
+      sAxilWriteSlave  : out AxiLiteWriteSlaveType;
 
-    adcMonDoutP       : in  slv(11 downto 0);
-    adcMonDoutM       : in  slv(11 downto 0);
-    adcDoClkP         : in  slv(1 downto 0);
-    adcDoClkM         : in  slv(1 downto 0);
-    adcFrameClkP      : in  slv(1 downto 0);
-    adcFrameClkM      : in  slv(1 downto 0);
+      -- Streaming Interfaces (axilClk domain)
+      asicDataMasters : out AxiStreamMasterArray(3 downto 0);
+      asicDataSlaves  : in  AxiStreamSlaveArray(3 downto 0);
+      remoteDmaPause  : in  slv(3 downto 0);
+      oscopeMasters   : out AxiStreamMasterArray(3 downto 0);
+      oscopeSlaves    : in  AxiStreamSlaveArray(3 downto 0);
+      slowAdcMasters  : out AxiStreamMasterArray(3 downto 0);
+      slowAdcSlaves   : in  AxiStreamSlaveArray(3 downto 0);
 
-    -- ASIC Control Ports
-    asicR0            : out sl;
-    asicGlblRst       : out sl;
-    asicSync          : out sl;
-    asicAcq           : out sl;
-    asicRoClkP        : out slv(3 downto 0);
-    asicRoClkN        : out slv(3 downto 0);
-    asicSro           : out sl;
-    asicClkEn         : out sl;
+      -- SSI commands
+      ssiCmd : in SsiCmdMasterType;
 
-    -- SACI Ports
-    asicSaciCmd       : out sl;
-    asicSaciClk       : out sl;
-    asicSaciSel       : out slv(3 downto 0);
-    asicSaciRsp       : in  sl;
+      -- Transceiver high speed lanes
+      fpgaOutObTransInP : out slv(11 downto 8);
+      fpgaOutObTransInM : out slv(11 downto 8);
+      fpgaInObTransOutP : in  slv(11 downto 8);
+      fpgaInObTransOutM : in  slv(11 downto 8);
 
-    -- Spare ports both to carrier and to p&cb
-    pcbSpare          : inout slv(5 downto 0);
-    spareM            : inout slv(1 downto 0);
-    spareP            : inout slv(1 downto 0);
+      -- ASIC Data Outs
+      asicDataP : in Slv24Array(3 downto 0);
+      asicDataM : in Slv24Array(3 downto 0);
 
-    -- Timing/Clocks
-    lcls2TimingClkP   : in     sl;
-    lcls2TimingClkM   : in     sl;
-    altTimingClkP     : in     sl;
-    altTimingClkM     : in     sl;
-    clkScl            : out    sl;
-    clkSda            : inout  sl;
-    rdClkSel          : out    sl;
+      -- Fast ADC Ports
+      adcMonDataP  : in slv(11 downto 0);
+      adcMonDataM  : in slv(11 downto 0);
+      adcDoClkP    : in slv(1 downto 0);
+      adcDoClkM    : in slv(1 downto 0);
+      adcFrameClkP : in slv(1 downto 0);
+      adcFrameClkM : in slv(1 downto 0);
 
-    -- Bias Dac
-    biasDacDin        : out sl;
-    biasDacSclk       : out sl;
-    biasDacCsb        : out sl;
-    biasDacClrb       : out sl;
+      -- ASIC Control Ports
+      asicR0      : out sl;
+      asicGlblRst : out sl;
+      asicSync    : out sl;
+      asicAcq     : out sl;
+      asicRoClkP  : out slv(3 downto 0);
+      asicRoClkN  : out slv(3 downto 0);
+      asicSro     : out sl;
+      asicClkEn   : out sl;
 
-    -- High speed dac
-    hsDacSclk         : out sl;
-    hsDacDin          : out sl;
-    hsCsb             : out sl;
-    hsLdacb           : out sl; 
-    
-    -- Digital Monitor
-    digMon            : in  slv(1 downto 0);
+      -- SACI Ports
+      saciCmd : out sl;
+      saciClk : out sl;
+      saciSel : out slv(3 downto 0);
+      saciRsp : in  sl;
 
-    -- External trigger Connector
-    runToFpga         : in  sl;
-    daqToFpga         : in  sl;
-    ttlToFpga         : in  sl;
-    fpgaTtlOut        : out sl; 
-    fpgaMps           : out sl;
-    fpgaTg            : out sl;
+      -- Spare ports both to carrier and to p&cb
+      pcbSpare : inout slv(5 downto 0);
+      spareM   : inout slv(1 downto 0);
+      spareP   : inout slv(1 downto 0);
 
-    -- Fpga Clock IO
-    fpgaClkInP        : in  sl;
-    fpgaClkInM        : in  sl;
-    fpgaClkOutP       : out sl;
-    fpgaClkOutM       : out sl;
+      -- GT Clock Ports
+      gtPllClkP : in sl;
+      gtPllClkM : in sl;
+      gtRefClkP : in sl;
+      gtRefClkM : in sl;
 
-    -- Power and communication env Monitor
-    pcbAdcDrdyL       : in  sl;
-    pcbAdcData        : in  sl;
-    pcbAdcCsb         : out sl;
-    pcbAdcSclk        : out sl;
-    pcbAdcDin         : out sl;
-    pcbAdcSyncL       : out sl;
-    pcbAdcRefClk      : out sl;
+      -- Bias Dac
+      biasDacDin  : out sl;
+      biasDacSclk : out sl;
+      biasDacCsb  : out sl;
+      biasDacClrb : out sl;
 
-    -- Serial number
-    serialNumber      : inout slv(2 downto 0);
+      -- High speed dac
+      hsDacSclk : out sl;
+      hsDacDin  : out sl;
+      hsCsb     : out sl;
+      hsLdacb   : out sl;
 
-    -- Power 
-    syncDcdc          : out slv(6 downto 0);
-    ldoShtdnL         : out slv(1 downto 0);
-    dcdcSync          : out sl;
-    pcbSync           : out sl;
-    pcbLocalSupplyGood: in  sl;
+      -- Digital Monitor
+      digMon : in slv(1 downto 0);
 
-    -- Digital board env monitor
-    adcSpiClk         : out  sl;
-    adcSpiData        : in   sl;
-    adcMonClkP        : out  sl;
-    adcMonClkM        : out  sl;
-    adcMonPdwn        : out  sl;
-    adcMonSpiCsb      : out  sl;
-    slowAdcDout       : in   sl;
-    slowAdcDrdyL      : in   sl;
-    slowAdcSyncL      : out  sl;
-    slowAdcSclk       : out  sl;
-    slowAdcCsb        : out  sl;
-    slowAdcDin        : out  sl;
-    slowAdcRefClk     : out  sl;
+      -- External trigger Connector
+      runToFpga  : in  sl;
+      daqToFpga  : in  sl;
+      ttlToFpga  : in  sl;
+      fpgaTtlOut : out sl;
+      fpgaMps    : out sl;
+      fpgaTg     : out sl;
 
-	);
+      -- Fpga Clock IO
+      fpgaClkInP  : in  sl;
+      fpgaClkInM  : in  sl;
+      fpgaClkOutP : out sl;
+      fpgaClkOutM : out sl;
+
+      -- Power and communication env Monitor
+      pcbAdcDrdyL  : in  sl;
+      pcbAdcData   : in  sl;
+      pcbAdcCsb    : out sl;
+      pcbAdcSclk   : out sl;
+      pcbAdcDin    : out sl;
+      pcbAdcSyncL  : out sl;
+      pcbAdcRefClk : out sl;
+
+      -- Serial number
+      serialNumber : inout slv(2 downto 0);
+
+      -- Power 
+      syncDcdc           : out slv(6 downto 0);
+      ldoShtdnL          : out slv(1 downto 0);
+      dcdcSync           : out sl;
+      pcbSync            : out sl;
+      pcbLocalSupplyGood : in  sl;
+
+      -- Digital board env monitor
+      adcSpiClk     : out sl;
+      adcSpiData    : in  sl;
+      adcMonClkP    : out sl;
+      adcMonClkM    : out sl;
+      adcMonPdwn    : out sl;
+      adcMonSpiCsb  : out sl;
+      slowAdcDout   : in  sl;
+      slowAdcDrdyL  : in  sl;
+      slowAdcSyncL  : out sl;
+      slowAdcSclk   : out sl;
+      slowAdcCsb    : out sl;
+      slowAdcDin    : out sl;
+      slowAdcRefClk : out sl
+   );
 end entity;
 
 
 architecture rtl of Application is
 
+   -- AXI-Lite Signals
+   signal sAxiReadMaster : AxiLiteReadMasterArray(HR_FD_NUM_AXI_SLAVE_SLOTS_C-1 downto 0);
+   signal sAxiReadSlave   : AxiLiteReadSlaveArray(HR_FD_NUM_AXI_SLAVE_SLOTS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal sAxiWriteMaster : AxiLiteWriteMasterArray(HR_FD_NUM_AXI_SLAVE_SLOTS_C-1 downto 0);
+   saignal sAxiWriteSlave : AxiLiteWriteSlaveArray(HR_FD_NUM_AXI_SLAVE_SLOTS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   -- AXI-Lite Signals
+   signal mAxiWriteMasters : AxiLiteWriteMasterArray(HR_FD_NUM_AXI_MASTER_SLOTS_C-1 downto 0);
+   signal mAxiWriteSlaves  : AxiLiteWriteSlaveArray(HR_FD_NUM_AXI_MASTER_SLOTS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   signal mAxiReadMasters  : AxiLiteReadMasterArray(HR_FD_NUM_AXI_MASTER_SLOTS_C-1 downto 0);
+   signal mAxiReadSlaves   : AxiLiteReadSlaveArray(HR_FD_NUM_AXI_MASTER_SLOTS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
 begin
 
-end rtl; -- rtl
+
+   U_AppClk : entity work.AppClk
+      generic map (
+      TPD_G        => TPD_G,
+      SIMULATION_G => SIMULATION_G
+   )
+      port map (
+         clkInP => gtRefClkP,
+         clkInM => gtRefClkM,
+
+   );
+
+   end rtl; -- rtl
