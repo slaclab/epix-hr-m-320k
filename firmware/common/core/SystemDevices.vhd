@@ -24,7 +24,7 @@ use surf.AxiStreamPkg.all;
 use surf.I2cPkg.all;
 
 library work;
-use work.EPixHR10k2MPkg.all;
+use work.ePix320kMPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -43,24 +43,30 @@ entity SystemDevices is
       axilReadSlave   : out   AxiLiteReadSlaveType;
       axilWriteMaster : in    AxiLiteWriteMasterType;
       axilWriteSlave  : out   AxiLiteWriteSlaveType;
-      -------------------
-      --  Top Level Ports
-      -------------------
+      --------------------------------------
+      --          Top Level Ports
+      --------------------------------------
       -- Jitter Cleaner PLL Ports
-      jitclnrCsL     : in out ;
-      jitclnrIntr    : in out ;
-      jitclnrLolL    : in out ;
-      jitclnrOeL     : in out ;
-      jitclnrRstL    : in out ;
-      jitclnrSclk    : in out ;
-      jitclnrSdio    : in out ;
-      jitclnrSdo     : in out ;
-      jitclnrSel     : in out ;
+      jitclnrCsL     : out   sl;
+      jitclnrIntr    : in    sl;
+      jitclnrLolL    : in    sl;
+      jitclnrOeL     : out   sl;
+      jitclnrRstL    : out   sl;
+      jitclnrSclk    : out   sl;
+      jitclnrSdio    : out   sl;
+      jitclnrSdo     : in    sl;
+      jitclnrSel     : out slv(1 downto 0) := "00";
+
+      -- LMK61E2
+      pllClkScl       : inout sl;
+      pllClkSda       : inout sl;
+
       -- LEAP Transceiver Ports
       obTransScl     : inout  sl;
       obTransSda     : inout  sl;
       obTransResetL  : out sl;
       obTransIntL    : in sl;
+
       -- SYSMON Ports
       vPIn            : in    sl;
       vNIn            : in    sl);
@@ -69,7 +75,7 @@ end SystemDevices;
 architecture mapping of SystemDevices is
 
    constant PLL_I2C_CONFIG_C : I2cAxiLiteDevArray(0 downto 0) := (
-      0              => MakeI2cAxiLiteDevType(
+         0           => MakeI2cAxiLiteDevType(
          i2cAddress  => "1011000",      -- LMK61E2
          dataSize    => 8,              -- in units of bits
          addrSize    => 8,              -- in units of bits
@@ -119,9 +125,9 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   --------------------------
-   -- AXI-Lite Version Module
-   --------------------------
+   ----------------------------------------------------
+   --          AXI-Lite Version Module
+   ----------------------------------------------------
    U_AxiVersion : entity surf.AxiVersion
       generic map (
          TPD_G           => TPD_G,
@@ -182,25 +188,25 @@ begin
       U_STARTUPE3 : STARTUPE3
          generic map (
             PROG_USR      => "FALSE",  -- Activate program event security feature. Requires encrypted bitstreams.
-            SIM_CCLK_FREQ => 0.0)  -- Set the Configuration Clock Frequency(ns) for simulation
+            SIM_CCLK_FREQ => 0.0)      -- Set the Configuration Clock Frequency(ns) for simulation
          port map (
-            CFGCLK    => open,  -- 1-bit output: Configuration main clock output
-            CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
-            DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
-            EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
-            PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
-            DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
-            DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
-            FCSBO     => bootCsL,  -- 1-bit input: Contols the FCS_B pin for flash access
-            FCSBTS    => '0',           -- 1-bit input: Tristate the FCS_B pin
-            GSR       => '0',  -- 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
-            GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
-            KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
-            PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-            USRCCLKO  => bootSck,       -- 1-bit input: User CCLK input
-            USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
-            USRDONEO  => axilRstL,  -- 1-bit input: User DONE pin output control
-            USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
+            CFGCLK    => open,         -- 1-bit output: Configuration main clock output
+            CFGMCLK   => open,         -- 1-bit output: Configuration internal oscillator clock output
+            DI        => di,           -- 4-bit output: Allow receiving on the D[3:0] input pins
+            EOS       => open,         -- 1-bit output: Active high output signal indicating the End Of Startup.
+            PREQ      => open,         -- 1-bit output: PROGRAM request to fabric output
+            DO        => do,           -- 4-bit input: Allows control of the D[3:0] pin outputs
+            DTS       => "1110",       -- 4-bit input: Allows tristate of the D[3:0] pins
+            FCSBO     => bootCsL,      -- 1-bit input: Contols the FCS_B pin for flash access
+            FCSBTS    => '0',          -- 1-bit input: Tristate the FCS_B pin
+            GSR       => '0',          -- 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
+            GTS       => '0',          -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
+            KEYCLEARB => '0',          -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
+            PACK      => '0',          -- 1-bit input: PROGRAM acknowledge input
+            USRCCLKO  => bootSck,      -- 1-bit input: User CCLK input
+            USRCCLKTS => '0',          -- 1-bit input: User CCLK 3-state enable input
+            USRDONEO  => axilRstL,     -- 1-bit input: User DONE pin output control
+            USRDONETS => '0');         -- 1-bit input: User DONE 3-state enable output
 
       axilRstL <= not(axilRst);  -- IPMC uses DONE to determine if FPGA is ready
       do       <= "111" & bootMosi;
@@ -229,7 +235,7 @@ begin
       U_PLL_SPI : entity surf.Si5345
          generic map (
             TPD_G              => TPD_G,
-            MEMORY_INIT_FILE_G => "EPixHR10k2MPllConfig.mem",
+            MEMORY_INIT_FILE_G => "ePix320kMPllConfig.mem",
             CLK_PERIOD_G       => AXIL_CLK_PERIOD_C,
             SPI_SCLK_PERIOD_G  => (1/10.0E+6))  -- 1/(10 MHz SCLK)
          port map (
@@ -241,10 +247,10 @@ begin
             axiWriteMaster => axilWriteMasters(PLL_SPI_INDEX_C),
             axiWriteSlave  => axilWriteSlaves(PLL_SPI_INDEX_C),
             -- SPI Ports
-            coreSclk       => pllSpiSclk,
-            coreSDin       => pllSpiSdo,
-            coreSDout      => pllSpiSdi,
-            coreCsb        => pllSpiCsL);
+            coreSclk       => jitclnrSclk,
+            coreSDin       => jitclnrSdo,
+            coreSDout      => jitclnrSdio,
+            coreCsb        => jitclnrCsL);
 
       U_PLL_I2C : entity surf.AxiI2cRegMaster
          generic map (

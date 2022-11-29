@@ -21,9 +21,9 @@ import surf.xilinx           as xil
 
 class Core(pr.Device):
     def __init__(self,
-            sim      = False,
-            promProg = False,
-        **kwargs):
+                 sim      = False,
+                 promProg = False,
+                 **kwargs):
         super().__init__(**kwargs)
 
         self.add(axi.AxiVersion(

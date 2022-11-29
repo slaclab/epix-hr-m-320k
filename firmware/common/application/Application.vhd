@@ -19,8 +19,8 @@ entity Application is
   generic (
     TPD_G           : time := 1 ns;
     BUILD_INFO_G    : BuildInfoType;
-    ROUGE_SIM_EN    : boolean := false;
-    ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 10000);
+    SIMULATION_G    : boolean := false
+    );
   port (
 		-----------------------
   	-- Top Level Ports --
@@ -43,41 +43,32 @@ entity Application is
     -- ssi commands (Lane and Vc 0)
     ssiCmd           : in    SsiCmdMasterType;
 
-    -----------------------
-    -- Application Ports --
-    -----------------------
     -- ASIC Data Outs
-    asic3DoutP        : in    slv(23 downto 0);
-    asic3DoutM        : in    slv(23 downto 0);
-    asic2DoutP        : in    slv(23 downto 0);
-    asic2DoutM        : in    slv(23 downto 0);
-    asic1DoutP        : in    slv(23 downto 0);
-    asic1DoutM        : in    slv(23 downto 0);
-    asic0DoutP        : in    slv(23 downto 0);
-    asic0DoutM        : in    slv(23 downto 0);
+    asicDataP         : in  Slv24Array(3 downto 0);
+    asicDataM         : in  Slv24Array(3 downto 0);
 
-    adcMonDoutP       : in    slv(11 downto 0);
-    adcMonDoutM       : in    slv(11 downto 0);
-    adcDoClkP         : in    slv(1 downto 0);
-    adcDoClkM         : in    slv(1 downto 0);
-    adcFrameClkP      : in    slv(1 downto 0);
-    adcFrameClkM      : in    slv(1 downto 0);
+    adcMonDoutP       : in  slv(11 downto 0);
+    adcMonDoutM       : in  slv(11 downto 0);
+    adcDoClkP         : in  slv(1 downto 0);
+    adcDoClkM         : in  slv(1 downto 0);
+    adcFrameClkP      : in  slv(1 downto 0);
+    adcFrameClkM      : in  slv(1 downto 0);
 
     -- ASIC Control Ports
-    asicR0            : out   sl;
-    asicGlblRst       : out   sl;
-    asicSync          : out   sl;
-    asicAcq           : out   sl;
-    asicRoClkP        : out   slv(3 downto 0);
-    asicRoClkN        : out   slv(3 downto 0);
-    asicSro           : out   sl;
-    asicClkEn             : out    sl;
+    asicR0            : out sl;
+    asicGlblRst       : out sl;
+    asicSync          : out sl;
+    asicAcq           : out sl;
+    asicRoClkP        : out slv(3 downto 0);
+    asicRoClkN        : out slv(3 downto 0);
+    asicSro           : out sl;
+    asicClkEn         : out sl;
 
     -- SACI Ports
-    asicSaciCmd       : out   sl;
-    asicSaciClk       : out   sl;
-    asicSaciSel       : out   slv(3 downto 0);
-    asicSaciRsp       : in    sl;
+    asicSaciCmd       : out sl;
+    asicSaciClk       : out sl;
+    asicSaciSel       : out slv(3 downto 0);
+    asicSaciRsp       : in  sl;
 
     -- Spare ports both to carrier and to p&cb
     pcbSpare          : inout slv(5 downto 0);
@@ -89,16 +80,6 @@ entity Application is
     lcls2TimingClkM   : in     sl;
     altTimingClkP     : in     sl;
     altTimingClkM     : in     sl;
-    pllClkP           : in     slv(1 downto 0);
-    pllClkM           : in     slv(1 downto 0);
-    refClkP           : in     slv(1 downto 0);
-    refClkM           : in     slv(1 downto 0);
-    fpgaClkInP        : in     sl;
-    fpgaClkInM        : in     sl;
-    fpgaClkOutP       : out    sl;
-    fpgaClkOutM       : out    sl;
-    fpgaRdClkP        : in     sl;
-    fpgaRdClkM        : in     sl;
     clkScl            : out    sl;
     clkSda            : inout  sl;
     rdClkSel          : out    sl;
@@ -115,17 +96,6 @@ entity Application is
     hsCsb             : out sl;
     hsLdacb           : out sl; 
     
-    -- Clock Jitter Cleaner
-    jitclnrCsL        : out   sl;
-    jitclnrIntrL      : in    sl;
-    jitclnrLolL       : in    sl;
-    jitclnrOeL        : out   sl;
-    jitclnrRstL       : out   sl;
-    jitclnrSclk       : out   sl;
-    jitclnrSdio       : inout sl;
-    jitclnrSdo        : out   sl;
-    jitclnrSel        : out   slv(1 downto 0);
-
     -- Digital Monitor
     digMon            : in  slv(1 downto 0);
 
@@ -135,7 +105,48 @@ entity Application is
     ttlToFpga         : in  sl;
     fpgaTtlOut        : out sl; 
     fpgaMps           : out sl;
-    fpgaTg            : out sl
+    fpgaTg            : out sl;
+
+    -- Fpga Clock IO
+    fpgaClkInP        : in  sl;
+    fpgaClkInM        : in  sl;
+    fpgaClkOutP       : out sl;
+    fpgaClkOutM       : out sl;
+
+    -- Power and communication env Monitor
+    pcbAdcDrdyL       : in  sl;
+    pcbAdcData        : in  sl;
+    pcbAdcCsb         : out sl;
+    pcbAdcSclk        : out sl;
+    pcbAdcDin         : out sl;
+    pcbAdcSyncL       : out sl;
+    pcbAdcRefClk      : out sl;
+
+    -- Serial number
+    serialNumber      : inout slv(2 downto 0);
+
+    -- Power 
+    syncDcdc          : out slv(6 downto 0);
+    ldoShtdnL         : out slv(1 downto 0);
+    dcdcSync          : out sl;
+    pcbSync           : out sl;
+    pcbLocalSupplyGood: in  sl;
+
+    -- Digital board env monitor
+    adcSpiClk         : out  sl;
+    adcSpiData        : in   sl;
+    adcMonClkP        : out  sl;
+    adcMonClkM        : out  sl;
+    adcMonPdwn        : out  sl;
+    adcMonSpiCsb      : out  sl;
+    slowAdcDout       : in   sl;
+    slowAdcDrdyL      : in   sl;
+    slowAdcSyncL      : out  sl;
+    slowAdcSclk       : out  sl;
+    slowAdcCsb        : out  sl;
+    slowAdcDin        : out  sl;
+    slowAdcRefClk     : out  sl;
+
 	);
 end entity;
 
