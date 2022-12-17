@@ -30,7 +30,7 @@ class Root(pr.Root):
                  initRead = True,   # Read all registers at start of the system
                  promProg = False,  # Flag to disable all devices not related to PROM programming
                  **kwargs):
-
+        numOfAsics = 4
         #################################################################
 
         self.promProg = promProg
@@ -51,7 +51,7 @@ class Root(pr.Root):
         #################################################################
 
         # Create an empty list to be filled
-        self.dataStream    = [None for i in range(5)]
+        self.dataStream    = [None for i in range(numOfAsics)]
         self.adcMonStream  = [None for i in range(4)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
@@ -59,32 +59,35 @@ class Root(pr.Root):
         # Check if not VCS simulation
         if (not self.sim):
 
-            # Start up flags
+            # # Start up flags
             self._pollEn   = pollEn
             self._initRead = initRead
 
-            # Map the DMA streams
-            for lane in range(5):
-                self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
-            self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
-            self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
-            self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
-            for vc in range(4):
-                self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
-                self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
+            # # Map the DMA streams
+            # for lane in range(numOfAsics):
+            #     self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
+            
+            # self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
+            
+            # self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
-            # Create (Xilinx Virtual Cable) XVC on localhost
-            self.xvc = rogue.protocols.xilinx.Xvc(2542)
-            self.addProtocol(self.xvc)
+            # self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
+            # for vc in range(4):
+            #     self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
+            #     self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
-            # Connect xvcStream to XVC module
-            self.xvcStream == self.xvc
+            # # Create (Xilinx Virtual Cable) XVC on localhost
+            # self.xvc = rogue.protocols.xilinx.Xvc(2542)
+            # self.addProtocol(self.xvc)
 
-            # Create SRPv3
-            self.srp = rogue.protocols.srp.SrpV3()
+            # # Connect xvcStream to XVC module
+            # self.xvcStream == self.xvc
 
-            # Connect SRPv3 to srpStream
-            self.srp == self.srpStream
+            # # Create SRPv3
+            # self.srp = rogue.protocols.srp.SrpV3()
+
+            # # Connect SRPv3 to srpStream
+            # self.srp == self.srpStream
 
         else:
 
@@ -95,7 +98,8 @@ class Root(pr.Root):
             # Map the simulation DMA streams
             # 2 TCP ports per stream
             self.srp = rogue.interfaces.memory.TcpClient('localhost', 24000)
-            for lane in range(5):
+
+            for lane in range(numOfAsics):
                 # 2 TCP ports per stream
                 self.dataStream[lane] = rogue.interfaces.stream.TcpClient('localhost', 24002 + 2 * lane)
 
@@ -120,7 +124,7 @@ class Root(pr.Root):
                                     cmd=self.Trigger,
                                     rates={1: '1 Hz', 2: '2 Hz', 4: '4 Hz', 8: '8 Hz', 10: '10 Hz', 30: '30 Hz', 60: '60 Hz', 120: '120 Hz'}))
         # Connect dataStream to data writer
-        for lane in range(5):
+        for lane in range(numOfAsics):
             self.dataStream[lane] >> self.dataWriter.getChannel(lane)
 
         # Check if not VCS simulation
@@ -140,13 +144,13 @@ class Root(pr.Root):
             expand   = False,
         ))
 
-        self.add(fpgaBoard.App(
-            offset   = 0x8000_0000,
-            memBase  = self.srp,
-            sim      = self.sim,
-            enabled  = not self.promProg,
-            expand   = True,
-        ))
+        # self.add(fpgaBoard.App(
+        #     offset   = 0x8000_0000,
+        #     memBase  = self.srp,
+        #     sim      = self.sim,
+        #     enabled  = not self.promProg,
+        #     expand   = True,
+        # ))
 
         #################################################################
 
