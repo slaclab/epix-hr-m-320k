@@ -1,32 +1,21 @@
-# Applications must define the 32-bitFirmware Version Number
-export PRJ_VERSION = 0x00000001
-
-# COMMON_NAME is defined by application
-# export COMMON_NAME = 
-
-# export COMM_TYPE = pgp4
-# export INCLUDE_PGP4_10G = 1
-
-# Define the Microblaze source path
-#export SDK_SRC_PATH = $(PROJ_DIR)/../../common/$(COMMON_NAME)/src
-
-# Define if you want to build the user Microblaze core
-export BUILD_MB_CORE = 0
-
-# Define if you want to build the DDR MIG core
-export BUILD_MIG_CORE = 0
-
-# Define if this is FSBL PROM address
-export PROM_FSBL = 1
-
-# Define if you want to remove unused source code
-export REMOVE_UNUSED_CODE = 0
 
 # Define target output
 target: prom
 
+# Define Firmware Version: v1.0.0.0
+export PRJ_VERSION = 0x01000000
+
 # Define target part
 export PRJ_PART = XCKU15P-FFVA1156-2-E
+
+# Define the TOP_DIR path
+export TOP_DIR = $(abspath $(PWD)/../..)
+
+# Using XVC Debug bridge
+export USE_XVC_DEBUG = 1
+
+# Setup for releases.yaml
+export RELEASE = EPixHR10k2M
 
 # Use top level makefile
 include ../../submodules/ruckus/system_vivado.mk

@@ -24,9 +24,10 @@ use surf.AxiLitePkg.all;
 
 entity ePix320kM is
    generic (
-      TPD_G        : time := 1 ns;
-      BUILD_INFO_G : BuildInfoType;
-      SIMULATION_G : boolean := false
+      BUILD_INFO_G   : BuildInfoType;
+      TPD_G          : time            := 1 ns;
+      SIMULATION_G   : boolean         := false;
+      NUM_OF_ASICS_G : integer         := 4
    );
    port (
       ----------------------------------------------
@@ -255,10 +256,10 @@ begin
          digMon => digMon,
 
          -- SACI Ports
-         saciCmd => saciCmd,
-         saciClk => saciClk,
-         saciSel => saciSel,
-         saciRsp => saciRsp,
+         saciCmd => asicsaciCmd,
+         saciClk => asicsaciClk,
+         saciSel => asicsaciSel,
+         saciRsp => asicsaciRsp,
 
          -- GT Clock Ports
          gtPllClkP => gtPllClkP(1),
@@ -316,11 +317,12 @@ begin
          fpgaInObTransOutM => fpgaInObTransOutM(11 downto 8)
       );
 
-   U_Core : entity work.Core
+   U_Core : entity epix_leap_core.Core
       generic map(
-         TPD_G        => TPD_G,
-         BUILD_INFO_G => BUILD_INFO_G,
-         SIMULATION_G => SIMULATION_G
+         TPD_G          => TPD_G,
+         BUILD_INFO_G   => BUILD_INFO_G,
+         SIMULATION_G   => SIMULATION_G,
+         NUM_OF_ASICS_G => NUM_OF_ASICS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
