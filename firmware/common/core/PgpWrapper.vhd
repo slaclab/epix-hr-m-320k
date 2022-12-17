@@ -25,13 +25,15 @@ use surf.SsiPkg.all;
 use surf.SsiCmdMasterPkg.all;
 
 library work;
-use work.ePix320kMPkg.all;
+use work.CorePkg.all;
 
 entity PgpWrapper is
    generic (
       TPD_G            : time             := 1 ns;
       SIMULATION_G     : boolean          := false;
-      AXIL_BASE_ADDR_G : slv(31 downto 0) := (others => '0'));
+      AXIL_BASE_ADDR_G : slv(31 downto 0) := (others => '0');
+      NUM_OF_ASICS_G    : integer         := 4
+   );
    port (
       -- Clock and Reset
       axilClk          : in  sl;
@@ -47,9 +49,9 @@ entity PgpWrapper is
       sAxilWriteMaster : in  AxiLiteWriteMasterType;
       sAxilWriteSlave  : out AxiLiteWriteSlaveType;
       -- Streaming Interfaces
-      asicDataMasters  : in  AxiStreamMasterArray(3 downto 0);
-      asicDataSlaves   : out AxiStreamSlaveArray(3 downto 0);
-      remoteDmaPause   : out slv(3 downto 0);
+      asicDataMasters  : in  AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0);
+      asicDataSlaves   : out AxiStreamSlaveArray(NUM_OF_ASICS_G - 1 downto 0);
+      remoteDmaPause   : out slv(NUM_OF_ASICS_G - 1 downto 0);
       oscopeMasters    : in  AxiStreamMasterArray(3 downto 0);
       oscopeSlaves     : out AxiStreamSlaveArray(3 downto 0);
       slowAdcMasters   : in  AxiStreamMasterArray(3 downto 0);
@@ -98,9 +100,9 @@ architecture mapping of PgpWrapper is
    signal pgpRst : slv(7 downto 0);
 
    -- these are unidirectional lanes to transmit data out on a single VC (lanes 0 - 4)
-   signal dataTxMasters  : AxiStreamMasterArray(4 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
-   signal dataTxSlaves   : AxiStreamSlaveArray(4 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
-   signal removePauseVec : slv(4 downto 0);
+   signal dataTxMasters  : AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal dataTxSlaves   : AxiStreamSlaveArray(NUM_OF_ASICS_G - 1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
+   signal removePauseVec : slv(NUM_OF_ASICS_G - 1 downto 0);
 
    -- These are the buses for lane 5 only. Each index here is a VC
    signal pgpTxMasters : AxiStreamMasterArray(2 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
@@ -122,7 +124,8 @@ begin
          TPD_G              => TPD_G,
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
-         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
+         MASTERS_CONFIG_G   => XBAR_CONFIG_C
+      )
       port map (
          axiClk              => axilClk,
          axiClkRst           => axilRst,
@@ -133,7 +136,8 @@ begin
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
-         mAxiReadSlaves      => axilReadSlaves);
+         mAxiReadSlaves      => axilReadSlaves
+      );
 
    GEN_QPLL :
    for i in 1 downto 0 generate
@@ -141,7 +145,8 @@ begin
          generic map (
             TPD_G    => TPD_G,
             RATE_G   => PGP_RATE_C,
-            EN_DRP_G => false)
+            EN_DRP_G => false
+         )
          port map (
             -- Stable Clock and Reset
             stableClk  => axilClk,
@@ -153,11 +158,12 @@ begin
             qpllRefclk => qpllRefclk(4*i+3 downto 4*i),
             qpllRst    => qpllRst(4*i+3 downto 4*i),
             axilClk    => axilClk,
-            axilRst    => axilRst);
+            axilRst    => axilRst
+         );
    end generate GEN_QPLL;
 
    GEN_PGP_DATA :
-   for i in 3 downto 0 generate
+   for i in NUM_OF_ASICS_G - 1 downto 0 generate
 
       U_Pgp : entity surf.Pgp4GthUs
          generic map (
@@ -170,7 +176,8 @@ begin
             AXIL_BASE_ADDR_G   => XBAR_CONFIG_C(i).baseAddr,
             STATUS_CNT_WIDTH_G => STATUS_CNT_WIDTH_C,
             ERROR_CNT_WIDTH_G  => ERROR_CNT_WIDTH_C,
-            AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C)
+            AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C
+         )
          port map (
             -- Stable Clock and Reset
             stableClk       => axilClk,
@@ -206,13 +213,15 @@ begin
             axilReadMaster  => axilReadMasters(i),
             axilReadSlave   => axilReadSlaves(i),
             axilWriteMaster => axilWriteMasters(i),
-            axilWriteSlave  => axilWriteSlaves(i));
+            axilWriteSlave  => axilWriteSlaves(i)
+         );
 
       U_TX_FIFO : entity surf.PgpTxVcFifo
          generic map (
             TPD_G            => TPD_G,
             APP_AXI_CONFIG_G => APP_AXIS_CONFIG_C,
-            PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C)
+            PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C
+         )
          port map (
             -- AXIS Interface (axisClk domain)
             axisClk     => axilClk,
@@ -225,15 +234,18 @@ begin
             rxlinkReady => pgpRxOut(i).linkReady,
             txlinkReady => pgpTxOut(i).linkReady,
             pgpTxMaster => dataTxMasters(i),
-            pgpTxSlave  => dataTxSlaves(i));
+            pgpTxSlave  => dataTxSlaves(i)
+         );
 
       U_remoteDmaPause : entity surf.Synchronizer
          generic map (
-            TPD_G => TPD_G)
+            TPD_G => TPD_G
+         )
          port map (
             clk     => axilClk,
             dataIn  => removePauseVec(i),
-            dataOut => remoteDmaPause(i));
+            dataOut => remoteDmaPause(i)
+         );
 
       -- On the PCIe card, remLinkData[0] is mapped to the large DDR/HBM memory buffer's pause
       removePauseVec(i) <= pgpRxOut(i).remLinkData(0) or not(pgpRxOut(i).linkReady) or not(pgpTxOut(i).linkReady);
@@ -251,7 +263,8 @@ begin
          AXIL_BASE_ADDR_G   => XBAR_CONFIG_C(5).baseAddr,
          STATUS_CNT_WIDTH_G => STATUS_CNT_WIDTH_C,
          ERROR_CNT_WIDTH_G  => ERROR_CNT_WIDTH_C,
-         AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C)
+         AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C
+      )
       port map (
          -- Stable Clock and Reset
          stableClk       => axilClk,
@@ -287,13 +300,15 @@ begin
          axilReadMaster  => axilReadMasters(5),
          axilReadSlave   => axilReadSlaves(5),
          axilWriteMaster => axilWriteMasters(5),
-         axilWriteSlave  => axilWriteSlaves(5));
+         axilWriteSlave  => axilWriteSlaves(5)
+      );
 
    U_VC0 : entity surf.SrpV3AxiLite
       generic map (
          TPD_G               => TPD_G,
          GEN_SYNC_FIFO_G     => false,
-         AXI_STREAM_CONFIG_G => PGP4_AXIS_CONFIG_C)
+         AXI_STREAM_CONFIG_G => PGP4_AXIS_CONFIG_C
+      )
       port map (
          -- Streaming Slave (Rx) Interface (sAxisClk domain)
          sAxisClk         => pgpClk(5),
@@ -311,13 +326,15 @@ begin
          mAxilReadMaster  => mAxilReadMaster,
          mAxilReadSlave   => mAxilReadSlave,
          mAxilWriteMaster => mAxilWriteMaster,
-         mAxilWriteSlave  => mAxilWriteSlave);
+         mAxilWriteSlave  => mAxilWriteSlave
+      );
 
    U_SsiCmdMaster : entity surf.SsiCmdMaster
       generic map (
          TPD_G               => TPD_G,
          AXI_STREAM_CONFIG_G => PGP4_AXIS_CONFIG_C,
-         SLAVE_READY_EN_G    => SIMULATION_G)
+         SLAVE_READY_EN_G    => SIMULATION_G
+      )
       port map (
          -- Streaming Data Interface - WHICH LANE? 0?
          axisClk     => pgpClk(5),
@@ -328,14 +345,16 @@ begin
          -- Command signals
          cmdClk      => axilClk,
          cmdRst      => axilRst,
-         cmdMaster   => ssiCmd);
+         cmdMaster   => ssiCmd
+      );
                   
    U_VC2_RX : entity surf.PgpRxVcFifo
       generic map (
          TPD_G            => TPD_G,
          GEN_SYNC_FIFO_G  => true,      -- same clock domain
          PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C,
-         APP_AXI_CONFIG_G => EMAC_AXIS_CONFIG_C)
+         APP_AXI_CONFIG_G => EMAC_AXIS_CONFIG_C
+      )
       port map (
          -- PGP Interface (pgpClk domain)
          pgpClk      => pgpClk(5),
@@ -347,7 +366,8 @@ begin
          axisClk     => pgpClk(5),
          axisRst     => pgpRst(5),
          axisMaster  => ibXvcMaster,
-         axisSlave   => ibXvcSlave);
+         axisSlave   => ibXvcSlave
+      );
 
    -----------------------------------------------------------------
    -- Xilinx Virtual Cable (XVC)
@@ -355,7 +375,8 @@ begin
    -----------------------------------------------------------------
    U_XVC : entity surf.UdpDebugBridgeWrapper
       generic map (
-         TPD_G => TPD_G)
+         TPD_G => TPD_G
+      )
       port map (
          -- Clock and Reset
          clk            => pgpClk(5),
@@ -364,14 +385,16 @@ begin
          obServerMaster => ibXvcMaster,
          obServerSlave  => ibXvcSlave,
          ibServerMaster => obXvcMaster,
-         ibServerSlave  => obXvcSlave);
+         ibServerSlave  => obXvcSlave
+      );
 
    U_VC1_TX : entity surf.PgpTxVcFifo
       generic map (
          TPD_G            => TPD_G,
          GEN_SYNC_FIFO_G  => true,      -- same clock domain
          APP_AXI_CONFIG_G => EMAC_AXIS_CONFIG_C,
-         PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C)
+         PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C
+      )
       port map (
          -- AXIS Interface (axisClk domain)
          axisClk     => pgpClk(5),
@@ -384,7 +407,8 @@ begin
          rxlinkReady => pgpRxOut(5).linkReady,
          txlinkReady => pgpTxOut(5).linkReady,
          pgpTxMaster => pgpTxMasters(2),
-         pgpTxSlave  => pgpTxSlaves(2));
+         pgpTxSlave  => pgpTxSlaves(2)
+      );
 
    U_Pgp_Lane6 : entity surf.Pgp4GthUs
       generic map (
@@ -397,7 +421,8 @@ begin
          AXIL_BASE_ADDR_G   => XBAR_CONFIG_C(6).baseAddr,
          STATUS_CNT_WIDTH_G => STATUS_CNT_WIDTH_C,
          ERROR_CNT_WIDTH_G  => ERROR_CNT_WIDTH_C,
-         AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C)
+         AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C
+      )
       port map (
          -- Stable Clock and Reset
          stableClk       => axilClk,
@@ -433,15 +458,17 @@ begin
          axilReadMaster  => axilReadMasters(6),
          axilReadSlave   => axilReadSlaves(6),
          axilWriteMaster => axilWriteMasters(6),
-         axilWriteSlave  => axilWriteSlaves(6));
+         axilWriteSlave  => axilWriteSlaves(6)
+      );
 
    GEN_PGP_LANE6 :
-   for i in 3 downto 0 generate
+   for i in NUM_OF_ASICS_G - 1 downto 0 generate
       U_TX_FIFO : entity surf.PgpTxVcFifo
          generic map (
             TPD_G            => TPD_G,
             APP_AXI_CONFIG_G => ssiAxiStreamConfig(4),
-            PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C)
+            PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C
+         )
          port map (
             -- AXIS Interface (axisClk domain)
             axisClk     => axilClk,
@@ -454,7 +481,8 @@ begin
             rxlinkReady => pgpRxOut(6).linkReady,
             txlinkReady => pgpTxOut(6).linkReady,
             pgpTxMaster => slowMonTxMasters(i),
-            pgpTxSlave  => slowMonTxSlaves(i));
+            pgpTxSlave  => slowMonTxSlaves(i)
+         );
    end generate GEN_PGP_LANE6;
 
    U_Pgp_Lane7 : entity surf.Pgp4GthUs
@@ -468,7 +496,8 @@ begin
          AXIL_BASE_ADDR_G   => XBAR_CONFIG_C(7).baseAddr,
          STATUS_CNT_WIDTH_G => STATUS_CNT_WIDTH_C,
          ERROR_CNT_WIDTH_G  => ERROR_CNT_WIDTH_C,
-         AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C)
+         AXIL_CLK_FREQ_G    => AXIL_CLK_FREQ_C
+      )
       port map (
          -- Stable Clock and Reset
          stableClk       => axilClk,
@@ -504,15 +533,17 @@ begin
          axilReadMaster  => axilReadMasters(7),
          axilReadSlave   => axilReadSlaves(7),
          axilWriteMaster => axilWriteMasters(7),
-         axilWriteSlave  => axilWriteSlaves(7));
+         axilWriteSlave  => axilWriteSlaves(7)
+      );
 
    GEN_PGP_LANE7 :
-   for i in 3 downto 0 generate
+   for i in NUM_OF_ASICS_G - 1 downto 0 generate
       U_TX_FIFO : entity surf.PgpTxVcFifo
          generic map (
             TPD_G            => TPD_G,
             APP_AXI_CONFIG_G => ssiAxiStreamConfig(4, TKEEP_COMP_C),
-            PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C)
+            PHY_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C
+         )
          port map (
             -- AXIS Interface (axisClk domain)
             axisClk     => axilClk,
@@ -525,7 +556,8 @@ begin
             rxlinkReady => pgpRxOut(7).linkReady,
             txlinkReady => pgpTxOut(7).linkReady,
             pgpTxMaster => oscopeTxMasters(i),
-            pgpTxSlave  => oscopeTxSlaves(i));
+            pgpTxSlave  => oscopeTxSlaves(i)
+         );
    end generate GEN_PGP_LANE7;
 
 end mapping;

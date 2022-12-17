@@ -24,7 +24,7 @@ use surf.AxiStreamPkg.all;
 use surf.I2cPkg.all;
 
 library work;
-use work.ePix320kMPkg.all;
+use work.CorePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;

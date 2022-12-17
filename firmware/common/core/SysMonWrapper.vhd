@@ -100,7 +100,8 @@ begin
          ip2intc_irpt  => open,
          vp            => vPIn,
          vn            => vNIn,
-         ot_out        => open,
+         -- Not sure which vivado version has this port, but not available in 2022.2
+         -- ot_out        => open,
          channel_out   => open,
          eoc_out       => open,
          alarm_out     => open,

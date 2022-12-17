@@ -29,19 +29,20 @@ library unisim;
 use unisim.vcomponents.all;
 
 library work;
-use work.ePix320kMPkg.all;
+use work.CorePkg.all;
 
 entity Core is 
     generic (
-      TPD_G           : time := 1 ns;
-      BUILD_INFO_G    : BuildInfoType;
-      SIMULATION_G    : boolean := false
+      BUILD_INFO_G      : BuildInfoType;
+      TPD_G             : time            := 1 ns;
+      SIMULATION_G      : boolean         := false;
+      NUM_OF_ASICS_G    : integer         := 4
       );
    port (
       axilClk         : out   sl;
       axilRst         : out   sl;
       --------------------------------------------
-      --          Top Level Ports
+      --          Top Level Ports 
       --------------------------------------------
       -- AXI-Lite Register Interface (sysClk domain)
       -- Register Address Range = [0x00000000:0x80000000]
@@ -50,9 +51,9 @@ entity Core is
       AxilWriteMaster : out   AxiLiteWriteMasterType;
       AxilWriteSlave  : in    AxiLiteWriteSlaveType;
       -- Streaming Interfaces (axilClk domain)
-      asicDataMasters : in    AxiStreamMasterArray(3 downto 0);
-      asicDataSlaves  : out   AxiStreamSlaveArray(3 downto 0);
-      remoteDmaPause  : out   slv(3 downto 0);
+      asicDataMasters : in    AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0);
+      asicDataSlaves  : out   AxiStreamSlaveArray(NUM_OF_ASICS_G - 1 downto 0);
+      remoteDmaPause  : out   slv(NUM_OF_ASICS_G - 1 downto 0);
       oscopeMasters   : in    AxiStreamMasterArray(3 downto 0);
       oscopeSlaves    : out   AxiStreamSlaveArray(3 downto 0);
       slowAdcMasters  : in    AxiStreamMasterArray(3 downto 0);
@@ -290,11 +291,11 @@ architecture rtl of Core is
          );
 
       GEN_VEC :
-      for i in 4 downto 0 generate
+      for i in NUM_OF_ASICS_G - 1 downto 0 generate
          U_asicData : entity surf.RogueTcpStreamWrap
             generic map (
                TPD_G         => TPD_G,
-               PORT_NUM_G    => 24002+2*i,  -- TCP Ports [24002:24011]
+               PORT_NUM_G    => 24002+2*i,  -- TCP Ports [24002:24008]
                SSI_EN_G      => true,
                AXIS_CONFIG_G => APP_AXIS_CONFIG_C
             )
@@ -311,7 +312,7 @@ architecture rtl of Core is
       U_ssiCmdData : entity surf.RogueTcpStreamWrap
       generic map (
          TPD_G         => TPD_G,
-         PORT_NUM_G    => 24012,  -- TCP Ports [24002:24011]
+         PORT_NUM_G    => 24012,  -- TCP Ports [24012]
          SSI_EN_G      => true,
          AXIS_CONFIG_G => APP_AXIS_CONFIG_C
       )
@@ -341,7 +342,7 @@ architecture rtl of Core is
          cmdClk      => axilClock,
          cmdRst      => axilReset,
          cmdMaster   => ssiCmd
-      );      
+      );
    end generate;
 
    ---------------------------
