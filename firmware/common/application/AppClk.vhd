@@ -18,8 +18,15 @@ entity AppClk is
       SIMULATION_G    : boolean := false
    );
    port (
+      -- AXI-Lite Register Interface (axiClk domain)
+      axiReadMaster  : in  AxiLiteReadMasterType;
+      axiReadSlave   : out AxiLiteReadSlaveType;
+      axiWriteMaster : in  AxiLiteWriteMasterType;
+      axiWriteSlave  : out AxiLiteWriteSlaveType;
+
+      -- Application specific IO
       clkInP      : in sl;
-      clkInM      : in sl;
+      clkInM      : in sl
    );
 end entity ; -- AppClk
 
