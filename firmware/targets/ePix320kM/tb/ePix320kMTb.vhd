@@ -20,6 +20,9 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 
+library ruckus;
+use ruckus.BuildInfoPkg.all;
+
 entity ePix320kMTb is
 end entity ePix320kMTb;
 
@@ -35,8 +38,8 @@ architecture testbench of ePix320kMTb is
     signal obTransResetL            : sl                     := '1';
     signal obTransIntL              : sl                     := '1';
     -- GT Clock Ports                    
-    signal gtPllClkP                : slv(2 downto 0)        := ( others => '0');
-    signal gtPllClkM                : slv(2 downto 0)        := ( others => '1');
+    signal gtPllClkP                : slv(1 downto 0)        := ( others => '0');
+    signal gtPllClkM                : slv(1 downto 0)        := ( others => '1');
     signal gtRefClkP                : slv(1 downto 0)        := ( others => '0');
     signal gtRefClkM                : slv(1 downto 0)        := ( others => '1');
     signal gtLclsClkP               : sl                     := '0';
@@ -307,8 +310,8 @@ begin
         vNIn => vNIn
    );
 
-    gtPllClkP <= Clk320P;
-    gtPllClkM <= Clk320M;
+    fpgaClkOutP <= Clk320P;
+    fpgaClkOutM <= Clk320M;
  
     gtPllClkP <= (others => Clk320P);
     gtPllClkM <= (others => Clk320M);

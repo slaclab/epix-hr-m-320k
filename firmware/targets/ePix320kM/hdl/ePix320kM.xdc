@@ -350,10 +350,10 @@ set_property -dict { PACKAGE_PIN K25 IOSTANDARD LVCMOS18 } [get_ports { rdClkSel
 set_property -dict { PACKAGE_PIN L23 IOSTANDARD LVCMOS18 } [get_ports { digMon[1] }]
 set_property -dict { PACKAGE_PIN L24 IOSTANDARD LVCMOS18 } [get_ports { digMon[2] }]
 
-set_property -dict { PACKAGE_PIN M27 IOSTANDARD LVCMOS18 } [get_ports { sRo         }]
+set_property -dict { PACKAGE_PIN M27 IOSTANDARD LVCMOS18 } [get_ports { asicSRo     }]
 set_property -dict { PACKAGE_PIN L27 IOSTANDARD LVCMOS18 } [get_ports { clkEn       }]
 set_property -dict { PACKAGE_PIN J23 IOSTANDARD LVCMOS18 } [get_ports { asicGlblRst }]
-set_property -dict { PACKAGE_PIN H24 IOSTANDARD LVCMOS18 } [get_ports { r0          }]
+set_property -dict { PACKAGE_PIN H24 IOSTANDARD LVCMOS18 } [get_ports { asicR0      }]
 
 set_property -dict { PACKAGE_PIN J26 IOSTANDARD LVCMOS18 } [get_ports { acq     }]
 set_property -dict { PACKAGE_PIN H26 IOSTANDARD LVCMOS18 } [get_ports { sync    }]
@@ -427,7 +427,7 @@ set_property -dict { PACKAGE_PIN AP8 IOSTANDARD LVCMOS33} [get_ports {analogPwrG
 ##	Bank 90
 ##########################
 set_property -dict { PACKAGE_PIN AP13 IOSTANDARD LVCMOS33} [get_ports {fpgaTtlOut}]
-set_property -dict { PACKAGE_PIN AP11 IOSTANDARD LVCMOS33} [get_ports {fpgaTg]}]
+set_property -dict { PACKAGE_PIN AP11 IOSTANDARD LVCMOS33} [get_ports {fpgaTg}]
 set_property -dict { PACKAGE_PIN AP10 IOSTANDARD LVCMOS33} [get_ports {fpgaMps}]
 
 ##########################
@@ -473,8 +473,8 @@ set_property -dict { PACKAGE_PIN R3  IOSTANDARD LVDS} [get_ports {fpgaOutObTrans
 set_property -dict { PACKAGE_PIN P2  IOSTANDARD LVDS} [get_ports {fpgaInObTransOutP[7]}]
 set_property -dict { PACKAGE_PIN P1  IOSTANDARD LVDS} [get_ports {fpgaInObTransOutM[7]}]
 
-set_property -dict { PACKAGE_PIN V6  IOSTANDARD LVCMOS18} [get_ports {gtPllClkP[1]]}]
-set_property -dict { PACKAGE_PIN V5  IOSTANDARD LVCMOS18} [get_ports {gtPllClkM[1]]}]
+set_property -dict { PACKAGE_PIN V6  IOSTANDARD LVCMOS18} [get_ports {gtPllClkP[1]}]
+set_property -dict { PACKAGE_PIN V5  IOSTANDARD LVCMOS18} [get_ports {gtPllClkM[1]}]
 
 set_property -dict { PACKAGE_PIN T6  IOSTANDARD LVCMOS18} [get_ports {gtRefClkP[1]}]
 set_property -dict { PACKAGE_PIN T5  IOSTANDARD LVCMOS18} [get_ports {gtRefClkM[1]}]

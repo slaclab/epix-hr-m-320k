@@ -21,6 +21,8 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 
+library epix_leap_core;
+use epix_leap_core.CorePkg.all;
 
 entity ePix320kM is
    generic (
@@ -47,8 +49,8 @@ entity ePix320kM is
       obTransIntL   : in    sl;
 
       -- GT Clock Ports
-      gtPllClkP  : in slv(2 downto 0);
-      gtPllClkM  : in slv(2 downto 0);
+      gtPllClkP  : in slv(1 downto 0);
+      gtPllClkM  : in slv(1 downto 0);
       gtRefClkP  : in slv(1 downto 0);
       gtRefClkM  : in slv(1 downto 0);
       gtLclsClkP : in sl;
@@ -61,6 +63,7 @@ entity ePix320kM is
       -- ASIC Data Outs
       asicDataP : in Slv24Array(3 downto 0);
       asicDataM : in Slv24Array(3 downto 0);
+
 
       adcMonDoutP  : in slv(11 downto 0);
       adcMonDoutM  : in slv(11 downto 0);
@@ -78,6 +81,8 @@ entity ePix320kM is
       asicRoClkN  : out slv(3 downto 0);
       asicSro     : out sl;
       asicClkEn   : out sl;
+      fpgaRdClkP   : out sl;
+      fpgaRdClkM  : out sl;
 
       -- SACI Ports
       asicSaciCmd : out sl;
@@ -181,8 +186,8 @@ end entity;
 architecture topLevel of ePix320kM is
 
    -- Clock and Reset
-   signal axilClk : sl;
-   signal axilRst : sl;
+   signal axiClk : sl;
+   signal axiRst : sl;
 
    -- AXI-Stream: Stream Interface
    signal asicDataMasters : AxiStreamMasterArray(3 downto 0);
@@ -210,8 +215,8 @@ begin
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x80000000:0xFFFFFFFF]
-         axilClk         => axilClk,
-         axilRst         => axilRst,
+         axiClk         => axiClk,
+         axiRst         => axiRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
@@ -235,10 +240,10 @@ begin
          asicGlblRst => asicGlblRst,
          asicSync    => asicSync,
          asicAcq     => asicAcq,
-         asicRoClkP  => asicRoClkP,
-         asicRoClkN  => asicRoClkN,
          asicSro     => asicSro,
          asicClkEn   => asicClkEn,
+         fpgaRdClkP  => fpgaRdClkP,
+         fpgaRdClkM  => fpgaRdClkM,
 
          -- Bias Dac
          biasDacDin  => biasDacDin,
@@ -327,8 +332,8 @@ begin
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x00000000:0x80000000]
-         axilClk         => axilClk,
-         axilRst         => axilRst,
+         axilClk         => axiClk,
+         axilRst         => axiRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,

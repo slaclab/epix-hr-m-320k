@@ -144,13 +144,13 @@ class Root(pr.Root):
             expand   = False,
         ))
 
-        # self.add(fpgaBoard.App(
-        #     offset   = 0x8000_0000,
-        #     memBase  = self.srp,
-        #     sim      = self.sim,
-        #     enabled  = not self.promProg,
-        #     expand   = True,
-        # ))
+        self.add(fpgaBoard.App(
+            offset   = 0x8000_0000,
+            memBase  = self.srp,
+            sim      = self.sim,
+            enabled  = not self.promProg,
+            expand   = True,
+        ))
 
         #################################################################
 

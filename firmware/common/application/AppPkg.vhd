@@ -30,26 +30,16 @@ use surf.AxiLitePkg.all;
 
 package AppPkg is
 
-
+   constant XIL_DEVICE_C                    : string  := "ULTRASCALE_PLUS";
    constant NUMBER_OF_ASICS_C               : natural := 4;   
    constant NUMBER_OF_LANES_C               : natural := 1;   
    
-   constant NUM_AXIL_MASTERS_C              : natural := 20;
+   constant NUM_AXIL_MASTERS_C              : natural := 1;
    constant NUM_AXIL_SLAVES_C               : natural := 1;
    
    constant PLLREGS_AXI_INDEX_C             : natural := 0;
 
-   
-   constant PLLREGS_AXI_BASE_ADDR_C         : slv(31 downto 0) := X"80000000";--0
-
-   
-   constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := (
-         PLLREGS_AXI_INDEX_C     => (
-         baseAddr                => PLLREGS_AXI_BASE_ADDR_C,
-         addrBits                => 24,
-         connectivity            => x"FFFF")
-   );
-
+   constant APP_AXI_BASE_ADDR_C         : slv(31 downto 0) := X"80000000";--0
 
    type AppConfigType is record
       AppVersion           : slv(31 downto 0);

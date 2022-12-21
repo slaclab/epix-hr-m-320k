@@ -27,6 +27,8 @@ use surf.SsiCmdMasterPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
+use work.AppPkg.all;
+
 entity Application is
    generic (
       TPD_G        : time := 1 ns;
@@ -37,8 +39,8 @@ entity Application is
       ----------------------
       -- Top Level Ports --
       ----------------------
-      axilClk            : in sl;
-      axilRst            : in sl;
+      axiClk            : in sl;
+      axiRst            : in sl;
 
       -- AXI-Lite Register Interface (sysClk domain)
       -- Register Address Range = [0x80000000:0xFFFFFFFF]
@@ -70,8 +72,8 @@ entity Application is
       asicDataM          : in Slv24Array(3 downto 0);
 
       -- Fast ADC Ports
-      adcMonDataP        : in slv(11 downto 0);
-      adcMonDataM        : in slv(11 downto 0);
+      adcMonDoutP        : in slv(11 downto 0);
+      adcMonDoutM        : in slv(11 downto 0);
       adcDoClkP          : in slv(1 downto 0);
       adcDoClkM          : in slv(1 downto 0);
       adcFrameClkP       : in slv(1 downto 0);
@@ -82,10 +84,10 @@ entity Application is
       asicGlblRst        : out sl;
       asicSync           : out sl;
       asicAcq            : out sl;
-      asicRoClkP         : out slv(3 downto 0);
-      asicRoClkN         : out slv(3 downto 0);
       asicSro            : out sl;
       asicClkEn          : out sl;
+      fpgaRdClkP         : out sl;
+      fpgaRdClkM         : out sl;
 
       -- SACI Ports
       saciCmd            : out sl;
@@ -174,30 +176,58 @@ architecture rtl of Application is
    constant APP_CLK_INDEX_C    : natural := 0;
    constant NUM_AXIL_MASTERS_C : natural := 1;
 
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, APP_AXIL_BASE_ADDR_C, 28, 24);
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, APP_AXI_BASE_ADDR_C, 28, 24);
 
-
+   -- AXI-Lite Signals
+   signal mAxiWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
+   signal mAxiWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
+   signal mAxiReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
+   signal mAxiReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
 begin
    
-   -- U_XBAR : entity surf.AxiLiteCrossbar
-   --    generic map (
-   --       TPD_G              => TPD_G,
-   --       NUM_SLAVE_SLOTS_G  => 1,
-   --       NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
-   --       MASTERS_CONFIG_G   => XBAR_CONFIG_C
-   --    )
-   --    port map (
-   --       axiClk              => axilClk,
-   --       axiClkRst           => axilRst,
-   --       sAxiWriteMasters(0) => axilWriteMaster,
-   --       sAxiWriteSlaves(0)  => axilWriteSlave,
-   --       sAxiReadMasters(0)  => axilReadMaster,
-   --       sAxiReadSlaves(0)   => axilReadSlave,
-   --       mAxiWriteMasters    => axilWriteMasters,
-   --       mAxiWriteSlaves     => axilWriteSlaves,
-   --       mAxiReadMasters     => axilReadMasters,
-   --       mAxiReadSlaves      => axilReadSlaves
-   --    );
+   U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
+      generic map (
+         NUM_SLAVE_SLOTS_G  => NUM_AXIL_MASTERS_C,
+         NUM_MASTER_SLOTS_G => NUM_AXIL_SLAVES_C, 
+         MASTERS_CONFIG_G   => XBAR_CONFIG_C
+      )
+      port map (                
+         sAxiWriteMasters(0)    => axilWriteMaster,    -- to entity
+         sAxiWriteSlaves(0)     => axilWriteSlave,     -- to entity
+         sAxiReadMasters(0)     => axilReadMaster,     -- to entity
+         sAxiReadSlaves(0)      => axilReadSlave,      -- to entity
+         mAxiWriteMasters    => mAxiWriteMasters,   -- to masters
+         mAxiWriteSlaves     => mAxiWriteSlaves,    -- to masters
+         mAxiReadMasters     => mAxiReadMasters,    -- to masters
+         mAxiReadSlaves      => mAxiReadSlaves,     -- to masters
+         axiClk              => axiClk,
+         axiClkRst           => axiRst
+      );
+
+   U_AppClk : entity work.AppClk
+      generic map(
+         TPD_G            => TPD_G,
+         SIMULATION_G     => SIMULATION_G
+      )
+      port map (
+         -- AXI-Lite Register Interface (axiClk domain)
+         axiReadMasters  => mAxiReadMasters(PLLREGS_AXI_INDEX_C),
+         axiReadSlaves   => mAxiReadSlaves(PLLREGS_AXI_INDEX_C),
+         axiWriteMasters => mAxiWriteMasters(PLLREGS_AXI_INDEX_C),
+         axiWriteSlaves  => mAxiWriteSlaves(PLLREGS_AXI_INDEX_C),
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+    
+         -- Application specific IO
+         clkInP         => gtRefClkP,
+         clkInM         => gtRefClkM,
+         -- Clock outputs
+         -- Off device
+         fpgaRdClkP     => fpgaRdClkP,
+         fpgaRdClkM     => fpgaRdClkM
+         -- pgaToPllClkP   => ,
+         -- pgaToPllClkM   => 
+      );
 
    end rtl; -- rtl
