@@ -12,10 +12,8 @@
 # Common Clocks
 ###############
 
-create_clock -name pllToFpgaClkP -period 3.125 [get_ports { pllToFpgaClkP }]
 create_clock -name gtPllClkP0    -period 3.125 [get_ports { gtPllClkP[0] }]
 create_clock -name gtPllClkP1    -period 3.125 [get_ports { gtPllClkP[1] }]
-create_clock -name gtPllClkP2    -period 3.125 [get_ports { gtPllClkP[2] }]
 create_clock -name gtRefClkP0    -period 6.400 [get_ports { gtRefClkP[0] }]
 create_clock -name gtRefClkP1    -period 6.400 [get_ports { gtRefClkP[1] }]
 create_clock -name gtLclsClkP    -period 2.691 [get_ports { gtLclsClkP }]
@@ -23,7 +21,6 @@ create_clock -name adcMonClkP0   -period 2.857 [get_ports { adcMonDataClkP[0] }]
 create_clock -name adcMonClkP1   -period 2.857 [get_ports { adcMonDataClkP[1] }]
 
 set_clock_groups -asynchronous \
-   -group [get_clocks -include_generated_clocks {pllToFpgaClkP}] \
    -group [get_clocks -include_generated_clocks {gtLclsClkP}] \
    -group [get_clocks -include_generated_clocks {gtRefClkP0}] \
    -group [get_clocks -include_generated_clocks {gtRefClkP1}] \

@@ -20,6 +20,7 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
+use surf.SsiCmdMasterPkg.all;
 
 library epix_leap_core;
 use epix_leap_core.CorePkg.all;
@@ -204,6 +205,8 @@ architecture topLevel of ePix320kM is
    signal axilWriteMaster : AxiLiteWriteMasterType;
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
 
+   signal ssiCmd          : SsiCmdMasterType;
+
 begin
 
    U_App : entity work.Application
@@ -272,6 +275,9 @@ begin
          gtRefClkP => gtRefClkP(1),
          gtRefClkM => gtRefClkM(1),
 
+         fpgaClkInP => fpgaClkInP,
+         fpgaClkInM => fpgaClkInM,
+
          -- Serial number
          serialNumber => serialNumber,
 
@@ -314,12 +320,16 @@ begin
          pcbAdcDin    => pcbAdcDin,
          pcbAdcSyncL  => pcbAdcSyncL,
          pcbAdcRefClk => pcbAdcRefClk,
+         pcbLocalSupplyGood => pcbLocalSupplyGood,
 
          -- Transceiver high speed lanes
          fpgaOutObTransInP => fpgaOutObTransInP(11 downto 8),
          fpgaOutObTransInM => fpgaOutObTransInM(11 downto 8),
          fpgaInObTransOutP => fpgaInObTransOutP(11 downto 8),
-         fpgaInObTransOutM => fpgaInObTransOutM(11 downto 8)
+         fpgaInObTransOutM => fpgaInObTransOutM(11 downto 8),
+
+         -- ssi commands
+         ssiCmd            => ssiCmd
       );
 
    U_Core : entity epix_leap_core.Core
@@ -383,7 +393,10 @@ begin
 
          -- XADC Ports
          vPIn => vPIn,
-         vNIn => vNIn
+         vNIn => vNIn,
+
+         -- ssi commands
+         ssiCmd            => ssiCmd
       );
 
 end topLevel;

@@ -12,17 +12,17 @@ export PRJ_PART = XCKU15P-FFVA1156-2-E
 export TOP_DIR = $(abspath $(PWD)/../..)
 
 # Using XVC Debug bridge
-export USE_XVC_DEBUG = 1
+export USE_XVC_DEBUG = 0
 
 # Setup for releases.yaml
-export RELEASE = EPixHR10k2M
+export RELEASE = ePix320KM
 
 # -----------------------------------
 # things needed for epix-hr-core
 export COMM_TYPE = pgp4
 export INCLUDE_PGP4_10G = 1 
 # COMMON_NAME is defined by application
-export COMMON_NAME = ePixHrMv2
+export COMMON_NAME = ePix320KM
 
 # Define if this is FSBL PROM address
 export PROM_FSBL = 1

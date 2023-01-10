@@ -332,7 +332,7 @@ begin
     U_Clk320 : entity surf.ClkRst
        generic map (
             CLK_PERIOD_G      => 3.125 ns,  -- 320 MHz
-            RST_START_DELAY_G => 0 ns,
+            RST_START_DELAY_G => 10 ns,
             RST_HOLD_TIME_G   => 1000 ns)
        port map (
           clkP => Clk320P,

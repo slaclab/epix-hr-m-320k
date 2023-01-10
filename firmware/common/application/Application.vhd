@@ -173,23 +173,100 @@ end entity;
 
 
 architecture rtl of Application is
-   constant APP_CLK_INDEX_C    : natural := 0;
-   constant NUM_AXIL_MASTERS_C : natural := 1;
 
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, APP_AXI_BASE_ADDR_C, 28, 24);
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, x"8000_0000", 28, 24);
 
    -- AXI-Lite Signals
-   signal mAxiWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
-   signal mAxiWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
-   signal mAxiReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
-   signal mAxiReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
+   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
+   signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
+   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+
+   signal fabRefClk        : sl := '0';
+   signal fabClock         : sl := '0';
+   signal asicRefClk       : sl := '0';
+   signal sysRst           : sl := '0';
+   signal adcClk           : sl := '0';
+   signal asicRegCtrl      : sl := '0';
+   signal refRst           : sl := '0';
+   signal adcRst           : sl := '0';
+   signal appRst           : sl := '0';
+   signal fpgaPllClk       : sl := '0';
+   signal pllRst           : sl := '0';
+   signal fabReset         : sl := '0';   
 
 begin
+   U_IBUFDS_GT : IBUFDS_GTE4
+      generic map (
+         REFCLK_EN_TX_PATH  => '0',
+         REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
+         REFCLK_ICNTL_RX    => "00"
+   )
+      port map (
+         I     => gtRefClkP,
+         IB    => gtRefClkM,
+         CEB   => '0',
+         ODIV2 => open,
+         O     => fabRefClk
+   );
+
+   U_BUFG_GT : BUFG_GT
+      port map (
+         I       => fabRefClk,
+         CE      => '1',
+         CEMASK  => '1',
+         CLR     => '0',
+         CLRMASK => '1',
+         DIV     => "000",              -- Divide by 1
+         O       => fabClock
+   );
+
+   U_fpgaToPllClk : entity surf.ClkOutBufDiff
+      generic map(
+         TPD_G        => TPD_G,
+         XIL_DEVICE_G => XIL_DEVICE_C
+      )
+      port map (
+         clkIn   => fpgaPllClk,
+         clkOutP => fpgaClkOutP,
+         clkOutN => fpgaClkOutM
+      );
+
+   U_fpgaToAsicRdClk : entity surf.ClkOutBufDiff
+      generic map(
+         TPD_G        => TPD_G,
+         XIL_DEVICE_G => XIL_DEVICE_C
+      )
+      port map (
+         clkIn   => asicRefClk,
+         clkOutP => fpgaRdClkP,
+         clkOutN => fpgaRdClkM
+      );
+   
+   U_fpgaToAdcClk : entity surf.ClkOutBufDiff
+      generic map(
+         TPD_G        => TPD_G,
+         XIL_DEVICE_G => XIL_DEVICE_C
+      )
+      port map (
+         clkIn   => adcClk,
+         clkOutP => adcMonClkP,
+         clkOutN => adcMonClkM
+      );
+   
+   U_PwrUpRst : entity surf.PwrUpRst
+      generic map(
+         TPD_G         => TPD_G,
+         SIM_SPEEDUP_G => SIMULATION_G)
+      port map(
+         clk    => fabClock,
+         rstOut => fabReset);
+
    
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
-         NUM_SLAVE_SLOTS_G  => NUM_AXIL_MASTERS_C,
-         NUM_MASTER_SLOTS_G => NUM_AXIL_SLAVES_C, 
+         NUM_SLAVE_SLOTS_G  => NUM_AXIL_SLAVES_C,
+         NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
          MASTERS_CONFIG_G   => XBAR_CONFIG_C
       )
       port map (                
@@ -197,37 +274,81 @@ begin
          sAxiWriteSlaves(0)     => axilWriteSlave,     -- to entity
          sAxiReadMasters(0)     => axilReadMaster,     -- to entity
          sAxiReadSlaves(0)      => axilReadSlave,      -- to entity
-         mAxiWriteMasters    => mAxiWriteMasters,   -- to masters
-         mAxiWriteSlaves     => mAxiWriteSlaves,    -- to masters
-         mAxiReadMasters     => mAxiReadMasters,    -- to masters
-         mAxiReadSlaves      => mAxiReadSlaves,     -- to masters
-         axiClk              => axiClk,
-         axiClkRst           => axiRst
+         mAxiWriteMasters       => axilWriteMasters,   -- to masters
+         mAxiWriteSlaves        => axilWriteSlaves,    -- to masters
+         mAxiReadMasters        => axilReadMasters,    -- to masters
+         mAxiReadSlaves         => axilReadSlaves,     -- to masters
+         axiClk                 => axiClk,
+         axiClkRst              => axiRst
       );
 
-   U_AppClk : entity work.AppClk
+   ------------------------------------------------
+   --    Generate clocks from 156.25 MHz PGP     --
+   ------------------------------------------------
+   -- clkIn     : 156.25 MHz PGP
+   -- base clk is 1000 MHz
+   -- clkOut(0) : 160.00 MHz ASIC ref clock
+   -- clkOut(1) : 50.00  MHz adc clock
+   -- clkOut(2) : 100.00 MHz app clock
+   -- clkOut(3) : 40.00 MHz  pll Clk
+   ------------------------------------------------
+   U_CoreClockGen : entity surf.ClockManagerUltraScale
       generic map(
-         TPD_G            => TPD_G,
-         SIMULATION_G     => SIMULATION_G
-      )
-      port map (
-         -- AXI-Lite Register Interface (axiClk domain)
-         axiReadMasters  => mAxiReadMasters(PLLREGS_AXI_INDEX_C),
-         axiReadSlaves   => mAxiReadSlaves(PLLREGS_AXI_INDEX_C),
-         axiWriteMasters => mAxiWriteMasters(PLLREGS_AXI_INDEX_C),
-         axiWriteSlaves  => mAxiWriteSlaves(PLLREGS_AXI_INDEX_C),
-         axiClk          => axiClk,
-         axiRst          => axiRst,
-    
-         -- Application specific IO
-         clkInP         => gtRefClkP,
-         clkInM         => gtRefClkM,
-         -- Clock outputs
-         -- Off device
-         fpgaRdClkP     => fpgaRdClkP,
-         fpgaRdClkM     => fpgaRdClkM
-         -- pgaToPllClkP   => ,
-         -- pgaToPllClkM   => 
-      );
+         TPD_G                  => 1 ns,
+         TYPE_G                 => "MMCM",  -- or "PLL"
+         INPUT_BUFG_G           => true,
+         FB_BUFG_G              => true,
+         RST_IN_POLARITY_G      => '1',     -- '0' for active low
+         NUM_CLOCKS_G           => 4,
+         SIMULATION_G           => SIMULATION_G,
+         -- MMCM attributes
+         BANDWIDTH_G            => "OPTIMIZED",
+         CLKIN_PERIOD_G         => 6.4,      -- 156.25 MHz
+         DIVCLK_DIVIDE_G        => 5,        -- 31.25 MHz = 156.25Mhz / 5
+         CLKFBOUT_MULT_F_G      => 32.0,     -- 1.0 Ghz = 31.25 MHz * 32
+         CLKFBOUT_MULT_G        => 5,
+         CLKOUT0_DIVIDE_F_G     => 6.25,     -- 160 MHz = 1 GHz / 6.25
+         CLKOUT0_DIVIDE_G       => 1,
+         CLKOUT1_DIVIDE_G       => 20,       -- 50 Mhz = 1 GHz / 20
+         CLKOUT2_DIVIDE_G       => 10,       -- 100 Mhz = 1 GHz / 10
+         CLKOUT3_DIVIDE_G       => 25,       -- 40 Mhz = 1 GHz / 25
+         CLKOUT0_PHASE_G        => 0.0,
+         CLKOUT1_PHASE_G        => 0.0,
+         CLKOUT2_PHASE_G        => 0.0,
+         CLKOUT3_PHASE_G        => 0.0,
+         CLKOUT0_DUTY_CYCLE_G   => 0.5,
+         CLKOUT1_DUTY_CYCLE_G   => 0.5,
+         CLKOUT2_DUTY_CYCLE_G   => 0.5,
+         CLKOUT3_DUTY_CYCLE_G   => 0.5,
+         CLKOUT0_RST_HOLD_G     => 3,
+         CLKOUT1_RST_HOLD_G     => 3,
+         CLKOUT2_RST_HOLD_G     => 3,
+         CLKOUT3_RST_HOLD_G     => 3,
+         CLKOUT0_RST_POLARITY_G => '1',
+         CLKOUT1_RST_POLARITY_G => '1',
+         CLKOUT2_RST_POLARITY_G => '1',
+         CLKOUT3_RST_POLARITY_G => '1'
+   )
+      port map(
+         clkIn           => fabClock,
+         rstIn           => fabReset,
+         clkOut(0)       => asicRefClk,
+         clkOut(1)       => adcClk,
+         clkOut(2)       => asicRegCtrl,
+         clkOut(3)       => fpgaPllClk,
+         rstOut(0)       => refRst,
+         rstOut(1)       => adcRst,
+         rstOut(2)       => appRst,
+         rstOut(3)       => pllRst,
+         locked          => open,
+         -- AXI-Lite Interface
+         axilClk         => axiClk,
+         axilRst         => axiRst,
+         axilReadMaster  => axilReadMasters(PLLREGS_AXI_INDEX_C),
+         axilReadSlave   => axilReadSlaves(PLLREGS_AXI_INDEX_C),
+         axilWriteMaster => axilWriteMasters(PLLREGS_AXI_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(PLLREGS_AXI_INDEX_C)
+   );
+
 
    end rtl; -- rtl
