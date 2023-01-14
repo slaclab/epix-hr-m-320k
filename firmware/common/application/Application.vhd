@@ -20,8 +20,6 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
-use surf.AxiPkg.all;
-use surf.I2cPkg.all;
 use surf.SsiCmdMasterPkg.all;
 
 library unisim;
@@ -68,8 +66,8 @@ entity Application is
       fpgaInObTransOutM  : in  slv(11 downto 8);
 
       -- ASIC Data Outs
-      asicDataP          : in Slv24Array(3 downto 0);
-      asicDataM          : in Slv24Array(3 downto 0);
+      asicDataP          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
+      asicDataM          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
 
       -- Fast ADC Ports
       adcMonDoutP        : in slv(11 downto 0);
@@ -174,26 +172,46 @@ end entity;
 
 architecture rtl of Application is
 
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, x"8000_0000", 28, 24);
+   constant NUM_AXIL_MASTERS_C         : natural := 4;
+   constant NUM_AXIL_SLAVES_C          : natural := 1;
+
+   constant PLLREGS_AXI_INDEX_C        : natural := 0;
+   constant ASIC_INDEX_C               : natural := 1;
+   constant POWER_CONTROL_INDEX_C      : natural := 3;
+   constant DESER_INDEX_C              : natural := 2;
+
+   constant AXI_BASE_ADDR_C            : slv(31 downto 0) := X"80000000"; --0
+
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXI_BASE_ADDR_C, 28, 24);
 
    -- AXI-Lite Signals
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
-   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal fabRefClk        : sl := '0';
-   signal fabClock         : sl := '0';
-   signal asicRefClk       : sl := '0';
-   signal sysRst           : sl := '0';
-   signal adcClk           : sl := '0';
-   signal asicRegCtrl      : sl := '0';
-   signal refRst           : sl := '0';
-   signal adcRst           : sl := '0';
-   signal appRst           : sl := '0';
-   signal fpgaPllClk       : sl := '0';
-   signal pllRst           : sl := '0';
-   signal fabReset         : sl := '0';   
+   signal fabRefClk        : sl;
+   signal fabClock         : sl;
+   signal refClk           : sl;
+   signal sysRst           : sl;
+   signal adcClk           : sl;
+   signal appClk           : sl;
+   signal refRst           : sl;
+   signal adcRst           : sl;
+   signal appRst           : sl;
+   signal fpgaPllClk       : sl;
+   signal pllRst           : sl;
+   signal fabReset         : sl;
+   signal asicRdClk        : slv(NUMBER_OF_ASICS_C - 1 downto 0);
+
+   signal sspClk           : sl;
+   signal sspRst           : sl;
+   signal sspLinkUp        : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal sspValid         : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal sspData          : Slv16Array((NUMBER_OF_ASICS_C * 24)-1 downto 0);
+   signal sspSof           : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal sspEof           : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal sspEofe          : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
 
 begin
    U_IBUFDS_GT : IBUFDS_GTE4
@@ -201,14 +219,14 @@ begin
          REFCLK_EN_TX_PATH  => '0',
          REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
          REFCLK_ICNTL_RX    => "00"
-   )
+      )
       port map (
          I     => gtRefClkP,
          IB    => gtRefClkM,
          CEB   => '0',
          ODIV2 => open,
          O     => fabRefClk
-   );
+      );
 
    U_BUFG_GT : BUFG_GT
       port map (
@@ -219,30 +237,8 @@ begin
          CLRMASK => '1',
          DIV     => "000",              -- Divide by 1
          O       => fabClock
-   );
-
-   U_fpgaToPllClk : entity surf.ClkOutBufDiff
-      generic map(
-         TPD_G        => TPD_G,
-         XIL_DEVICE_G => XIL_DEVICE_C
-      )
-      port map (
-         clkIn   => fpgaPllClk,
-         clkOutP => fpgaClkOutP,
-         clkOutN => fpgaClkOutM
       );
-
-   U_fpgaToAsicRdClk : entity surf.ClkOutBufDiff
-      generic map(
-         TPD_G        => TPD_G,
-         XIL_DEVICE_G => XIL_DEVICE_C
-      )
-      port map (
-         clkIn   => asicRefClk,
-         clkOutP => fpgaRdClkP,
-         clkOutN => fpgaRdClkM
-      );
-   
+  
    U_fpgaToAdcClk : entity surf.ClkOutBufDiff
       generic map(
          TPD_G        => TPD_G,
@@ -260,8 +256,8 @@ begin
          SIM_SPEEDUP_G => SIMULATION_G)
       port map(
          clk    => fabClock,
-         rstOut => fabReset);
-
+         rstOut => fabReset
+      );
    
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
@@ -332,9 +328,9 @@ begin
       port map(
          clkIn           => fabClock,
          rstIn           => fabReset,
-         clkOut(0)       => asicRefClk,
+         clkOut(0)       => refClk,
          clkOut(1)       => adcClk,
-         clkOut(2)       => asicRegCtrl,
+         clkOut(2)       => appClk,
          clkOut(3)       => fpgaPllClk,
          rstOut(0)       => refRst,
          rstOut(1)       => adcRst,
@@ -349,6 +345,117 @@ begin
          axilWriteMaster => axilWriteMasters(PLLREGS_AXI_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(PLLREGS_AXI_INDEX_C)
    );
+
+   U_AsicTop : entity work.AsicTop
+      generic map (
+         TPD_G            => TPD_G,
+         SIMULATION_G     => SIMULATION_G,
+         BUILD_INFO_G     => BUILD_INFO_G,
+         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr
+      )
+      port map (
+         -- AXI-Lite Interface (axilClk domain)
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+         axilReadMaster  => axilReadMasters(ASIC_INDEX_C),
+         axilReadSlave   => axilReadSlaves(ASIC_INDEX_C),
+         axilWriteMaster => axilWriteMasters(ASIC_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(ASIC_INDEX_C),
+
+         -- Streaming Interfaces (axilClk domain)
+         asicDataMasters => asicDataMasters,
+         asicDataSlaves  => asicDataSlaves,
+         remoteDmaPause  => remoteDmaPause,
+         
+         -- ASIC control ports
+         asicR0          => asicR0,
+         asicGlblRst     => asicGlblRst,
+         asicSync        => asicSync,
+         asicAcq         => asicAcq,
+         asicSro         => asicSro,
+         asicClkEn       => asicClkEn,
+
+         -- Clocking ports
+         refClk          => refClk,
+         refRst          => refRst,
+
+         -- appClk          => appClk,
+         -- appRst          => appRst,
+
+         -- SSI commands
+         ssiCmd         => ssiCmd,
+
+         -- External trigger inputs
+         daqToFpga      => daqToFpga,
+         ttlToFpga      => ttlToFpga,
+
+         -- ref ports
+         refClk          => refClk,
+         refRst          => refRst
+      );
+
+   U_PwrCtrl : entity work.PowerCtrl
+      generic map (
+         TPD_G             => TPD_G,
+         EN_DEVICE_DNA_G   => EN_DEVICE_DNA_G
+      )
+      port map (
+         axiClk             => axiClk,
+         axiRst             => axiRst,
+         axilReadMaster     => axilReadMasters(POWER_CONTROL_INDEX_C),
+         axilReadSlave      => axilReadSlaves(POWER_CONTROL_INDEX_C),
+         axilWriteMaster    => axilWriteMasters(POWER_CONTROL_INDEX_C),
+         axilWriteSlave     => axilWriteSlaves(POWER_CONTROL_INDEX_C),
+         syncDcdc           => syncDcdc,
+         ldoShtdnL          => ldoShtdnL,
+         dcdcSync           => dcdcSync,
+         pcbSync            => pcbSync,
+         pcbLocalSupplyGood => pcbLocalSupplyGood
+      );
+   
+   U_Deser : entity work.AppDeser
+      generic map (
+         TPD_G             => TPD_G,
+         SIMULATION_G     => SIMULATION_G,
+         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
+      )
+      port map (
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axiClk,
+         axilRst         => axiRst,
+         axilReadMaster  => axilReadMasters(DESER_INDEX_C),
+         axilReadSlave   => axilReadSlaves(DESER_INDEX_C),
+         axilWriteMaster => axilWriteMasters(DESER_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(DESER_INDEX_C),
+         -- ASIC Ports
+         asicDataP       => asicDataP,
+         asicDataN       => asicDataM,
+         -- ref ports
+         refClk          => refClk,
+         refRst          => refRst,
+         -- Streaming Interfaces (sspClk domain)
+         sspClk          => sspClk,
+         sspRst          => sspRst,
+         sspLinkUp       => sspLinkUp,
+         sspValid        => sspValid,
+         sspData         => sspData,
+         sspSof          => sspSof,
+         sspEof          => sspEof,
+         sspEofe         => sspEofe,
+         -- ASIC RdOut Clks
+         asicRdClk      => asicRdClk
+      );
+   
+   U_fpgaToAsicClk : entity surf.ClkOutBufDiff
+      generic map(
+         TPD_G        => TPD_G,
+         XIL_DEVICE_G => XIL_DEVICE_C
+      )
+      port map (
+         clkIn   => asicRdClk(0),
+         clkOutP => fpgaClkOutP,
+         clkOutN => fpgaClkOutM
+      );
 
 
    end rtl; -- rtl

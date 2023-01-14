@@ -16,6 +16,8 @@ import surf.devices.micron as micron
 # from  surf.xilinx import ClockManager as MMCM7Registers
 
 from .ClockManager import MMCM7Registers
+from .RegisterControl import RegisterControl
+from .PowerControl  import PowerControl
 
 
 class App(pr.Device):
@@ -26,6 +28,24 @@ class App(pr.Device):
             MMCM7Registers(
                 name='MMCMRegisters',
                 offset=0x0000_0000,
+                expand=False,
+                enabled=False
+            )
+        )
+
+        self.add(
+            RegisterControl(
+                name='Register Control',
+                offset=0x0100_0000,
+                expand=False,
+                enabled=False
+            )
+        )
+
+        self.add(
+            PowerControl(
+                name='Power Control',
+                offset=0x0200_0000,
                 expand=False,
                 enabled=False
             )
