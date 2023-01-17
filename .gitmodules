@@ -7,3 +7,9 @@
 [submodule "firmware/submodules/epix-hr-core"]
 	path = firmware/submodules/epix-hr-core
 	url = git@github.com:slaclab/epix-hr-core.git
+[submodule "firmware/submodules/lcls-timing-core"]
+	path = firmware/submodules/lcls-timing-core
+	url = git@github.com:slaclab/lcls-timing-core.git
+[submodule "firmware/submodules/l2si-core"]
+	path = firmware/submodules/l2si-core
+	url = git@github.com:slaclab/l2si-core.git

@@ -190,8 +190,6 @@ architecture rtl of Application is
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal fabRefClk        : sl;
-   signal fabClock         : sl;
    signal refClk           : sl;
    signal sysRst           : sl;
    signal adcClk           : sl;
@@ -201,9 +199,13 @@ architecture rtl of Application is
    signal appRst           : sl;
    signal fpgaPllClk       : sl;
    signal pllRst           : sl;
-   signal fabReset         : sl;
    signal asicRdClk        : slv(NUMBER_OF_ASICS_C - 1 downto 0);
 
+
+   signal clk156      : sl;
+   signal rst156      : sl;
+   signal clk250      : sl;
+   signal rst250      : sl;
    signal sspClk           : sl;
    signal sspRst           : sl;
    signal sspLinkUp        : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
@@ -214,51 +216,6 @@ architecture rtl of Application is
    signal sspEofe          : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
 
 begin
-   U_IBUFDS_GT : IBUFDS_GTE4
-      generic map (
-         REFCLK_EN_TX_PATH  => '0',
-         REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
-         REFCLK_ICNTL_RX    => "00"
-      )
-      port map (
-         I     => gtRefClkP,
-         IB    => gtRefClkM,
-         CEB   => '0',
-         ODIV2 => open,
-         O     => fabRefClk
-      );
-
-   U_BUFG_GT : BUFG_GT
-      port map (
-         I       => fabRefClk,
-         CE      => '1',
-         CEMASK  => '1',
-         CLR     => '0',
-         CLRMASK => '1',
-         DIV     => "000",              -- Divide by 1
-         O       => fabClock
-      );
-  
-   U_fpgaToAdcClk : entity surf.ClkOutBufDiff
-      generic map(
-         TPD_G        => TPD_G,
-         XIL_DEVICE_G => XIL_DEVICE_C
-      )
-      port map (
-         clkIn   => adcClk,
-         clkOutP => adcMonClkP,
-         clkOutN => adcMonClkM
-      );
-   
-   U_PwrUpRst : entity surf.PwrUpRst
-      generic map(
-         TPD_G         => TPD_G,
-         SIM_SPEEDUP_G => SIMULATION_G)
-      port map(
-         clk    => fabClock,
-         rstOut => fabReset
-      );
-   
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
          NUM_SLAVE_SLOTS_G  => NUM_AXIL_SLAVES_C,
@@ -278,73 +235,33 @@ begin
          axiClkRst              => axiRst
       );
 
-   ------------------------------------------------
-   --    Generate clocks from 156.25 MHz PGP     --
-   ------------------------------------------------
-   -- clkIn     : 156.25 MHz PGP
-   -- base clk is 1000 MHz
-   -- clkOut(0) : 160.00 MHz ASIC ref clock
-   -- clkOut(1) : 50.00  MHz adc clock
-   -- clkOut(2) : 100.00 MHz app clock
-   -- clkOut(3) : 40.00 MHz  pll Clk
-   ------------------------------------------------
-   U_CoreClockGen : entity surf.ClockManagerUltraScale
-      generic map(
-         TPD_G                  => 1 ns,
-         TYPE_G                 => "MMCM",  -- or "PLL"
-         INPUT_BUFG_G           => true,
-         FB_BUFG_G              => true,
-         RST_IN_POLARITY_G      => '1',     -- '0' for active low
-         NUM_CLOCKS_G           => 4,
-         SIMULATION_G           => SIMULATION_G,
-         -- MMCM attributes
-         BANDWIDTH_G            => "OPTIMIZED",
-         CLKIN_PERIOD_G         => 6.4,      -- 156.25 MHz
-         DIVCLK_DIVIDE_G        => 5,        -- 31.25 MHz = 156.25Mhz / 5
-         CLKFBOUT_MULT_F_G      => 32.0,     -- 1.0 Ghz = 31.25 MHz * 32
-         CLKFBOUT_MULT_G        => 5,
-         CLKOUT0_DIVIDE_F_G     => 6.25,     -- 160 MHz = 1 GHz / 6.25
-         CLKOUT0_DIVIDE_G       => 1,
-         CLKOUT1_DIVIDE_G       => 20,       -- 50 Mhz = 1 GHz / 20
-         CLKOUT2_DIVIDE_G       => 10,       -- 100 Mhz = 1 GHz / 10
-         CLKOUT3_DIVIDE_G       => 25,       -- 40 Mhz = 1 GHz / 25
-         CLKOUT0_PHASE_G        => 0.0,
-         CLKOUT1_PHASE_G        => 0.0,
-         CLKOUT2_PHASE_G        => 0.0,
-         CLKOUT3_PHASE_G        => 0.0,
-         CLKOUT0_DUTY_CYCLE_G   => 0.5,
-         CLKOUT1_DUTY_CYCLE_G   => 0.5,
-         CLKOUT2_DUTY_CYCLE_G   => 0.5,
-         CLKOUT3_DUTY_CYCLE_G   => 0.5,
-         CLKOUT0_RST_HOLD_G     => 3,
-         CLKOUT1_RST_HOLD_G     => 3,
-         CLKOUT2_RST_HOLD_G     => 3,
-         CLKOUT3_RST_HOLD_G     => 3,
-         CLKOUT0_RST_POLARITY_G => '1',
-         CLKOUT1_RST_POLARITY_G => '1',
-         CLKOUT2_RST_POLARITY_G => '1',
-         CLKOUT3_RST_POLARITY_G => '1'
-   )
-      port map(
-         clkIn           => fabClock,
-         rstIn           => fabReset,
-         clkOut(0)       => refClk,
-         clkOut(1)       => adcClk,
-         clkOut(2)       => appClk,
-         clkOut(3)       => fpgaPllClk,
-         rstOut(0)       => refRst,
-         rstOut(1)       => adcRst,
-         rstOut(2)       => appRst,
-         rstOut(3)       => pllRst,
-         locked          => open,
-         -- AXI-Lite Interface
-         axilClk         => axiClk,
-         axilRst         => axiRst,
-         axilReadMaster  => axilReadMasters(PLLREGS_AXI_INDEX_C),
-         axilReadSlave   => axilReadSlaves(PLLREGS_AXI_INDEX_C),
-         axilWriteMaster => axilWriteMasters(PLLREGS_AXI_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(PLLREGS_AXI_INDEX_C)
-   );
+   U_ClkGen : entity work.appClk
+      generic map (
+         TPD_G          => TPD_G,
+         SIMULATION_G   => SIMULATION_G
+         )
+      port map (
+         -- 156.25 MHz Clock input
+         gtRefClkP     =>  gtRefClkP,
+         gtRefClkM     =>  gtRefClkM,
+         -- 250 Mhz Pll Output
+         gtPllClkP     => gtPllClkP,
+         gtPllClkM     => gtPllClkM,
+         -- 40 Mhz clock output to pll(2)
+         fpgaClkOutP   => fpgaClkOutP, 
+         fpgaClkOutM   => fpgaClkOutM, 
+         adcClk        => adcClk,
+
+         jitclnLolL    => jitclnLolL,
+         clk156        => clk156,
+         rst156        => rst156,
+         clk250        => clk250,
+         rst250        => rst250,
+         sspClk        => sspClk,
+         sspRst        => sspRst
+      
+      );
+      
 
    U_AsicTop : entity work.AsicTop
       generic map (
