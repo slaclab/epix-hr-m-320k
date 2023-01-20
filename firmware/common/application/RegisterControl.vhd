@@ -37,8 +37,7 @@ entity RegisterControl is
    port (
       -- Global Signals
       axiClk         : in  sl;
-      axiRst         : out sl;
-      sysRst         : in  sl;
+      axiRst         : in sl;
 
       -- AXI-Lite Register Interface (axiClk domain)
       axiReadMaster  : in  AxiLiteReadMasterType;
@@ -57,7 +56,8 @@ entity RegisterControl is
       asicSync       : out sl;
       asicAcq        : out sl;
       asicClkEn      : out sl;
-      errInhibit     : out sl
+      errInhibit     : out sl;
+      rdClkSel       : out sl
    );
 end RegisterControl;
 
@@ -112,6 +112,7 @@ architecture rtl of RegisterControl is
       asicAcqTimeCnt    : slv(31 downto 0);
       resetCounters     : sl;
       usrRst            : sl;
+      clkSource         : sl;
       axiReadSlave      : AxiLiteReadSlaveType;
       axiWriteSlave     : AxiLiteWriteSlaveType;
    end record AsicAcqType;
@@ -164,6 +165,7 @@ architecture rtl of RegisterControl is
       asicAcqTimeCnt    => (others => '0'),
       resetCounters     => '0',
       usrRst            => '0',
+      clkSource         => '0',
       errInhibitCnt     => (others => '0'),
       axiReadSlave      => AXI_LITE_READ_SLAVE_INIT_C,
       axiWriteSlave     => AXI_LITE_WRITE_SLAVE_INIT_C
@@ -178,8 +180,8 @@ architecture rtl of RegisterControl is
    
 begin
 
-   axiReset <= sysRst or r.usrRst;
-   axiRst   <= axiReset;
+   axiReset <= axiRst or r.usrRst;
+   -- axiRst   <= axiReset;
 
    -------------------------------
    -- Configuration Register
@@ -237,6 +239,7 @@ begin
       axiSlaveRegister(regCon,  x"01AC",  0, v.SR0Delay2);
       axiSlaveRegister(regCon,  x"01B0",  0, v.SR0Width2);
       axiSlaveRegister(regCon,  x"0208",  0, v.resetCounters);
+      axiSlaveRegister(regcon,  x"020C",  0, v.clkSource);
 
       
       -- Special reset for write to address 00
@@ -410,6 +413,7 @@ begin
       asicSync       <= r.Sync;
       asicAcq        <= r.Acq;
       asicClkEn      <= r.clkEn;
+      rdClkSel       <= r.clkSource;
       
    end process comb;
 

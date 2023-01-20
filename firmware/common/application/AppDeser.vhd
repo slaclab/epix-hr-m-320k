@@ -32,21 +32,18 @@ entity AppDeser is
       asicDataP       : in    Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       asicDataM       : in    Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
 
-      -- ref ports
-      refClk         : in sl;
-      refRst         : in sl;
-
       -- SSP Interfaces (sspClk domain)
+      clk250          : in sl;
       sspClk          : in  sl;
       sspRst          : in  sl;
+
+      -- Ssp data outputs
       sspLinkUp       : out Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       sspValid        : out Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       sspData         : out Slv16Array((NUMBER_OF_ASICS_C * 24)-1 downto 0);
       sspSof          : out Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       sspEof          : out Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-      sspEofe         : out Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-
-      asicRdClk       : out slv(NUMBER_OF_ASICS_C - 1 downto 0)
+      sspEofe         : out Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0)
    );
 end AppDeser;
 
@@ -59,7 +56,7 @@ architecture mapping of AppDeser is
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUMBER_OF_ASICS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
    signal axilReadMasters  : AxiLiteReadMasterArray(NUMBER_OF_ASICS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUMBER_OF_ASICS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
-   
+   signal sspReset         : slv(NUMBER_OF_ASICS_C-1 downto 0);
 begin
 
    ---------------------------
@@ -86,9 +83,9 @@ begin
       );
 
    U_ASICS : for i in NUMBER_OF_ASICS_C - 1 downto 0 generate 
-      U_Deser_Group : entity work.AsicDeserGroup
+      U_Deser_Group : entity work.AppDeserGroup
          generic map (
-            TDP_G => TPD_G,
+            TPD_G          => TPD_G,
             SIMULATION_G   => SIMULATION_G
          )
          port map (
@@ -104,20 +101,28 @@ begin
             asicDataP        => asicDataP(i),
             asicDataM        => asicDataM(i),
 
-            -- Ref Clocks MMCM Out (0)
-            refClk           => refClk,
-            refRst           => refRst,
+            clk250           => clk250,
+            sspClk           => sspClk,
+            sspRst           => sspReset(i),
 
-            -- Selectio Deser pll clk to ASIC
-            asicRdClk        => asicRdClk(i),
-
-            rxLinkUp         => sspLinkUp(i),
-            rxValid          => sspValid(i),
-            rxData           => sspData(24*i+23 downto 24*i),
-            rxSof            => sspSof(i),
-            rxEof            => sspEof(i),
-            rxEofe           => sspEofe(i)
+            sspLinkUp         => sspLinkUp(i),
+            sspValid          => sspValid(i),
+            sspData           => sspData(24*i+23 downto 24*i),
+            sspSof            => sspSof(i),
+            sspEof            => sspEof(i),
+            sspEofe           => sspEofe(i)
          );
-      
+
+      U_reset80 : entity surf.RstPipeline
+         generic map (
+            TPD_G => TPD_G
+         )
+         port map (
+            clk    => sspClk,
+            rstIn  => sspRst,
+            rstOut => sspReset(i)
+         );
+
    end generate;
+
  end architecture;

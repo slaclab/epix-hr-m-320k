@@ -34,6 +34,33 @@ package AppPkg is
    constant NUMBER_OF_ASICS_C          : natural := 4;
    constant NUMBER_OF_LANES_C          : natural := 1; 
 
+   type AppConfigType is record
+      AppVersion           : slv(31 downto 0);
+      powerEnable          : slv(3 downto 0);
+      asicMask             : slv(NUMBER_OF_ASICS_C-1 downto 0);
+      acqCnt               : slv(31 downto 0);
+      requestStartupCal    : sl;
+      startupAck           : sl;
+      startupFail          : sl;
+      epixhrDbgSel1        : slv(4 downto 0);
+      epixhrDbgSel2        : slv(4 downto 0);
+      epixhrDbgSel3        : slv(3 downto 0);
+   end record;
+
+
+   constant APP_CONFIG_INIT_C : AppConfigType := (
+      AppVersion           => (others => '0'),
+      powerEnable          => (others => '0'),
+      asicMask             => (others => '0'),
+      acqCnt               => (others => '0'),
+      requestStartupCal    => '1',
+      startupAck           => '0',
+      startupFail          => '0',
+      epixhrDbgSel1        => (others => '0'),
+      epixhrDbgSel2        => (others => '0'),
+      epixhrDbgSel3        => (others => '0')
+   );
+
 end package AppPkg;
 
 package body AppPkg is

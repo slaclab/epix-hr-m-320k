@@ -21,7 +21,14 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.SsiCmdMasterPkg.all;
+use surf.SsiPkg.all;
 use surf.Pgp2bPkg.all;
+
+library lcls_timing_core;
+use lcls_timing_core.TimingPkg.all;
+
+library l2si_core;
+use l2si_core.L2SiPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -36,8 +43,8 @@ entity AsicTop is
       TPD_G                   : time          := 1 ns;
       SIMULATION_G            : boolean       := false;
       EN_DEVICE_DNA_G         : boolean       := true;
-      CLK_PERIOD_G            : real          := 10.0e-9;
-      ASIC_AXIL_BASE_ADDR_G   : slv(31 downto 0);
+      CLK_PERIOD_G            : real          := 156.25E+6;
+      AXIL_BASE_ADDR_G        : slv(31 downto 0);
       BUILD_INFO_G            : BuildInfoType
    );
    port (
@@ -47,20 +54,52 @@ entity AsicTop is
       -- AXI-Lite Interface (axilClk domain): Address Range = [0x80000000:0xFFFFFFFF]
       axiClk             : in  sl;
       axiRst             : in  sl;
-      axilReadMaster : in  AxiLiteReadMasterType;
-      axilReadSlave  : out AxiLiteReadSlaveType;
-      axilWriteMaster: in  AxiLiteWriteMasterType;
-      axilWriteSlave : out AxiLiteWriteSlaveType;
+      axilReadMaster     : in  AxiLiteReadMasterType;
+      axilReadSlave      : out AxiLiteReadSlaveType;
+      axilWriteMaster    : in  AxiLiteWriteMasterType;
+      axilWriteSlave     : out AxiLiteWriteSlaveType;
 
       -- Streaming Interfaces (axilClk domain)
-      asicDataMasters: out AxiStreamMasterArray(NUMBER_OF_ASICS_C - 1 downto 0);
-      asicDataSlaves : in  AxiStreamSlaveArray(NUMBER_OF_ASICS_C - 1 downto 0);
-      remoteDmaPause : in  slv(NUMBER_OF_ASICS_C - 1 downto 0);
+      asicDataMasters    : out AxiStreamMasterArray(NUMBER_OF_ASICS_C - 1 downto 0);
+      asicDataSlaves     : in  AxiStreamSlaveArray(NUMBER_OF_ASICS_C - 1 downto 0);
+      remoteDmaPause     : in  slv(NUMBER_OF_ASICS_C - 1 downto 0);
 
       -- Trigger Interface (triggerClk domain)
-      triggerClk           : out   sl;
-      triggerRst           : out   sl;
-      triggerData          : in    TriggerEventDataArray(1 downto 0);
+      triggerClk         : out   sl;
+      triggerRst         : out   sl;
+      triggerData        : in    TriggerEventDataArray(1 downto 0);
+
+      -- Optional: L1 trigger feedback (eventClk domain)
+      l1Clk                : out   sl                    := '0';
+      l1Rst                : out   sl                    := '0';
+      l1Feedbacks          : out   TriggerL1FeedbackArray(1 downto 0):= (others => TRIGGER_L1_FEEDBACK_INIT_C);
+      l1Acks               : in    slv(1 downto 0);
+
+      -- Event streams (eventClk domain)
+      eventClk             : out   sl;
+      eventRst             : out   sl;
+      eventTrigMsgMasters  : in    AxiStreamMasterArray(1 downto 0);
+      eventTrigMsgSlaves   : out   AxiStreamSlaveArray(1 downto 0);
+      eventTrigMsgCtrl     : out   AxiStreamCtrlArray(1 downto 0) := (others => AXI_STREAM_CTRL_UNUSED_C);
+      eventTimingMsgMasters: in    AxiStreamMasterArray(1 downto 0);
+      eventTimingMsgSlaves : out   AxiStreamSlaveArray(1 downto 0);
+      clearReadout         : in    slv(1 downto 0);
+      
+      -- ADC/DAC Debug Trigger Interface (axilClk domain)
+      oscopeAcqStart       : out   slv(3 downto 0);
+      oscopeTrigBus        : out   slv(11 downto 0);
+      slowAdcAcqStart      : out   slv(3 downto 0);
+      dacTrig              : out   sl;
+
+      -- SSP Interfaces (sspClk domain)
+      sspClk         : in sl;
+      sspRst         : in sl;
+      sspLinkUp      : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+      sspValid       : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+      sspData        : in Slv16Array((NUMBER_OF_ASICS_C * NUMBER_OF_LANES_C)-1 downto 0);
+      sspSof         : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+      sspEof         : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+      sspEofe        : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
 
       ----------------------------------------
       --          Top Level Ports           --
@@ -73,54 +112,75 @@ entity AsicTop is
       asicSro        : out sl;
       asicRdClk      : in sl;
       asicClkEn      : out sl;
-
-      asicDataP: in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-      asicDataM: in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+      rdClkSel       : out sl;
 
       -- Digital Monitor
       digMon: in slv(1 downto 0);
       
       -- Clocking ports
-      refClk      : in sl;
-      refRst      : in sl;
-      -- appClk      : in sl;
-      -- appRst      : in sl;
+      appClk      : in sl;
 
       -- SSI commands
       ssiCmd: in SsiCmdMasterType;
 
+      -- TTL external input triggers
       daqToFpga: in  sl;
-      ttlToFpga: in  sl
+      ttlToFpga: in  sl;
+
+      -- Timing link up
+      v1LinkUp             : in    sl;
+      v2LinkUp             : in    sl
 
    );
 end AsicTop;
 
 architecture rtl of AsicTop is
    constant NUM_ASIC_AXIL_SLAVES_C        : natural := 1;
-   constant NUM_ASIC_AXIL_MASTERS_C       : natural := 15;
+   constant NUM_ASIC_AXIL_MASTERS_C       : natural := 10;
 
    constant REGCTRL_AXI_INDEX_C           : natural := 0;
    constant TRIGCTRL_AXI_INDEX_C          : natural := 1;
+   constant DIG_ASIC_STREAM_AXI_INDEX_C   : natural := 2; 
+   constant EVENTBUILDER0_INDEX_C         : natural := 6;
 
-   constant DIG_ASIC_STREAM_AXI_INDEX_C   : natural := 8; 
-   constant AXI_STREAM_MON_INDEX_C        : natural := 12;
-
-   signal ASIC_AXIL_CONFIG_G     : AxiLiteCrossbarMasterConfigArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_ASIC_AXIL_MASTERS_C, ASIC_AXIL_BASE_ADDR_G, 24, 20);
+   signal ASIC_AXIL_CONFIG_G            : AxiLiteCrossbarMasterConfigArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_ASIC_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 24, 20);
 
    -- Master AXI-Lite Signals
-   signal axilWriteMasters   : AxiLiteWriteMasterArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0);
-   signal axilWriteSlaves    : AxiLiteWriteSlaveArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
-   signal axilReadMasters    : AxiLiteReadMasterArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0);
-   signal axilReadSlaves     : AxiLiteReadSlaveArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal axilWriteMasters             : AxiLiteWriteMasterArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0);
+   signal axilWriteSlaves              : AxiLiteWriteSlaveArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
+   signal axilReadMasters              : AxiLiteReadMasterArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0);
+   signal axilReadSlaves               : AxiLiteReadSlaveArray(NUM_ASIC_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
    
-   signal dataSend             : sl;
-   signal dataSendStreched     : sl;
-   signal acqStart             : sl;
+   -- AXI/PRBS Streams, one per carrier
+   signal mAxisMastersASIC             : AxiStreamMasterArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal mAxisSlavesASIC              : AxiStreamSlaveArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   
+   -- duplicated timing information
+   signal eventTimingMsgMasterArray  : AxiStreamMasterArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal eventTimingMsgSlaveArray   : AxiStreamSlaveArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   
+   -- AXI-Lite batcher
+   signal axilBatcherReadMaster  : AxiLiteReadMasterArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal axilBatcherReadSlave   : AxiLiteReadSlaveArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal axilBatcherWriteMaster : AxiLiteWriteMasterArray(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal axilBatcherWriteSlave  : AxiLiteWriteSlaveArray(NUMBER_OF_ASICS_C - 1 downto 0);
 
-   signal timingRunTrigger     : sl;
-   signal timingDaqTrigger     : sl;
-   signal errInhibit           : sl;
+   -- Timing info synched to axilClk
+   signal eventTimingMsgMasterAxiLSync  : AxiStreamMasterType;
+   signal eventTimingMsgSlaveAxiLSync   : AxiStreamSlaveType;
 
+   signal boardConfig                  : AppConfigType;
+
+   signal dataSend                     : sl;
+   signal dataSendStreched             : sl;
+   signal acqStart                     : sl;
+
+   signal timingRunTrigger             : sl;
+   signal timingDaqTrigger             : sl;
+   signal errInhibit                   : sl;
+
+   signal iAsicPpmat                   : sl;
+   signal iAsicPpbe                    : sl;
 
 begin
 
@@ -172,7 +232,8 @@ begin
          asicSync    => asicSync,
          asicAcq     => asicAcq,
          asicClkEn   => asicClkEn,
-         errInhibit  => errInhibit
+         errInhibit  => errInhibit,
+         rdClkSel    => rdClkSel
       );
 
    ------------------------------------------
@@ -226,8 +287,8 @@ begin
             PULSE_WIDTH_G  => 4       -- one-shot pulse width duration (units of clk cycles)
          )
          port map(
-            clk     => refClk,
-            rst     => refRst,
+            clk     => axiClk,
+            rst     => axiRst,
             dataIn  => dataSend,
             dataOut => dataSendStreched
          );
@@ -247,58 +308,65 @@ begin
                )
             port map(
                -- Deserialized data port
-               deserClk          => asicRdClk,
-               deserRst          => deserRst,
-               rxValid           => rxValid,
-               rxData            => rxData,
-               rxSof             => rxSof,
-               rxEof             => rxEof,
-               rxEofe            => rxEofe,
+               deserClk          => sspClk,
+               deserRst          => sspRst,
+               rxValid           => sspValid(i),
+               rxData            => sspData(24*i+23 downto 24*i),
+               rxSof             => sspSof(i),
+               rxEof             => sspEof(i),
+               rxEofe            => sspEofe(i),
             
                -- AXI lite slave port for register access
-               axilClk           => appClk,
-               axilRst           => appRst,
-               sAxilWriteMaster  => axilWriteMaster,
-               sAxilWriteSlave   => axilWriteSlave,
-               sAxilReadMaster   => axilReadMaster,
-               sAxilReadSlave    => axilReadSlave,
+               axilClk           => axiClk,
+               axilRst           => axiRst,
+               sAxilWriteMaster  => axilWriteMasters(DIG_ASIC_STREAM_AXI_INDEX_C + i),
+               sAxilWriteSlave   => axilWriteSlaves(DIG_ASIC_STREAM_AXI_INDEX_C + i),
+               sAxilReadMaster   => axilReadMasters(DIG_ASIC_STREAM_AXI_INDEX_C + i),
+               sAxilReadSlave    => axilReadSlaves(DIG_ASIC_STREAM_AXI_INDEX_C + i),
             
                -- AXI data stream output
-               axisClk           => sysClk,
-               axisRst           => sysRst,
-               mAxisMaster       => mAxisMastersASIC(0),
-               mAxisSlave        => mAxisSlavesASIC(0),
+               axisClk           => axiClk,
+               axisRst           => axiRst,
+               mAxisMaster       => mAxisMastersASIC(i),
+               mAxisSlave        => mAxisSlavesASIC(i),
             
                -- acquisition number input to the header
-               acqNo             => boardConfig.acqCnt
+               acqNo             => boardConfig.acqCnt,
+               startRdout        => dataSendStreched
             );
+      
+      U_EventBuilder : entity surf.AxiStreamBatcherEventBuilder
+         generic map (
+              TPD_G          => TPD_G,
+              NUM_SLAVES_G   => 2,
+              MODE_G         => "ROUTED",
+              TDEST_ROUTES_G => (
+                0           => "0000000-",
+                1           => "00000010"),
+              TRANS_TDEST_G  => X"01",
+              AXIS_CONFIG_G  => SSI_CONFIG_INIT_C
+              )
+            port map (
+              -- Clock and Reset
+              axisClk                    => axiClk,
+              axisRst                    => axiRst,
+              -- AXI-Lite Interface (axisClk domain)
+              axilReadMaster             => axilReadMasters(EVENTBUILDER0_INDEX_C + i),
+              axilReadSlave              => axilReadSlaves(EVENTBUILDER0_INDEX_C + i),
+              axilWriteMaster            => axilWriteMasters(EVENTBUILDER0_INDEX_C + i),
+              axilWriteSlave             => axilWriteSlaves(EVENTBUILDER0_INDEX_C + i),
+              -- Inbound Master AXIS Interfaces
+              sAxisMasters(0)            => eventTimingMsgMasterArray(i),
+              sAxisMasters(1)            => mAxisMastersASIC(i),
+              -- Inbound Slave AXIS Interfaces
+              sAxisSlaves(0)             => eventTimingMsgSlaveArray(i),
+              sAxisSlaves(1)             => mAxisSlavesASIC(i),
+              -- Outbound AXIS
+              mAxisMaster                => asicDataMasters(i), --to core
+              mAxisSlave                 => asicDataSlaves(i)   --to core
+              );
       end generate;
       
-      
-      -------------------------------------------------------
-      -- AXI stream monitoring                             --
-      -------------------------------------------------------
-      U_AxiSMonitor : entity surf.AxiStreamMonAxiL
-         generic map(
-            TPD_G           => 1 ns,
-            COMMON_CLK_G    => false,  -- true if axisClk = statusClk
-            AXIS_CLK_FREQ_G => 156.25E+6,  -- units of Hz
-            AXIS_NUM_SLOTS_G=> NUMBER_OF_LANES_C,
-            AXIS_CONFIG_G   => COMM_AXIS_CONFIG_C
-            )
-         port map(
-            -- AXIS Stream Interface
-            axisClk         => sysClk,
-            axisRst         => sysRst,
-            axisMasters(0)  => imAxisMasters(0),
-            axisSlaves(0)   => mAxisSlaves(0),
-            -- AXI lite slave port for register access
-            axilClk         => axilClk,
-            axilRst         => axilRst,
-            sAxilWriteMaster=> axilWriteMaster,
-            sAxilWriteSlave => axilWriteSlave,
-            sAxilReadMaster => axilReadMaster,
-            sAxilReadSlave  => axilReadSlave
-         );  
+
 
 end architecture;

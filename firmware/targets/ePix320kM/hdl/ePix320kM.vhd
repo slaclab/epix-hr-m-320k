@@ -57,7 +57,6 @@ entity ePix320kM is
       gtLclsClkP : in sl;
       gtLclsClkM : in sl;
 
-
       ----------------------------------------------
       --              Application Ports           --
       ----------------------------------------------
@@ -82,7 +81,8 @@ entity ePix320kM is
       asicRoClkN  : out slv(3 downto 0);
       asicSro     : out sl;
       asicClkEn   : out sl;
-      fpgaRdClkP   : out sl;
+      rdClkSel    : out sl;
+      fpgaRdClkP  : out sl;
       fpgaRdClkM  : out sl;
 
       -- SACI Ports
@@ -142,7 +142,7 @@ entity ePix320kM is
       ldoShtdnL          : out slv(1 downto 0);
       dcdcSync           : out sl;
       pcbSync            : out sl;
-      pcbLocalSupplyGood : in  sl;
+      pwrGood            : in  slv(1 downto 0);
 
       -- Digital board env monitor
       adcSpiClk     : out sl;
@@ -247,6 +247,7 @@ begin
          asicClkEn   => asicClkEn,
          fpgaRdClkP  => fpgaRdClkP,
          fpgaRdClkM  => fpgaRdClkM,
+         rdClkSel    => rdClkSel,
 
          -- Bias Dac
          biasDacDin  => biasDacDin,
@@ -320,7 +321,7 @@ begin
          pcbAdcDin    => pcbAdcDin,
          pcbAdcSyncL  => pcbAdcSyncL,
          pcbAdcRefClk => pcbAdcRefClk,
-         pcbLocalSupplyGood => pcbLocalSupplyGood,
+         pwrGood      => pwrGood,
 
          -- Transceiver high speed lanes
          fpgaOutObTransInP => fpgaOutObTransInP(11 downto 8),
@@ -329,7 +330,9 @@ begin
          fpgaInObTransOutM => fpgaInObTransOutM(11 downto 8),
 
          -- ssi commands
-         ssiCmd            => ssiCmd
+         ssiCmd            => ssiCmd,
+
+         jitclnrLolL => jitclnrLolL
       );
 
    U_Core : entity epix_leap_core.Core

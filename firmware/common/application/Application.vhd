@@ -86,6 +86,7 @@ entity Application is
       asicClkEn          : out sl;
       fpgaRdClkP         : out sl;
       fpgaRdClkM         : out sl;
+      rdClkSel           : out sl;
 
       -- SACI Ports
       saciCmd            : out sl;
@@ -150,7 +151,7 @@ entity Application is
       ldoShtdnL          : out slv(1 downto 0);
       dcdcSync           : out sl;
       pcbSync            : out sl;
-      pcbLocalSupplyGood : in  sl;
+      pwrGood            : in  slv(1 downto 0);
 
       -- Digital board env monitor
       adcSpiClk          : out sl;
@@ -165,7 +166,9 @@ entity Application is
       slowAdcSclk        : out sl;
       slowAdcCsb         : out sl;
       slowAdcDin         : out sl;
-      slowAdcRefClk      : out sl
+      slowAdcRefClk      : out sl;
+   
+      jitclnrLolL        : in sl
    );
 end entity;
 
@@ -190,24 +193,14 @@ architecture rtl of Application is
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal refClk           : sl;
-   signal sysRst           : sl;
-   signal adcClk           : sl;
-   signal appClk           : sl;
-   signal refRst           : sl;
-   signal adcRst           : sl;
-   signal appRst           : sl;
-   signal fpgaPllClk       : sl;
-   signal pllRst           : sl;
-   signal asicRdClk        : slv(NUMBER_OF_ASICS_C - 1 downto 0);
-
-
-   signal clk156      : sl;
-   signal rst156      : sl;
-   signal clk250      : sl;
-   signal rst250      : sl;
+   signal clk156           : sl;
+   signal rst156           : sl;
+   signal clk250           : sl;
+   signal clk100           : sl;
+   signal rst250           : sl;
    signal sspClk           : sl;
    signal sspRst           : sl;
+   
    signal sspLinkUp        : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
    signal sspValid         : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
    signal sspData          : Slv16Array((NUMBER_OF_ASICS_C * 24)-1 downto 0);
@@ -250,9 +243,9 @@ begin
          -- 40 Mhz clock output to pll(2)
          fpgaClkOutP   => fpgaClkOutP, 
          fpgaClkOutM   => fpgaClkOutM, 
-         adcClk        => adcClk,
+         adcClk        => open,
 
-         jitclnLolL    => jitclnLolL,
+         jitclnLolL    => jitclnrLolL,
          clk156        => clk156,
          rst156        => rst156,
          clk250        => clk250,
@@ -293,48 +286,40 @@ begin
          asicClkEn       => asicClkEn,
 
          -- Clocking ports
-         refClk          => refClk,
-         refRst          => refRst,
-
-         -- appClk          => appClk,
-         -- appRst          => appRst,
+         rdClkSel        => rdClkSel,
 
          -- SSI commands
          ssiCmd         => ssiCmd,
 
          -- External trigger inputs
          daqToFpga      => daqToFpga,
-         ttlToFpga      => ttlToFpga,
-
-         -- ref ports
-         refClk          => refClk,
-         refRst          => refRst
+         ttlToFpga      => ttlToFpga
       );
 
-   U_PwrCtrl : entity work.PowerCtrl
-      generic map (
-         TPD_G             => TPD_G,
-         EN_DEVICE_DNA_G   => EN_DEVICE_DNA_G
-      )
-      port map (
-         axiClk             => axiClk,
-         axiRst             => axiRst,
-         axilReadMaster     => axilReadMasters(POWER_CONTROL_INDEX_C),
-         axilReadSlave      => axilReadSlaves(POWER_CONTROL_INDEX_C),
-         axilWriteMaster    => axilWriteMasters(POWER_CONTROL_INDEX_C),
-         axilWriteSlave     => axilWriteSlaves(POWER_CONTROL_INDEX_C),
-         syncDcdc           => syncDcdc,
-         ldoShtdnL          => ldoShtdnL,
-         dcdcSync           => dcdcSync,
-         pcbSync            => pcbSync,
-         pcbLocalSupplyGood => pcbLocalSupplyGood
-      );
+   -- U_PwrCtrl : entity work.PowerCtrl
+   --    generic map (
+   --       TPD_G             => TPD_G,
+   --       EN_DEVICE_DNA_G   => EN_DEVICE_DNA_G
+   --    )
+   --    port map (
+   --       axiClk             => axiClk,
+   --       axiRst             => axiRst,
+   --       axilReadMaster     => axilReadMasters(POWER_CONTROL_INDEX_C),
+   --       axilReadSlave      => axilReadSlaves(POWER_CONTROL_INDEX_C),
+   --       axilWriteMaster    => axilWriteMasters(POWER_CONTROL_INDEX_C),
+   --       axilWriteSlave     => axilWriteSlaves(POWER_CONTROL_INDEX_C),
+   --       syncDcdc           => syncDcdc,
+   --       ldoShtdnL          => ldoShtdnL,
+   --       dcdcSync           => dcdcSync,
+   --       pcbSync            => pcbSync,
+   --       pcbLocalSupplyGood => pcbLocalSupplyGood
+   --    );
    
    U_Deser : entity work.AppDeser
       generic map (
          TPD_G             => TPD_G,
-         SIMULATION_G     => SIMULATION_G,
-         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
+         SIMULATION_G      => SIMULATION_G,
+         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
       )
       port map (
          -- AXI-Lite Interface (axilClk domain)
@@ -346,10 +331,9 @@ begin
          axilWriteSlave  => axilWriteSlaves(DESER_INDEX_C),
          -- ASIC Ports
          asicDataP       => asicDataP,
-         asicDataN       => asicDataM,
+         asicDataM       => asicDataM,
          -- ref ports
-         refClk          => refClk,
-         refRst          => refRst,
+         clk250          => clk250,
          -- Streaming Interfaces (sspClk domain)
          sspClk          => sspClk,
          sspRst          => sspRst,
@@ -358,21 +342,6 @@ begin
          sspData         => sspData,
          sspSof          => sspSof,
          sspEof          => sspEof,
-         sspEofe         => sspEofe,
-         -- ASIC RdOut Clks
-         asicRdClk      => asicRdClk
+         sspEofe         => sspEofe
       );
-   
-   U_fpgaToAsicClk : entity surf.ClkOutBufDiff
-      generic map(
-         TPD_G        => TPD_G,
-         XIL_DEVICE_G => XIL_DEVICE_C
-      )
-      port map (
-         clkIn   => asicRdClk(0),
-         clkOutP => fpgaClkOutP,
-         clkOutN => fpgaClkOutM
-      );
-
-
    end rtl; -- rtl

@@ -24,6 +24,9 @@ use surf.AxiLitePkg.all;
 
 use work.AppPkg.all;
 
+library epix_leap_core;
+use epix_leap_core.CorePkg.all;
+
 library unisim;
 use unisim.vcomponents.all;
 
@@ -44,89 +47,92 @@ entity PowerCtrl is
       axiWriteMaster : in  AxiLiteWriteMasterType;
       axiWriteSlave  : out AxiLiteWriteSlaveType;
 
-      -- 1-wire board ID interfaces
-      serialIdIo     : inout slv(1 downto 0)
+      -------------------
+      --  Top Level Ports
+      -------------------
+      -- Power Ports
+      syncDcdc         : out slv(3 downto 0);
+      pwrGood           : in  slv(1 downto 0);
+      PwrSync1MHzClk    : out sl;
+      PwrEnable6V     : out sl;
+      pwrEnAna        : out slv(4 downto 0);
+      pwrEnDig        : out slv(4 downto 0)
         
     );
 end entity PowerCtrl;
 
 architecture rtl of PowerCtrl is
-    signal idValues : Slv64Array(2 downto 0);
-    signal idValids : slv(2 downto 0);
-    signal dummyIdValues : slv(63 downto 0);
 
-    type PowerControlType is record
-      
-    end record;
+   type RegType is record
+      pwrEnable6V    : sl;
+      pwrEnAna       : slv(4 downto 0);
+      pwrEnDig       : slv(4 downto 0);
+      axilReadSlave  : AxiLiteReadSlaveType;
+      axilWriteSlave : AxiLiteWriteSlaveType;
+   end record RegType;
+
+   constant REG_INIT_C : RegType := (
+      pwrEnable6V    => '0',
+      pwrEnAna       => (others => '0'),
+      pwrEnDig       => (others => '0'),
+      axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
+      axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
+
+   signal r   : RegType := REG_INIT_C;
+   signal rin : RegType;
+
+  signal idValues : Slv64Array(2 downto 0);
+  signal idValids : slv(2 downto 0);
+  signal dummyIdValues : slv(63 downto 0);
+
+  -- External Signals 
+  signal snCardId : Slv64Array(1 downto 0) := (others => (others => '0'));
 
 begin
 
-    conb: process (axiReadMaster, axiWriteMaster, r, idValids, idValues)
-        variable v           : PowerControlType;
-        variable regCon      : AxiLiteEndPointType;
-    begin
 
-        -- Determine the transaction type
-        axiSlaveWaitTxn(regCon, axiWriteMaster, axiReadMaster, v.axiWriteSlave, v.axiReadSlave);
+   comb : process (axilReadMaster, axilRst, axilWriteMaster, pwrGood, r) is
+      variable v      : RegType;
+      variable axilEp : AxiLiteEndPointType;
+   begin
+      -- Latch the current value
+      v := r;
 
-        axiSlaveRegisterR(regCon, x"0004",  0, ite(idValids(0) = '1',idValues(0)(31 downto  0), x"00000000")); --Digital card ID low
-        axiSlaveRegisterR(regCon, x"0008",  0, ite(idValids(0) = '1',idValues(0)(63 downto 32), x"00000000")); --Digital card ID high
-        axiSlaveRegisterR(regCon, x"000C",  0, ite(idValids(1) = '1',idValues(1)(31 downto  0), x"00000000")); --Analog card ID low
-        axiSlaveRegisterR(regCon, x"0010",  0, ite(idValids(1) = '1',idValues(1)(63 downto 32), x"00000000")); --Analog card ID high
-        axiSlaveRegisterR(regCon, x"0014",  0, ite(idValids(2) = '1',idValues(2)(31 downto  0), x"00000000")); --Carrier card ID low
-        axiSlaveRegisterR(regCon, x"0018",  0, ite(idValids(2) = '1',idValues(2)(63 downto 32), x"00000000")); --Carrier card ID high
-    end process;
+      -- Determine the transaction type
+      axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
-       -----------------------------------------------
-   -- Serial IDs: FPGA Device DNA + DS2411's
-   -----------------------------------------------  
-   GEN_DEVICE_DNA : if (EN_DEVICE_DNA_G = true) generate
-    G_DEVICE_DNA : entity surf.DeviceDna
-       generic map (
-          TPD_G        => TPD_G,
-          XIL_DEVICE_G => "ULTRASCALE")
-       port map (
-          clk      => axiClk,
-          rst      => axiReset,
-          dnaValue(127 downto 64) => dummyIdValues,
-          dnaValue( 63 downto  0) => idValues(0),
-          dnaValid => idValids(0)
-       );
-    G_DS2411 : for i in 0 to 1 generate
-      U_DS2411_N : entity surf.DS2411Core
-        generic map (
-          TPD_G        => TPD_G,
-          CLK_PERIOD_G => CLK_PERIOD_G
-          )
-        port map (
-          clk       => axiClk,
-          rst       => chipIdRst,
-          fdSerSdio => serialIdIo(i),
-          fdValue   => idValues(i+1),
-          fdValid   => idValids(i+1)
-        );
-    end generate;
- end generate GEN_DEVICE_DNA;
- 
- BYP_DEVICE_DNA : if (EN_DEVICE_DNA_G = false) generate
-    idValids(0) <= '1';
-    idValues(0) <= (others=>'0');
- end generate BYP_DEVICE_DNA;   
+      -- Register Mapping
+      axiSlaveRegister (axilEp, x"0", 0, v.pwrEnable6V);
+      axiSlaveRegister (axilEp, x"4", 0, v.pwrEnAna);
+      axiSlaveRegister (axilEp, x"8", 0, v.pwrEnDig);
+      axiSlaveRegisterR(axilEp, x"C", 0, pwrGood);
 
-    
-  GEN_VEC : for i in 1 downto 0 generate
-    U_snAdcCard : entity surf.DS2411Core
-       generic map (
-          TPD_G        => TPD_G,
-          SIMULATION_G => SIMULATION_G,
-          CLK_PERIOD_G => AXIL_CLK_PERIOD_C
-      )
-       port map (
-          clk       => axiClk,
-          rst       => axiRst,
-          fdSerSdio => serialNumber(i),
-          fdValue   => snCardId(i)
-      );
- end generate GEN_VEC;
+      -- Closeout the transaction
+      axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
 
+      -- Synchronous Reset
+      if (axilRst = '1') then
+         v := REG_INIT_C;
+      end if;
+
+      -- Register the variable for next clock cycle
+      rin <= v;
+
+      -- Outputs
+      axilReadSlave  <= r.axilReadSlave;
+      axilWriteSlave <= r.axilWriteSlave;
+      syncDcdc        <= (others => '0');
+      pwrSync1MHzClk <= '0';
+      pwrEnable6V    <= r.pwrEnable6V;
+      pwrEnAna       <= r.pwrEnAna;
+      pwrEnDig       <= r.pwrEnDig;
+
+   end process comb;
+
+   seq : process (axilClk) is
+   begin
+      if (rising_edge(axilClk)) then
+         r <= rin after TPD_G;
+      end if;
+   end process seq;
 end architecture;

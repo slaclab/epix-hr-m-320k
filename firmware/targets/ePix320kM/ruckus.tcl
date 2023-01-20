@@ -7,6 +7,8 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load submodules' code and constraints
 loadRuckusTcl $::env(TOP_DIR)/submodules/surf
+loadRuckusTcl $::env(TOP_DIR)/submodules/l2si-core
+loadRuckusTcl $::env(TOP_DIR)/submodules/lcls-timing-core
 loadRuckusTcl $::env(TOP_DIR)/submodules/epix-hr-core
 loadRuckusTcl $::env(TOP_DIR)/common
 

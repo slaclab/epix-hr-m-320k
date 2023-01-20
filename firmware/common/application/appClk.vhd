@@ -29,6 +29,11 @@ entity appClk is
       -- 40 Mhz clock output to pll(2)
       fpgaClkOutP   : out sl;
       fpgaClkOutM   : out sl;
+      
+      -- fpga generated asic rdout clk, 
+      -- Ctrl is in registerControl.vhd
+      fpgaRdClkP    : out sl;
+      fpgaRdClkM    : out sl;
 
       -- Adc Clk
       adcClk        : out sl;
@@ -54,6 +59,7 @@ architecture rtl of appClk is
    signal pllToFpgaClk     : sl;
    signal clk50            : sl;
    signal rst50            : sl;
+   signal iClk250          : sl;
 
 begin
 
@@ -61,6 +67,7 @@ begin
    clk156 <= fabClock;
    rst156 <= fabReset;
    rst250 <= rst50;
+   clk250 <= iClk250;
 
    U_IBUFDS_GT : IBUFDS_GTE4
       generic map (
@@ -111,20 +118,23 @@ begin
         INPUT_BUFG_G           => false,
         FB_BUFG_G              => true,
         RST_IN_POLARITY_G      => '1',     -- '0' for active low
-        NUM_CLOCKS_G           => 2,
+        NUM_CLOCKS_G           => 3,
         SIMULATION_G           => SIMULATION_G,
         -- MMCM attributes
         BANDWIDTH_G            => "OPTIMIZED",
         CLKIN_PERIOD_G         => 6.4,      -- 156.25 MHz
         CLKFBOUT_MULT_F_G      => 8.0,      -- 1.25 Ghz = 31.25 MHz * 32
         CLKOUT0_DIVIDE_F_G     => 31.25,    -- 40 MHz = 1.25 GHz / 31.25
-        CLKOUT1_DIVIDE_G       => 25        -- 50 MHz = 1.25 GHz / 25
+        CLKOUT1_DIVIDE_G       => 25,       -- 50 MHz = 1.25 GHz / 25
+        CLKOUT2_DIVIDE_G       => 5         -- 50 MHz = 1.25 GHz / 25
+
      )
      port map(
         clkIn           => fabClock,
         rstIn           => fabReset,
         clkOut(0)       => fpgaToPllClk,
-        clkOut(1)       => adcClk
+        clkOut(1)       => adcClk,
+        clkOut(2)       => iClk250
      );
   
    U_fpgaToPllClk : entity surf.ClkOutBufDiff
@@ -138,6 +148,17 @@ begin
          clkOutN => fpgaClkOutM
          );
    
+   U_fpgaRdClk : entity surf.ClkOutBufDiff
+      generic map(
+         TPD_G        => TPD_G,
+         XIL_DEVICE_G => XIL_DEVICE_C
+         )
+      port map (
+         clkIn   => iClk250,
+         clkOutP => fpgaRdClkP,
+         clkOutN => fpgaRdClkM
+         );
+   
    U_IBUFDS : IBUFDS
       port map (
          I  => gtPllClkP,
@@ -145,11 +166,11 @@ begin
          O  => pllToFpgaClk
       );
    
-   U_clk320 : BUFG
-      port map (
-         I => pllToFpgaClk,
-         O => clk250
-      );
+   -- U_clk320 : BUFG
+   --    port map (
+   --       I => pllToFpgaClk,
+   --       O => clk250
+   --    );
    
    U_clk80 : BUFGCE_DIV
       generic map (
@@ -183,5 +204,6 @@ begin
          rstIn  => rst50,
          rstOut => sspRst
       );
+
 
 end architecture;

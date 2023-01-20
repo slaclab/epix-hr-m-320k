@@ -420,8 +420,8 @@ set_property -dict { PACKAGE_PIN AK8 IOSTANDARD LVCMOS33} [get_ports {obTransScl
 set_property -dict { PACKAGE_PIN AL8 IOSTANDARD LVCMOS33} [get_ports {obTransSda}]
 set_property -dict { PACKAGE_PIN AJ9 IOSTANDARD LVCMOS33} [get_ports {obTransReset}]
 set_property -dict { PACKAGE_PIN AJ8 IOSTANDARD LVCMOS33} [get_ports {obTransIntL}]
-set_property -dict { PACKAGE_PIN AN8 IOSTANDARD LVCMOS33} [get_ports {pcbLocalSupplyGood}]
-set_property -dict { PACKAGE_PIN AP8 IOSTANDARD LVCMOS33} [get_ports {analogPwrGood}]
+set_property -dict { PACKAGE_PIN AN8 IOSTANDARD LVCMOS33} [get_ports {pwrGood[0]}]
+set_property -dict { PACKAGE_PIN AP8 IOSTANDARD LVCMOS33} [get_ports {pwrGood[1]}]
 
 ##########################
 ##	Bank 90
