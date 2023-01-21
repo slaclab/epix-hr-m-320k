@@ -36,7 +36,8 @@ entity appClk is
       fpgaRdClkM    : out sl;
 
       -- Adc Clk
-      adcClk        : out sl;
+      adcMonClkP        : out sl;
+      adcMonClkM        : out sl;
 
       -- logic Clocks
       clk156        : out sl;
@@ -166,11 +167,17 @@ begin
          O  => pllToFpgaClk
       );
    
-   -- U_clk320 : BUFG
-   --    port map (
-   --       I => pllToFpgaClk,
-   --       O => clk250
-   --    );
+   U_adcMonClk : entity surf.ClkOutBufDiff
+      generic map(
+         TPD_G        => TPD_G,
+         XIL_DEVICE_G => XIL_DEVICE_C
+         )
+      port map (
+         clkIn   => adcClk,
+         clkOutP => adcMonClkP,
+         clkOutN => adcMonClkM
+         );
+
    
    U_clk80 : BUFGCE_DIV
       generic map (

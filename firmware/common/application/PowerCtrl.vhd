@@ -38,25 +38,25 @@ entity PowerCtrl is
     port (
       -- Global Signals
       axiClk         : in  sl;
-      axiRst         : out sl;
-      sysRst         : in  sl;
-
+      axiRst         : in sl;
+      
       -- AXI-Lite Register Interface (axiClk domain)
-      axiReadMaster  : in  AxiLiteReadMasterType;
-      axiReadSlave   : out AxiLiteReadSlaveType;
-      axiWriteMaster : in  AxiLiteWriteMasterType;
-      axiWriteSlave  : out AxiLiteWriteSlaveType;
+      axilReadMaster  : in  AxiLiteReadMasterType;
+      axilReadSlave   : out AxiLiteReadSlaveType;
+      axilWriteMaster : in  AxiLiteWriteMasterType;
+      axilWriteSlave  : out AxiLiteWriteSlaveType;
 
       -------------------
       --  Top Level Ports
       -------------------
       -- Power Ports
-      syncDcdc         : out slv(3 downto 0);
-      pwrGood           : in  slv(1 downto 0);
-      PwrSync1MHzClk    : out sl;
-      PwrEnable6V     : out sl;
-      pwrEnAna        : out slv(4 downto 0);
-      pwrEnDig        : out slv(4 downto 0)
+      syncDcdc         : out slv(6 downto 0);
+      pwrGood          : in  slv(1 downto 0);
+      ldoShtdnL        : out slv(2 downto 0);
+      PwrSync1MHzClk   : out sl;
+      PwrEnable6V      : out sl;
+      pwrEnAna         : out slv(4 downto 0);
+      pwrEnDig         : out slv(4 downto 0)
         
     );
 end entity PowerCtrl;
@@ -65,7 +65,7 @@ architecture rtl of PowerCtrl is
 
    type RegType is record
       pwrEnable6V    : sl;
-      pwrEnAna       : slv(4 downto 0);
+      pwrEnAna       : slv(2 downto 0);
       pwrEnDig       : slv(4 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
@@ -81,17 +81,10 @@ architecture rtl of PowerCtrl is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
-  signal idValues : Slv64Array(2 downto 0);
-  signal idValids : slv(2 downto 0);
-  signal dummyIdValues : slv(63 downto 0);
-
-  -- External Signals 
-  signal snCardId : Slv64Array(1 downto 0) := (others => (others => '0'));
-
 begin
 
 
-   comb : process (axilReadMaster, axilRst, axilWriteMaster, pwrGood, r) is
+   comb : process (axilReadMaster, axiRst, axilWriteMaster, pwrGood, r) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
    begin
@@ -111,7 +104,7 @@ begin
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
 
       -- Synchronous Reset
-      if (axilRst = '1') then
+      if (axiRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -129,9 +122,9 @@ begin
 
    end process comb;
 
-   seq : process (axilClk) is
+   seq : process (axiClk) is
    begin
-      if (rising_edge(axilClk)) then
+      if (rising_edge(axiClk)) then
          r <= rin after TPD_G;
       end if;
    end process seq;

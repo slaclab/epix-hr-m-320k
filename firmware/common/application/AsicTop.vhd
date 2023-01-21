@@ -115,17 +115,20 @@ entity AsicTop is
       rdClkSel       : out sl;
 
       -- Digital Monitor
-      digMon: in slv(1 downto 0);
+      digMon   : out slv(1 downto 0);
       
       -- Clocking ports
-      appClk      : in sl;
+      sysClk      : in sl;
+      sysRst      : in sl;
 
       -- SSI commands
-      ssiCmd: in SsiCmdMasterType;
+      ssiCmd      : in SsiCmdMasterType;
 
       -- TTL external input triggers
-      daqToFpga: in  sl;
-      ttlToFpga: in  sl;
+      daqToFpga      : in  sl;
+      ttlToFpga      : in  sl;
+
+      serialNumber         : inout slv(1 downto 0);
 
       -- Timing link up
       v1LinkUp             : in    sl;
@@ -171,6 +174,10 @@ architecture rtl of AsicTop is
 
    signal boardConfig                  : AppConfigType;
 
+   -- External Signals 
+   signal serialIdIo                   : slv(1 downto 0) := "00";
+   signal snCardId : Slv64Array(1 downto 0) := (others => (others => '0'));
+
    signal dataSend                     : sl;
    signal dataSendStreched             : sl;
    signal acqStart                     : sl;
@@ -180,9 +187,30 @@ architecture rtl of AsicTop is
    signal errInhibit                   : sl;
 
    signal iAsicPpmat                   : sl;
-   signal iAsicPpbe                    : sl;
+   signal iAsicR0                      : sl;
+   signal iAsicAcq                     : sl;
+   signal iAsicPPbe                    : sl;
+   signal iAsicDigRst                  : sl;
+   signal iAsicSRO                     : sl;
+   signal saciPrepReadoutAck           : sl;
+
+   signal iAsicClkSyncEn               : sl;
+   signal iAsicGlblRst                 : sl;
+   signal iAsicSync                    : sl;
 
 begin
+
+   triggerClk       <= axiClk;
+   triggerRst       <= axiRst;
+
+   eventClk         <= axiClk;
+   eventRst         <= axiRst;
+
+   oscopeAcqStart   <= (others => '0');
+   oscopeTrigBus    <= (others => '0');
+   slowAdcAcqStart  <= (others => '0');
+   dacTrig          <= '0';
+   digMon           <= (others => '0');
 
    timingRunTrigger <= triggerData(0).valid and triggerData(0).l0Accept;
    timingDaqTrigger <= triggerData(1).valid and triggerData(1).l0Accept;
@@ -206,7 +234,7 @@ begin
          axiClkRst              => axiRst
       );
 
-   U_RegCtrl : entity work.RegisterControl
+   U_RegCtrl : entity work.RegisterControlDualClock
       generic map (
          TPD_G           => TPD_G,
          EN_DEVICE_DNA_G => EN_DEVICE_DNA_G,
@@ -214,26 +242,41 @@ begin
          BUILD_INFO_G    => BUILD_INFO_G
       )
       port map (
-         axiClk          => axiClk,
-         axiRst          => axiRst,
+         axilClk          => axiClk,
+         axilRst          => axiRst,
          axiReadMaster   => axilReadMasters(REGCTRL_AXI_INDEX_C),
          axiReadSlave    => axilReadSlaves(REGCTRL_AXI_INDEX_C),
          axiWriteMaster  => axilWriteMasters(REGCTRL_AXI_INDEX_C),
          axiWriteSlave   => axilWriteSlaves(REGCTRL_AXI_INDEX_C),
 
+         -- Register Inputs/Outputs (axiClk domain)
+         boardConfig    => boardConfig,
+
+         -- 1-wire board ID interfaces
+         serialIdIo     => serialIdIo,
+
+         -- sys clock signals (ASIC RD clock domain)
+         sysRst         => sysRst,
+         sysClk         => sysClk,
+
          -- ASICs acquisition signals
-         acqStart    => acqStart,
-         asicPPbe    => iAsicPpbe,
-         asicPpmat   => iAsicPpmat,
-         asicTpulse  => open,
-         asicStart   => asicR0,
-         asicSR0     => asicSro,
-         asicGlblRst => asicGlblRst,
-         asicSync    => asicSync,
-         asicAcq     => asicAcq,
-         asicClkEn   => asicClkEn,
-         errInhibit  => errInhibit,
-         rdClkSel    => rdClkSel
+         acqStart       => acqStart,
+         asicR0         => iAsicR0,
+         asicAcq        => iAsicAcq,
+         asicPPbe       => iAsicPPbe,
+         asicDigRst     => iAsicDigRst,
+         saciReadoutReq => open,
+         saciReadoutAck => saciPrepReadoutAck,
+         errInhibit     => open,
+         rdClkSel       => rdClkSel,
+
+         asicSRO        => iAsicSRO,
+         asicClkSyncEn  => iAsicClkSyncEn,
+         asicGlblRst    => iAsicGlblRst,
+         asicSync       => iAsicSync,
+
+         v1LinkUp => v1LinkUp,
+         v2LinkUp => v2LinkUp
       );
 
    ------------------------------------------
@@ -260,11 +303,14 @@ begin
 
          -- Fiber optic trigger (axilClk domain)
          pgpRxOut          => PGP2B_RX_OUT_INIT_C,
+
          -- Fiducial code output
          opCodeOut         => open,
+
          -- Timing Triggers
          timingRunTrigger  => timingRunTrigger,
          timingDaqTrigger  => timingDaqTrigger,
+
          -- AXI lite slave port for register access
          axilClk           => axiClk,
          axilRst           => axiRst,
@@ -274,6 +320,28 @@ begin
          sAxilReadSlave    => axilReadSlaves(TRIGCTRL_AXI_INDEX_C)
       );
    
+   -------------------------------------------------
+   -- AxiStream repeater
+   -------------------------------------------------
+   U_AxiStreamRepeater_timing : entity surf.AxiStreamRepeater
+      generic map(
+         TPD_G                => TPD_G,
+         NUM_MASTERS_G        => NUMBER_OF_ASICS_C,
+         INCR_AXIS_ID_G       => false,
+         INPUT_PIPE_STAGES_G  => 0,
+         OUTPUT_PIPE_STAGES_G => 0
+         )
+      port map(
+         -- Clock and reset
+         axisClk      => axiClk,
+         axisRst      => axiRst,
+         -- Slave
+         sAxisMaster  => eventTimingMsgMasters(1),
+         sAxisSlave   => eventTimingMsgSlaves(1),
+         -- Masters
+         mAxisMasters => eventTimingMsgMasterArray,
+         mAxisSlaves  => eventTimingMsgSlaveArray
+      );
    
       U_DataSendStretcher : entity surf.SynchronizerOneShot 
          generic map(
@@ -292,7 +360,6 @@ begin
             dataIn  => dataSend,
             dataOut => dataSendStreched
          );
-
    
       -----------------------------------------------------------------------------
       -- generate stream frames
@@ -366,7 +433,23 @@ begin
               mAxisSlave                 => asicDataSlaves(i)   --to core
               );
       end generate;
-      
+   
+   asicAcq <= iAsicAcq;
+   asicR0 <= iAsicSRO;
+   asicGlblRst <= iAsicGlblRst;
+   asicSync <= iAsicSync;
 
-
+   GEN_VEC :
+   for i in 1 downto 0 generate
+      U_snAdcCard : entity surf.DS2411Core
+         generic map (
+            TPD_G        => TPD_G,
+            SIMULATION_G => SIMULATION_G,
+            CLK_PERIOD_G => AXIL_CLK_PERIOD_C)
+         port map (
+            clk       => axiClk,
+            rst       => axiRst,
+            fdSerSdio => serialNumber(i),
+            fdValue   => snCardId(i));
+   end generate GEN_VEC;
 end architecture;

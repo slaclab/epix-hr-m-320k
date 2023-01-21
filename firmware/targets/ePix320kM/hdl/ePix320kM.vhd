@@ -279,6 +279,9 @@ begin
          fpgaClkInP => fpgaClkInP,
          fpgaClkInM => fpgaClkInM,
 
+         gtLclsClkP => gtLclsClkP,
+         gtLclsClkM => gtLclsClkM,
+
          -- Serial number
          serialNumber => serialNumber,
 
