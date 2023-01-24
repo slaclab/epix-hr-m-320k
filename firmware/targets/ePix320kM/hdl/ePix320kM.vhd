@@ -139,7 +139,7 @@ entity ePix320kM is
 
       -- Power 
       syncDcdc           : out slv(6 downto 0);
-      ldoShtdnL          : out slv(1 downto 0);
+      pwrAnaEn           : out slv(1 downto 0);
       dcdcSync           : out sl;
       pcbSync            : out sl;
       pwrGood            : in  slv(1 downto 0);

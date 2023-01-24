@@ -61,6 +61,7 @@ architecture rtl of appClk is
    signal clk50            : sl;
    signal rst50            : sl;
    signal iClk250          : sl;
+   signal adcClk           : sl;
 
 begin
 

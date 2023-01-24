@@ -371,8 +371,8 @@ set_property -dict { PACKAGE_PIN G27 IOSTANDARD LVCMOS18 } [get_ports { saciClk 
 ##########################
 ##	Bank 64
 ##########################
-set_property -dict { PACKAGE_PIN AF14 IOSTANDARD LVCMOS18} [get_ports {ldoShtdnL[1]}]
-set_property -dict { PACKAGE_PIN AD19 IOSTANDARD LVCMOS18} [get_ports {ldoShtdnL[0]}]
+set_property -dict { PACKAGE_PIN AF14 IOSTANDARD LVCMOS18} [get_ports {pwrAnaEn[1]}]
+set_property -dict { PACKAGE_PIN AD19 IOSTANDARD LVCMOS18} [get_ports {pwrAnaEn[0]}]
 
 set_property -dict { PACKAGE_PIN AD18 IOSTANDARD LVCMOS18} [get_ports {syncDcdc[6]}]
 set_property -dict { PACKAGE_PIN AG15 IOSTANDARD LVCMOS18} [get_ports {syncDcdc[5]}]

@@ -47,7 +47,7 @@ entity RegisterControlDualClock is
       -- Register Inputs/Outputs (axiClk domain)
       boardConfig     : out AppConfigType;
       -- 1-wire board ID interfaces
-      serialIdIo     : inout slv(1 downto 0);
+      serialIdIo     : inout slv(2 downto 0);
       -- ASICs acquisition signals
       acqStart       : in  sl;
       asicR0         : out sl;
@@ -701,7 +701,7 @@ begin
             dnaValue( 63 downto  0) => idValues(0),
             dnaValid => idValids(0)
          );
-      G_DS2411 : for i in 0 to 1 generate
+      G_DS2411 : for i in 0 to 2 generate
         U_DS2411_N : entity surf.DS2411Core
           generic map (
             TPD_G        => TPD_G,
@@ -711,8 +711,8 @@ begin
             clk       => axilClk,
             rst       => chipIdRst,
             fdSerSdio => serialIdIo(i),
-            fdValue   => idValues(i+1),
-            fdValid   => idValids(i+1)
+            fdValue   => idValues(i),
+            fdValid   => idValids(i)
           );
       end generate;
    end generate GEN_DEVICE_DNA;

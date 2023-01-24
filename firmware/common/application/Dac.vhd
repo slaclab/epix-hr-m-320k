@@ -62,17 +62,17 @@ end Dac;
 
 architecture mapping of Dac is
 
-   constant NUM_AXIL_MASTERS_C : positive := 2;
-   constant HS_DAC_INDEX_C : natural   := 1;
-   constant BIAS_DAC_INDEX_C : natural := 2;
+   constant NUM_DAC_AXIL_MASTERS_C : natural  := 2;
+   constant HS_DAC_INDEX_C         : natural  := 0;
+   constant BIAS_DAC_INDEX_C       : natural  := 1;
 
 
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 20, 16);
+   constant DAC_XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_DAC_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_DAC_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 20, 16);
 
-   signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
-   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
-   signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
-   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_DAC_AXIL_MASTERS_C-1 downto 0);
+   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_DAC_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
+   signal axilReadMasters  : AxiLiteReadMasterArray(NUM_DAC_AXIL_MASTERS_C-1 downto 0);
+   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_DAC_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
 begin
 
@@ -83,8 +83,8 @@ begin
       generic map (
          TPD_G              => TPD_G,
          NUM_SLAVE_SLOTS_G  => 1,
-         NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
-         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
+         NUM_MASTER_SLOTS_G => NUM_DAC_AXIL_MASTERS_C,
+         MASTERS_CONFIG_G   => DAC_XBAR_CONFIG_C)
       port map (
          sAxiWriteMasters(0) => axilWriteMaster,
          sAxiWriteSlaves(0)  => axilWriteSlave,
@@ -98,31 +98,31 @@ begin
          axiClkRst           => axilRst);
 
    ----------------------------
-   -- High speed DAC (DAC8812C)
+   -- High speed DAC (DAC8812C)  TO BE REPLACED WITH 20 Bit DAC DEVICE
    ----------------------------
-   U_HS_DAC : entity epix_hr_core.DacWaveformGenAxi
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Master system clock
-         sysClk           => axilClk,
-         sysClkRst        => axilRst,
-         -- DAC Control Signals
-         dacDin           => hsDacDin,
-         dacSclk          => hsDacSclk,
-         dacCsL           => hsCsb,
-         dacLdacL         => hsLdacb,
-         dacClrL          => open,
-         -- external trigger
-         externalTrigger  => dacTrig,
-         -- AXI lite slave port for register access
-         axilClk          => axilClk,
-         axilRst          => axilRst,
-         sAxilWriteMaster => axilWriteMasters(HS_DAC_INDEX_C - 1 downto 0),
-         sAxilWriteSlave  => axilWriteSlaves(HS_DAC_INDEX_C - 1 downto 0),
-         sAxilReadMaster  => axilReadMasters(HS_DAC_INDEX_C - 1 downto 0),
-         sAxilReadSlave   => axilReadSlaves(HS_DAC_INDEX_C - 1 downto 0)
-      );
+   -- U_HS_DAC : entity epix_hr_core.DacWaveformGenAxi
+   --    generic map (
+   --       TPD_G => TPD_G)
+   --    port map (
+   --       -- Master system clock
+   --       sysClk           => axilClk,
+   --       sysClkRst        => axilRst,
+   --       -- DAC Control Signals
+   --       dacDin           => hsDacDin,
+   --       dacSclk          => hsDacSclk,
+   --       dacCsL           => hsCsb,
+   --       dacLdacL         => hsLdacb,
+   --       dacClrL          => open,
+   --       -- external trigger
+   --       externalTrigger  => dacTrig,
+   --       -- AXI lite slave port for register access
+   --       axilClk          => axilClk,
+   --       axilRst          => axilRst,
+   --       sAxilWriteMaster => axilWriteMasters(HS_DAC_INDEX_C),
+   --       sAxilWriteSlave  => axilWriteSlaves(HS_DAC_INDEX_C),
+   --       sAxilReadMaster  => axilReadMasters(HS_DAC_INDEX_C),
+   --       sAxilReadSlave   => axilReadSlaves(HS_DAC_INDEX_C)
+   --    );
 
    --------------------------
    -- Low Speed DAC (MAX5443)

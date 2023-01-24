@@ -24,14 +24,41 @@ class App(pr.Device):
     def __init__(self, sim=False, **kwargs):
         super().__init__(**kwargs)
 
+        # self.add(
+        #     MMCM7Registers(
+        #         name='MMCMRegisters',
+        #         offset=0x0000_0000,
+        #         expand=False,
+        #         enabled=False
+        #     )
+        # )
+
         self.add(
-            MMCM7Registers(
-                name='MMCMRegisters',
-                offset=0x0000_0000,
+            RegisterControl(
+                name='Register Control',
+                offset=0x0100_0000,
                 expand=False,
                 enabled=False
             )
         )
+
+        self.add(
+            PowerControl(
+                name='Power Control',
+                offset=0x0200_0000,
+                expand=False,
+                enabled=False
+            )
+        )
+    
+        # self.add(
+        #     MMCM7Registers(
+        #         name='MMCMRegisters',
+        #         offset=0x0000_0000,
+        #         expand=False,
+        #         enabled=False
+        #     )
+        # )
 
         self.add(
             RegisterControl(

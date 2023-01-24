@@ -32,13 +32,12 @@ use unisim.vcomponents.all;
 
 entity PowerCtrl is
     generic (
-        TPD_G             : time               := 1 ns;
-        SIMULATION_G        : boolean   := false
+        TPD_G  : time      := 1 ns
     );
     port (
       -- Global Signals
       axiClk         : in  sl;
-      axiRst         : in sl;
+      axiRst         : in  sl;
       
       -- AXI-Lite Register Interface (axiClk domain)
       axilReadMaster  : in  AxiLiteReadMasterType;
@@ -52,12 +51,11 @@ entity PowerCtrl is
       -- Power Ports
       syncDcdc         : out slv(6 downto 0);
       pwrGood          : in  slv(1 downto 0);
-      ldoShtdnL        : out slv(2 downto 0);
+      pwrAnaEn         : out slv(1 downto 0);
       PwrSync1MHzClk   : out sl;
       PwrEnable6V      : out sl;
-      pwrEnAna         : out slv(4 downto 0);
+      pwrEnAna         : out slv(1 downto 0);
       pwrEnDig         : out slv(4 downto 0)
-        
     );
 end entity PowerCtrl;
 
@@ -65,7 +63,7 @@ architecture rtl of PowerCtrl is
 
    type RegType is record
       pwrEnable6V    : sl;
-      pwrEnAna       : slv(2 downto 0);
+      pwrEnAna       : slv(1 downto 0);
       pwrEnDig       : slv(4 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
@@ -83,6 +81,21 @@ architecture rtl of PowerCtrl is
 
 begin
 
+   DCDC_CLK_U : entity surf.ClockDivider
+      generic map(
+         TPD_G             => TPD_G,   
+         COUNT_WIDTH_G     => 8 
+      )
+      port map(
+         clk        => axiClk,
+         rst        => axiRst,
+         highCount  => toslv(78, 8),
+         lowCount   => toslv(78, 8),
+         delayCount => toslv(0, 8),
+         divClk     => PwrSync1MHzClk,
+         preRise    => open,
+         preFall    => open
+         );
 
    comb : process (axilReadMaster, axiRst, axilWriteMaster, pwrGood, r) is
       variable v      : RegType;

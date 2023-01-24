@@ -38,6 +38,8 @@ use work.AppPkg.all;
 library epix_leap_core;
 use epix_leap_core.CorePkg.all;
 
+library epix_hr_core;
+
 entity AsicTop is
    generic (
       TPD_G                   : time          := 1 ns;
@@ -96,7 +98,7 @@ entity AsicTop is
       sspRst         : in sl;
       sspLinkUp      : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       sspValid       : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-      sspData        : in Slv16Array((NUMBER_OF_ASICS_C * NUMBER_OF_LANES_C)-1 downto 0);
+      sspData        : in Slv16Array((NUMBER_OF_ASICS_C * 24)-1 downto 0);
       sspSof         : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       sspEof         : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
       sspEofe        : in Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
@@ -107,15 +109,16 @@ entity AsicTop is
       -- ASIC Control Ports
       asicR0         : out sl;
       asicGlblRst    : out sl;
+      asicDigRst     : out sl;
       asicSync       : out sl;
       asicAcq        : out sl;
       asicSro        : out sl;
-      asicRdClk      : in sl;
       asicClkEn      : out sl;
       rdClkSel       : out sl;
+      asicClkSyncEn  : out sl;
 
       -- Digital Monitor
-      digMon   : out slv(1 downto 0);
+      digMon   : in slv(1 downto 0);
       
       -- Clocking ports
       sysClk      : in sl;
@@ -128,12 +131,12 @@ entity AsicTop is
       daqToFpga      : in  sl;
       ttlToFpga      : in  sl;
 
-      serialNumber         : inout slv(1 downto 0);
+      serialNumber         : inout slv(2 downto 0);
 
       -- Timing link up
       v1LinkUp             : in    sl;
-      v2LinkUp             : in    sl
-
+      v2LinkUp             : in    sl;
+      boardConfig          : out   AppConfigType
    );
 end AsicTop;
 
@@ -172,10 +175,10 @@ architecture rtl of AsicTop is
    signal eventTimingMsgMasterAxiLSync  : AxiStreamMasterType;
    signal eventTimingMsgSlaveAxiLSync   : AxiStreamSlaveType;
 
-   signal boardConfig                  : AppConfigType;
+   signal boardConfigSig                  : AppConfigType;
 
    -- External Signals 
-   signal serialIdIo                   : slv(1 downto 0) := "00";
+   signal serialIdIo                   : slv(2 downto 0) := (others => '0');
    signal snCardId : Slv64Array(1 downto 0) := (others => (others => '0'));
 
    signal dataSend                     : sl;
@@ -210,10 +213,11 @@ begin
    oscopeTrigBus    <= (others => '0');
    slowAdcAcqStart  <= (others => '0');
    dacTrig          <= '0';
-   digMon           <= (others => '0');
 
    timingRunTrigger <= triggerData(0).valid and triggerData(0).l0Accept;
    timingDaqTrigger <= triggerData(1).valid and triggerData(1).l0Accept;
+
+   boardConfig      <= boardConfigSig;
 
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
@@ -250,7 +254,7 @@ begin
          axiWriteSlave   => axilWriteSlaves(REGCTRL_AXI_INDEX_C),
 
          -- Register Inputs/Outputs (axiClk domain)
-         boardConfig    => boardConfig,
+         boardConfig    => boardConfigSig,
 
          -- 1-wire board ID interfaces
          serialIdIo     => serialIdIo,
@@ -282,7 +286,7 @@ begin
    ------------------------------------------
    --             Trig control             --
    ------------------------------------------ 
-   U_TrigControl : entity epix_hr_core.TrigControlAxi
+   U_TrigControl : entity work.TrigControlAxi
       port map (
          -- Trigger outputs
          appClk            => axiClk,
@@ -398,7 +402,7 @@ begin
                mAxisSlave        => mAxisSlavesASIC(i),
             
                -- acquisition number input to the header
-               acqNo             => boardConfig.acqCnt,
+               acqNo             => boardConfigSig.acqCnt,
                startRdout        => dataSendStreched
             );
       
@@ -438,6 +442,7 @@ begin
    asicR0 <= iAsicSRO;
    asicGlblRst <= iAsicGlblRst;
    asicSync <= iAsicSync;
+   asicDigRst <= iAsicDigRst;
 
    GEN_VEC :
    for i in 1 downto 0 generate
