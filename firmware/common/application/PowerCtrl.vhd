@@ -49,6 +49,7 @@ entity PowerCtrl is
       --  Top Level Ports
       -------------------
       -- Power Ports
+      clk6Meg          : in sl;
       syncDcdc         : out slv(6 downto 0);
       pwrGood          : in  slv(1 downto 0);
       pwrAnaEn         : out slv(1 downto 0);
@@ -79,19 +80,21 @@ architecture rtl of PowerCtrl is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
+   constant COUNT_WIDTH_C  : natural := 3;
+
 begin
 
    DCDC_CLK_U : entity surf.ClockDivider
       generic map(
          TPD_G             => TPD_G,   
-         COUNT_WIDTH_G     => 8 
+         COUNT_WIDTH_G     => COUNT_WIDTH_C 
       )
       port map(
-         clk        => axiClk,
+         clk        => clk6Meg,
          rst        => axiRst,
-         highCount  => toslv(78, 8),
-         lowCount   => toslv(78, 8),
-         delayCount => toslv(0, 8),
+         highCount  => toslv(3, COUNT_WIDTH_C),
+         lowCount   => toslv(3, COUNT_WIDTH_C),
+         delayCount => toslv(0, COUNT_WIDTH_C),
          divClk     => PwrSync1MHzClk,
          preRise    => open,
          preFall    => open
@@ -128,7 +131,7 @@ begin
       axilReadSlave  <= r.axilReadSlave;
       axilWriteSlave <= r.axilWriteSlave;
       syncDcdc        <= (others => '0');
-      pwrSync1MHzClk <= '0';
+      -- pwrSync1MHzClk <= '0';
       pwrEnable6V    <= r.pwrEnable6V;
       pwrEnAna       <= r.pwrEnAna;
       pwrEnDig       <= r.pwrEnDig;

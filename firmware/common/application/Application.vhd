@@ -267,6 +267,8 @@ architecture rtl of Application is
    signal saciCmdVec             : sl;
    signal saciSelSig             : slv(NUMBER_OF_ASICS_C - 1 downto 0);
 
+   signal clk6Meg                : sl;
+
 begin
 
    saciSel       <= saciSelSig;
@@ -365,7 +367,8 @@ begin
          clk250                 => clk250,
          rst250                 => rst250,
          sspClk                 => sspClk,
-         sspRst                 => sspRst
+         sspRst                 => sspRst,
+         clk6Meg                => clk6Meg
       );
       
    U_AsicTop : entity work.AsicTop
@@ -451,33 +454,31 @@ begin
          v2LinkUp             => v2LinkUp
       );
    
-   GEN_SACI :
-   for i in NUMBER_OF_ASICS_C - 1 downto 0 generate
-      ----------------------------
-      -- SACI Interface Controller
-      ----------------------------
-      U_AxiLiteSaciMaster : entity surf.AxiLiteSaciMaster
-         generic map (
-            AXIL_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,  -- In units of seconds
-            AXIL_TIMEOUT_G     => 1.0E-3,             -- In units of seconds
-            SACI_CLK_PERIOD_G  => ite(SIMULATION_G, (4.0*AXIL_CLK_PERIOD_C), 1.0E-6),  -- In units of seconds
-            SACI_CLK_FREERUN_G => false,
-            SACI_RSP_BUSSED_G  => true,
-            SACI_NUM_CHIPS_G   => 4)
-         port map (
-            -- SACI interface
-            saciClk         => saciClkVec,
-            saciCmd         => saciCmdVec,
-            saciSelL        => saciSelSig,
-            saciRsp(0)      => saciRsp,
-            -- AXI-Lite Register Interface
-            axilClk         => axiClk,
-            axilRst         => axiRst,
-            axilReadMaster  => axilReadMasters(SACI_INDEX_C + i),
-            axilReadSlave   => axilReadSlaves(SACI_INDEX_C + i),
-            axilWriteMaster => axilWriteMasters(SACI_INDEX_C + i),
-            axilWriteSlave  => axilWriteSlaves(SACI_INDEX_C + i));
-   end generate GEN_SACI;
+   ----------------------------
+   -- SACI Interface Controller
+   ----------------------------
+   U_AxiLiteSaciMaster : entity surf.AxiLiteSaciMaster
+      generic map (
+         AXIL_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,  -- In units of seconds
+         AXIL_TIMEOUT_G     => 1.0E-3,             -- In units of seconds
+         SACI_CLK_PERIOD_G  => ite(SIMULATION_G, (4.0*AXIL_CLK_PERIOD_C), 1.0E-6),  -- In units of seconds
+         SACI_CLK_FREERUN_G => false,
+         SACI_RSP_BUSSED_G  => true,
+         SACI_NUM_CHIPS_G   => 4)
+      port map (
+         -- SACI interface
+         saciClk         => saciClkVec,
+         saciCmd         => saciCmdVec,
+         saciSelL        => saciSelSig,
+         saciRsp(0)      => saciRsp,
+         -- AXI-Lite Register Interface
+         axilClk         => axiClk,
+         axilRst         => axiRst,
+         axilReadMaster  => axilReadMasters(SACI_INDEX_C),
+         axilReadSlave   => axilReadSlaves(SACI_INDEX_C),
+         axilWriteMaster => axilWriteMasters(SACI_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(SACI_INDEX_C));
+
 
    U_PwrCtrl : entity work.PowerCtrl
       generic map (
@@ -486,12 +487,14 @@ begin
       port map (
          axiClk             => axiClk,
          axiRst             => axiRst,
-         axilReadMaster     => axilReadMasters(POWER_CONTROL_INDEX_C),
-         axilReadSlave      => axilReadSlaves(POWER_CONTROL_INDEX_C),
-         axilWriteMaster    => axilWriteMasters(POWER_CONTROL_INDEX_C),
-         axilWriteSlave     => axilWriteSlaves(POWER_CONTROL_INDEX_C),
+         axilReadMaster     => axilReadMasters(PWR_INDEX_C),
+         axilReadSlave      => axilReadSlaves(PWR_INDEX_C),
+         axilWriteMaster    => axilWriteMasters(PWR_INDEX_C),
+         axilWriteSlave     => axilWriteSlaves(PWR_INDEX_C),
+         clk6Meg            => clk6Meg,
          syncDcdc           => syncDcdc,
          pwrAnaEn           => pwrAnaEn,
+         PwrSync1MHzClk     => open,
          -- pcbSync            => pcbSync,
          pwrGood            => pwrGood
       );

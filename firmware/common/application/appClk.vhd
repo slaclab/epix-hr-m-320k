@@ -46,6 +46,7 @@ entity appClk is
       rst250        : out sl;
       sspClk        : out sl;
       sspRst        : out sl;
+      clk6Meg       : out sl;
 
       jitclnLolL    : in sl
       
@@ -120,7 +121,7 @@ begin
         INPUT_BUFG_G           => false,
         FB_BUFG_G              => true,
         RST_IN_POLARITY_G      => '1',     -- '0' for active low
-        NUM_CLOCKS_G           => 3,
+        NUM_CLOCKS_G           => 4,
         SIMULATION_G           => SIMULATION_G,
         -- MMCM attributes
         BANDWIDTH_G            => "OPTIMIZED",
@@ -128,7 +129,8 @@ begin
         CLKFBOUT_MULT_F_G      => 8.0,      -- 1.25 Ghz = 31.25 MHz * 32
         CLKOUT0_DIVIDE_F_G     => 31.25,    -- 40 MHz = 1.25 GHz / 31.25
         CLKOUT1_DIVIDE_G       => 25,       -- 50 MHz = 1.25 GHz / 25
-        CLKOUT2_DIVIDE_G       => 5         -- 50 MHz = 1.25 GHz / 25
+        CLKOUT2_DIVIDE_G       => 5,        -- 50 MHz = 1.25 GHz / 25
+        CLKOUT3_DIVIDE_G       => 26
 
      )
      port map(
@@ -136,7 +138,8 @@ begin
         rstIn           => fabReset,
         clkOut(0)       => fpgaToPllClk,
         clkOut(1)       => adcClk,
-        clkOut(2)       => iClk250
+        clkOut(2)       => iClk250,
+        clkOut(3)       => clk6Meg
      );
   
    U_fpgaToPllClk : entity surf.ClkOutBufDiff
@@ -180,7 +183,7 @@ begin
          );
 
    
-   U_clk80 : BUFGCE_DIV
+   U_clk50 : BUFGCE_DIV
       generic map (
          BUFGCE_DIVIDE => 4
       )

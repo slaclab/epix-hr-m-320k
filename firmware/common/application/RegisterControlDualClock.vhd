@@ -690,17 +690,6 @@ begin
    -- Serial IDs: FPGA Device DNA + DS2411's
    -----------------------------------------------  
    GEN_DEVICE_DNA : if (EN_DEVICE_DNA_G = true) generate
-      G_DEVICE_DNA : entity surf.DeviceDna
-         generic map (
-            TPD_G        => TPD_G,
-            XIL_DEVICE_G => "ULTRASCALE")
-         port map (
-            clk      => axilClk,
-            rst      => axiReset,
-            dnaValue(127 downto 64) => dummyIdValues,
-            dnaValue( 63 downto  0) => idValues(0),
-            dnaValid => idValids(0)
-         );
       G_DS2411 : for i in 0 to 2 generate
         U_DS2411_N : entity surf.DS2411Core
           generic map (
@@ -722,8 +711,6 @@ begin
       idValues(0) <= (others=>'0');
    end generate BYP_DEVICE_DNA;   
       
-   
-   
    chipIdRst <= axiReset or adcCardStartUpEdge;
 
    -- Special reset to the DS2411 to re-read in the event of a start up request event

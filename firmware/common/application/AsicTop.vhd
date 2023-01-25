@@ -179,7 +179,7 @@ architecture rtl of AsicTop is
 
    -- External Signals 
    signal serialIdIo                   : slv(2 downto 0) := (others => '0');
-   signal snCardId : Slv64Array(1 downto 0) := (others => (others => '0'));
+   signal snCardId                     : Slv64Array(2 downto 0) := (others => (others => '0'));
 
    signal dataSend                     : sl;
    signal dataSendStreched             : sl;
@@ -444,17 +444,4 @@ begin
    asicSync <= iAsicSync;
    asicDigRst <= iAsicDigRst;
 
-   GEN_VEC :
-   for i in 1 downto 0 generate
-      U_snAdcCard : entity surf.DS2411Core
-         generic map (
-            TPD_G        => TPD_G,
-            SIMULATION_G => SIMULATION_G,
-            CLK_PERIOD_G => AXIL_CLK_PERIOD_C)
-         port map (
-            clk       => axiClk,
-            rst       => axiRst,
-            fdSerSdio => serialNumber(i),
-            fdValue   => snCardId(i));
-   end generate GEN_VEC;
 end architecture;

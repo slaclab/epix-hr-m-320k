@@ -9,7 +9,8 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 loadRuckusTcl $::env(TOP_DIR)/submodules/surf
 loadRuckusTcl $::env(TOP_DIR)/submodules/l2si-core
 loadRuckusTcl $::env(TOP_DIR)/submodules/lcls-timing-core
-loadRuckusTcl $::env(TOP_DIR)/submodules/epix-hr-core
+loadRuckusTcl $::env(TOP_DIR)/submodules/epix-hr-core/core/leap-core
+loadRuckusTcl $::env(TOP_DIR)/submodules/epix-hr-core/shared
 loadRuckusTcl $::env(TOP_DIR)/common
 
 # Load target's source code and constraints

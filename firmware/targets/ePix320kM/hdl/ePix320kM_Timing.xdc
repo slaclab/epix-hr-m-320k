@@ -12,17 +12,25 @@
 # Common Clocks
 ###############
 
-create_clock -name gtPllClkP0    -period 3.125 [get_ports { gtPllClkP[0] }]
-create_clock -name gtPllClkP1    -period 3.125 [get_ports { gtPllClkP[1] }]
+create_clock -name gtPllClkP0    -period 4     [get_ports { gtPllClkP[0] }]
+create_clock -name gtPllClkP1    -period 4     [get_ports { gtPllClkP[1] }]
 create_clock -name gtRefClkP0    -period 6.400 [get_ports { gtRefClkP[0] }]
 create_clock -name gtRefClkP1    -period 6.400 [get_ports { gtRefClkP[1] }]
+create_clock -name pllToFpgaClkP -period 4     [get_ports { pllToFpgaClkP }]
 create_clock -name gtLclsClkP    -period 2.691 [get_ports { gtLclsClkP }]
 create_clock -name adcMonClkP0   -period 2.857 [get_ports { adcMonDataClkP[0] }]
 create_clock -name adcMonClkP1   -period 2.857 [get_ports { adcMonDataClkP[1] }]
 
 set_clock_groups -asynchronous \
+   -group [get_clocks -include_generated_clocks {pllToFpgaClkP}] \
    -group [get_clocks -include_generated_clocks {gtLclsClkP}] \
    -group [get_clocks -include_generated_clocks {gtRefClkP0}] \
    -group [get_clocks -include_generated_clocks {gtRefClkP1}] \
    -group [get_clocks -include_generated_clocks {adcMonClkP0}] \
    -group [get_clocks -include_generated_clocks {adcMonClkP1}]
+
+set_clock_groups -asynchronous \
+    -group [get_clocks -of_objects [get_pins U_Core/GEN_PGP.U_axilClock/PllGen.U_Pll/CLKOUT0]] \
+    -group [get_clocks -of_objects [get_pins -hier -filter {NAME =~ *U_Pgp3GthUsIpWrapper_1/GEN_10G.U_Pgp3GthUsIp/inst/gen_gtwizard_gthe4_top.Pgp3GthUsIp10G_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_tx_user_clocking_internal.gen_single_instance.gtwiz_userclk_tx_inst/gen_gtwiz_userclk_tx_main.bufg_gt_usrclk2_inst/O}]] \
+    -group [get_clocks -of_objects [get_pins -hier -filter {NAME =~ *U_Pgp3GthUsIpWrapper_1/GEN_10G.U_Pgp3GthUsIp/inst/gen_gtwizard_gthe4_top.Pgp3GthUsIp10G_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_rx_user_clocking_internal.gen_single_instance.gtwiz_userclk_rx_inst/gen_gtwiz_userclk_rx_main.bufg_gt_usrclk2_inst/O}]] \
+    -group [get_clocks -of_objects [get_pins -hier -filter {NAME =~ *U_Pgp3GthUsIpWrapper_1/GEN_10G.U_Pgp3GthUsIp/inst/gen_gtwizard_gthe4_top.Pgp3GthUsIp10G_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_channel_container[2].gen_enabled_channel.gthe4_channel_wrapper_inst/channel_inst/gthe4_channel_gen.gen_gthe4_channel_inst[0].GTHE4_CHANNEL_PRIM_INST/RXOUTCLKPCS}]]
