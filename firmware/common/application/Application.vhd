@@ -39,10 +39,12 @@ use epix_leap_core.CorePkg.all;
 
 entity Application is
    generic (
-      TPD_G             : time := 1 ns;
-      BUILD_INFO_G      : BuildInfoType;
-      SIMULATION_G      : boolean := false;
-      NUM_OF_CARRIER_G  : integer   := 1
+      TPD_G                : time            := 1 ns;
+      BUILD_INFO_G         : BuildInfoType;
+      SIMULATION_G         : boolean         := false;
+      NUM_OF_ASICS_G       : integer         := 4;
+      NUM_OF_SLOW_ADCS_G   : integer         := 2;
+      NUM_OF_PSCOPE_G      : integer         := 4
    );
    port (
       ----------------------
@@ -62,10 +64,10 @@ entity Application is
       asicDataMasters    : out AxiStreamMasterArray(3 downto 0);
       asicDataSlaves     : in  AxiStreamSlaveArray(3 downto 0);
       remoteDmaPause     : in  slv(3 downto 0);
-      oscopeMasters      : out AxiStreamMasterArray(NUM_OF_CARRIER_G - 1 downto 0);
-      oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_CARRIER_G - 1 downto 0);
-      slowAdcMasters     : out AxiStreamMasterArray(3 downto 0);
-      slowAdcSlaves      : in  AxiStreamSlaveArray(3 downto 0);
+      oscopeMasters      : out AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
+      oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
+      slowAdcMasters     : out AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSlaves      : in  AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
 
       -- SSI commands
       ssiCmd             : in SsiCmdMasterType;
@@ -149,8 +151,8 @@ entity Application is
       pwrGood              : in  slv(1 downto 0);
 
       -- Fast ADC Ports
-      adcMonDoutP           : in slv(11 downto 0);
-      adcMonDoutM           : in slv(11 downto 0);
+      adcMonDoutP           : in Slv8Array(1 downto 0);
+      adcMonDoutM           : in Slv8Array(1 downto 0);
       adcMonDataClkP        : in slv(1 downto 0);
       adcMonDataClkM        : in slv(1 downto 0);
       adcMonFrameClkP       : in slv(1 downto 0);
@@ -164,13 +166,13 @@ entity Application is
       adcMonPdwn            : out sl;
       adcMonSpiCsL          : out sl;
 
-      slowAdcDout           : in  slv(1 downto 0);
-      slowAdcDrdyL          : in  slv(1 downto 0);
+      slowAdcDout           : in  sl;
+      slowAdcDrdyL          : in  sl;
       slowAdcSyncL          : out slv(1 downto 0);
-      slowAdcSclk           : out slv(1 downto 0);
+      slowAdcSclk           : out sl;
       slowAdcCsL            : out slv(1 downto 0);
-      slowAdcDin            : out slv(1 downto 0);
-      slowAdcRefClk         : out slv(1 downto 0);
+      slowAdcDin            : out sl;
+      slowAdcRefClk         : out sl;
    
       jitclnrLolL           : in sl
    );
@@ -236,9 +238,9 @@ architecture rtl of Application is
    signal v1LinkUp               : sl  := '0';
    signal v2LinkUp               : sl  := '0';
 
-   signal oscopeAcqStart         : sl;
+   signal oscopeAcqStart         : slv(NUM_OF_PSCOPE_G - 1 downto 0);
    signal oscopeTrigBus          : slv(11 downto 0);
-   signal slowAdcAcqStart        : slv(3 downto 0);
+   signal slowAdcAcqStart        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal dacTrig                : sl;
    signal boardConfig            : AppConfigType;
 
@@ -252,9 +254,9 @@ architecture rtl of Application is
    signal dacLoadSig             : sl;
    signal asicDigRstSig          : sl;
    signal asicClkSyncEnSig       : sl;
-   signal slowAdcDinSig          : slv(1 downto 0);
-   signal slowAdcSyncLSig        : slv(1 downto 0);
-   signal slowAdcRefClkSig       : slv(1 downto 0);
+   signal slowAdcDinSig          : sl;
+   signal slowAdcSyncLSig        : sl;
+   signal slowAdcRefClkSig       : sl;
 
    signal saciClkVec             : sl;
    signal saciCmdVec             : sl;
@@ -365,6 +367,8 @@ begin
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G,
          BUILD_INFO_G           => BUILD_INFO_G,
+         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
          AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr
       )
       port map (
@@ -613,12 +617,14 @@ begin
   
    U_AdcMon : entity work.AdcMon
       generic map (
-         TPD_G            => TPD_G,
-         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(ADC_INDEX_C).baseAddr
+         TPD_G                => TPD_G,
+         AXIL_BASE_ADDR_G     => XBAR_CONFIG_C(ADC_INDEX_C).baseAddr,
+         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
       port map (
-         clk250          => clk250,
-         rst250          => rst250,
+         clk156          => clk156,
+         rst156          => rst156,
          -- Trigger Interface (axilClk domain)
          oscopeAcqStart  => oscopeAcqStart,
          oscopeTrigBus   => oscopeTrigBus,

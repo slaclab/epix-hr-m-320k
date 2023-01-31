@@ -33,16 +33,17 @@ entity AdcMon is
    generic (
       TPD_G                : time := 1 ns;
       AXIL_BASE_ADDR_G     : slv(31 downto 0);
-      NUM_OF_CARRIER_G     : integer := 1
-   );
+      NUM_OF_SLOW_ADCS_G   : integer := 2;
+      NUM_OF_PSCOPE_G      : integer := 4       -- Related to the number of fast adcs
+   );                                           -- NUM_OF_PSCOPE_G * 4 
    port (
       -- Clock and Reset
-      clk250          : in    sl;
-      rst250          : in    sl;
+      clk156          : in    sl;
+      rst156          : in    sl;
       -- Trigger Interlace (axilClk domain)
-      oscopeAcqStart  : in    sl;
+      oscopeAcqStart  : in    slv(NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeTrigBus   : in    slv(11 downto 0);
-      slowAdcAcqStart : in    slv(3 downto 0);
+      slowAdcAcqStart : in    slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in    sl;
       axilRst         : in    sl;
@@ -51,21 +52,21 @@ entity AdcMon is
       axilWriteMaster : in    AxiLiteWriteMasterType;
       axilWriteSlave  : out   AxiLiteWriteSlaveType;
       -- Streaming Interfaces (axilClk domain)
-      oscopeMasters   : out   AxiStreamMasterArray( NUM_OF_CARRIER_G - 1 downto 0);
-      oscopeSlaves    : in    AxiStreamSlaveArray( NUM_OF_CARRIER_G - 1 downto 0);
-      slowAdcMasters  : out   AxiStreamMasterArray(1 downto 0);
-      slowAdcSlaves   : in    AxiStreamSlaveArray(1 downto 0);
+      oscopeMasters   : out   AxiStreamMasterArray( NUM_OF_PSCOPE_G - 1 downto 0);
+      oscopeSlaves    : in    AxiStreamSlaveArray( NUM_OF_PSCOPE_G - 1 downto 0);
+      slowAdcMasters  : out   AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSlaves   : in    AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G -1 downto 0);
       -------------------
       --  Top Level Ports
       -------------------
       -- Slow ADC Ports
-      slowAdcCsL      : out   slv(1 downto 0);
-      slowAdcSclk     : out   slv(1 downto 0);
-      slowAdcDin      : out   slv(1 downto 0);
-      slowAdcSyncL    : out   slv(1 downto 0);
-      slowAdcDout     : in    slv(1 downto 0);
-      slowAdcDrdyL    : in    slv(1 downto 0);
-      slowAdcRefClk   : out   slv(1 downto 0);
+      slowAdcCsL      : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSclk     : out   sl;
+      slowAdcDin      : out   sl;
+      slowAdcSyncL    : out   sl;
+      slowAdcDout     : in    sl;
+      slowAdcDrdyL    : in    sl;
+      slowAdcRefClk   : out   sl;
       -- ADC Monitor Ports
       adcMonSpiCsL    : out   sl;
       adcMonPdwn      : out   sl;
@@ -73,8 +74,8 @@ entity AdcMon is
       adcMonSpiData   : inout sl;
       adcMonClkOutP   : out   sl;
       adcMonClkOutM   : out   sl;
-      adcMonDoutP     : in    slv(11 downto 0);
-      adcMonDoutM     : in    slv(11 downto 0);
+      adcMonDoutP     : in    Slv8Array(1 downto 0);
+      adcMonDoutM     : in    Slv8Array(1 downto 0);
       adcMonFrameClkP : in    slv(1 downto 0);
       adcMonFrameClkM : in    slv(1 downto 0);
       adcMonDataClkP  : in    slv(1 downto 0);
@@ -84,11 +85,11 @@ end AdcMon;
 
 architecture mapping of AdcMon is
 
-   constant MONADC_INDEX_C     : natural  := 0;
-   constant SCOPE_INDEX_C      : natural  := 1; --1:2
-   constant ADC_RD_INDEX_C     : natural  := 3;
-   constant ADC_CFG_INDEX_C    : natural  := 4;
-   constant NUM_AXIL_MASTERS_C : positive := 5;
+   constant MONADC_INDEX_C     : natural  := 0;    -- 0:1
+   constant SCOPE_INDEX_C      : natural  := 2;    -- 2:5
+   constant ADC_RD_INDEX_C     : natural  := 6;    -- 6:7
+   constant ADC_CFG_INDEX_C    : natural  := 8;    -- 8
+   constant NUM_AXIL_MASTERS_C : positive := 9;
 
    constant XBAR_CONFIG_C      : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 20, 16);
 
@@ -107,21 +108,20 @@ architecture mapping of AdcMon is
    signal adcBitClkDiv4        : slv(1 downto 0);
    signal adcBitRst            : slv(1 downto 0);
    signal adcBitRstDiv4        : slv(1 downto 0);
-   signal adcSpiCsL_i          : slv(1 downto 0);
-   signal adcPdwn_i            : slv(0 downto 0);
 
-   signal adcValid             : slv(3 downto 0);
-   signal adcData              : Slv16Array(3 downto 0);
-   signal adcStreams           : AxiStreamMasterArray(3 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
-   signal monAdc               : Ad9249SerialGroupType;
+
+   signal adcValid             : slv(15 downto 0);
+   signal adcData              : Slv16Array(15 downto 0);
+   signal adcStreams           : AxiStreamMasterArray(15 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
+   signal monAdc               : Ad9249SerialGroupArray(NUM_OF_PSCOPE_G - 1 downto 0);
 
    signal adcClk               : sl;
    signal adcRst               : sl;
 
+   signal adcSpiCsL_i          : slv(1 downto 0);
+   signal adcPdwn_i            : slv(0 downto 0);
 
 begin
-   adcMonSpiCsL       <= adcSpiCsL_i(0);
-   adcMonPdwn         <= adcPdwn_i(0);
 
    U_adcClk : entity surf.ClockManagerUltraScale
       generic map(
@@ -139,8 +139,8 @@ begin
       )
       port map(
          -- Clock Input
-         clkIn     => clk250,
-         rstIn     => rst250,
+         clkIn     => clk156,
+         rstIn     => rst156,
          -- Clock Outputs
          clkOut(0) => adcClk,
          -- Reset Outputs
@@ -184,43 +184,46 @@ begin
    -----------------------
    -- Virtual oscilloscope
    -----------------------
-   U_PseudoScope : entity work.PseudoScopeAxi
-      generic map (
-      TPD_G                      => TPD_G,
-      MASTER_AXI_STREAM_CONFIG_G => APP_AXIS_CONFIG_C
-   )
-      port map (
-      sysClk           => axilClk,
-      sysClkRst        => axilRst,
-      adcData          => adcData,
-      adcValid         => adcValid,
-      arm              => oscopeAcqStart,
-      triggerIn        => oscopeTrigBus,
-      mAxisMaster      => oscopeMasters(0),
-      mAxisSlave       => oscopeSlaves(0),
-      -- AXI lite slave port for register access
-      axilClk          => axilClk,
-      axilRst          => axilRst,
-      sAxilWriteMaster => axilWriteMasters(SCOPE_INDEX_C),
-      sAxilWriteSlave  => axilWriteSlaves(SCOPE_INDEX_C),
-      sAxilReadMaster  => axilReadMasters(SCOPE_INDEX_C),
-      sAxilReadSlave   => axilReadSlaves(SCOPE_INDEX_C)
-      );
-
-   GenAdcStr : for i in 0 to 3 generate
-      adcData(i)  <= adcStreams(i).tData(15 downto 0);
-      adcValid(i) <= adcStreams(i).tValid;
-   end generate;
-      
-   monAdc(i).fClkP           <= adcMonFrameClkP(0);
-   monAdc(i).fClkN           <= adcMonFrameClkM(0);
-   monAdc(i).dClkP           <= adcMonDataClkP(0);
-   monAdc(i).dClkN           <= adcMonDataClkM(0);
-   monAdc(i).chP(7 downto 0) <= adcMonDoutP(i);
-   monAdc(i).chN(7 downto 0) <= adcMonDoutM(i);
+   GEN_OSCOPE :
+   for i in NUM_OF_PSCOPE_G - 1 downto 0 generate
+      U_PseudoScope : entity work.PseudoScopeAxi
+         generic map (
+         TPD_G                      => TPD_G,
+         MASTER_AXI_STREAM_CONFIG_G => APP_AXIS_CONFIG_C
+      )
+         port map (
+         sysClk           => axilClk,
+         sysClkRst        => axilRst,
+         adcData          => adcData(4*i+3 downto 4*i),
+         adcValid         => adcValid(4*i+3 downto 4*i),
+         arm              => oscopeAcqStart(i),
+         triggerIn        => oscopeTrigBus,
+         mAxisMaster      => oscopeMasters(i),
+         mAxisSlave       => oscopeSlaves(i),
+         -- AXI lite slave port for register access
+         axilClk          => axilClk,
+         axilRst          => axilRst,
+         sAxilWriteMaster => axilWriteMasters(SCOPE_INDEX_C + i),
+         sAxilWriteSlave  => axilWriteSlaves(SCOPE_INDEX_C + i),
+         sAxilReadMaster  => axilReadMasters(SCOPE_INDEX_C + i),
+         sAxilReadSlave   => axilReadSlaves(SCOPE_INDEX_C + i)
+         );
    
-   GEN_ADCCLK :
+         GenAdcStr : for j in 0 to NUM_OF_PSCOPE_G - 1 generate
+            adcData(4*i+j)  <= adcStreams(4*i+j).tData(15 downto 0);
+            adcValid(4*i+j) <= adcStreams(4*i+j).tValid;
+         end generate;
+   end generate GEN_OSCOPE ;
+
+   GEN_FAST_ADC :
    for i in 1 downto 0 generate
+      monAdc(i).fClkP           <= adcMonFrameClkP(i);
+      monAdc(i).fClkN           <= adcMonFrameClkM(i);
+      monAdc(i).dClkP           <= adcMonDataClkP(i);
+      monAdc(i).dClkN           <= adcMonDataClkM(i);
+      monAdc(i).chP(7 downto 0) <= adcMonDoutP(i);
+      monAdc(i).chN(7 downto 0) <= adcMonDoutM(i);
+   
       U_IBUFDS : IBUFDS
          port map (
             I  => adcMonDataClkP(i),
@@ -228,36 +231,34 @@ begin
             O  => adcDclk(i)
          );
 
-
-   ------------------------------------------
-   -- Generate clocks from ADC incoming clock
-   ------------------------------------------
-   -- clkIn     : 350.00 MHz ADC clock
-   -- clkOut(0) : 350.00 MHz adcBitClk clock
-   -- clkOut(1) :  87.50 MHz adcBitClkDiv4 clock
-   U_iserdesClockGen : entity surf.ClockManagerUltraScale
-      generic map(
-         TPD_G             => TPD_G,
-         TYPE_G            => "PLL",
-         INPUT_BUFG_G      => true,
-         FB_BUFG_G         => true,
-         RST_IN_POLARITY_G => '1',
-         NUM_CLOCKS_G      => 2,
-         -- MMCM attributes
-         CLKIN_PERIOD_G    => 2.85,  -- 350MHz
-         CLKFBOUT_MULT_G   => 3,     -- 1050MHz = 3 x 350MHz
-         CLKOUT0_DIVIDE_G  => 3,     -- 350MHz = 1050MHz/3
-         CLKOUT1_DIVIDE_G  => 12     -- 87.5MHz = 1050MHz/12
-      )
-      port map(
-         clkIn     => adcDclk(i),
-         rstIn     => '0',
-         clkOut(0) => adcBitClk(i),
-         clkOut(1) => adcBitClkDiv4(i),
-         rstOut(0) => adcBitRst(i),
-         rstOut(1) => adcBitRstDiv4(i)
-      );
-
+      ------------------------------------------
+      -- Generate clocks from ADC incoming clock
+      ------------------------------------------
+      -- clkIn     : 350.00 MHz ADC clock
+      -- clkOut(0) : 350.00 MHz adcBitClk clock
+      -- clkOut(1) :  87.50 MHz adcBitClkDiv4 clock
+      U_iserdesClockGen : entity surf.ClockManagerUltraScale
+         generic map(
+            TPD_G             => TPD_G,
+            TYPE_G            => "PLL",
+            INPUT_BUFG_G      => true,
+            FB_BUFG_G         => true,
+            RST_IN_POLARITY_G => '1',
+            NUM_CLOCKS_G      => 2,
+            -- MMCM attributes
+            CLKIN_PERIOD_G    => 2.85,  -- 350MHz
+            CLKFBOUT_MULT_G   => 3,     -- 1050MHz = 3 x 350MHz
+            CLKOUT0_DIVIDE_G  => 3,     -- 350MHz = 1050MHz/3
+            CLKOUT1_DIVIDE_G  => 12     -- 87.5MHz = 1050MHz/12
+         )
+         port map(
+            clkIn     => adcDclk(i),
+            rstIn     => '0',
+            clkOut(0) => adcBitClk(i),
+            clkOut(1) => adcBitClkDiv4(i),
+            rstOut(0) => adcBitRst(i),
+            rstOut(1) => adcBitRstDiv4(i)
+         );
 
    U_MonAdcReadout : entity surf.Ad9249ReadoutGroup
       generic map (
@@ -273,10 +274,10 @@ begin
          axilClk         => axilClk,
          axilRst         => axilRst,
          -- Axi Interface
-         axilReadMaster  => axilReadMasters(ADC_RD_INDEX_C),
-         axilReadSlave   => axilReadSlaves(ADC_RD_INDEX_C),
-         axilWriteMaster => axilWriteMasters(ADC_RD_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(ADC_RD_INDEX_C),
+         axilReadMaster  => axilReadMasters(ADC_RD_INDEX_C + i),
+         axilReadSlave   => axilReadSlaves(ADC_RD_INDEX_C + i),
+         axilWriteMaster => axilWriteMasters(ADC_RD_INDEX_C + i),
+         axilWriteSlave  => axilWriteSlaves(ADC_RD_INDEX_C + i),
          -- Reset for adc deserializer (axilClk domain)
          adcClkRst       => '0',
          -- clocks must be provided with USE_MMCME_G = false
@@ -285,10 +286,10 @@ begin
          adcBitRstIn     => adcBitRst(i),
          adcBitRstDiv4In => adcBitRstDiv4(i),
          -- Serial Data from ADC
-         adcSerial       => monAdc,
+         adcSerial       => monAdc(i),
          -- Deserialized ADC Data
          adcStreamClk    => axilClk,
-         adcStreams      => adcStreams
+         adcStreams      => adcStreams(8*i+7 downto 8*i)
       );
    
    end generate;
@@ -317,7 +318,7 @@ begin
    --  Slow ADC Readout
    --------------------
    GEN_SLOW_ADC :
-   for i in 1 downto 0 generate
+   for i in NUM_OF_SLOW_ADCS_G - 1 downto 0 generate
       U_AdcCntrl : entity epix_hr_core.SlowAdcCntrlAxi
          generic map (
          SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
@@ -343,33 +344,33 @@ begin
          mAxisSlave       => slowAdcSlaves(i),
          -- ADC Control Signals
          adcRefClk        => slowAdcRefClkVec(i),
-         adcDrdy          => slowAdcDrdyL(i),
+         adcDrdy          => slowAdcDrdyL,
          adcSclk          => slowAdcSclkVec(i),
-         adcDout          => slowAdcDout(i),
+         adcDout          => slowAdcDout,
          adcCsL           => slowAdcCsLVec(i),
          adcDin           => slowAdcDinVec(i)
       );
    end generate GEN_SLOW_ADC;
 
 
-   slowAdcRefClk <= slowAdcRefClkVec;
+   slowAdcRefClk <= slowAdcRefClkVec(0);
    slowAdcCsL    <= slowAdcCsLVec;
-   slowAdcSyncL  <= (others => '0');
+   slowAdcSyncL  <= '0';
 
-   -- process(slowAdcCsLVec, slowAdcDinVec, slowAdcSclkVec)
-   --    variable sclk : sl;
-   --    variable din  : sl;
-   -- begin
-   --    sclk := '0';
-   --    din  := '0';
-   --    for i in 0 to 1 loop
-   --       if (slowAdcCsLVec(i) = '0') then
-   --          sclk := slowAdcSclkVec(i);
-   --          din  := slowAdcDinVec(i);
-   --       end if;
-   --    end loop;
-   --    slowAdcSclk <= sclk;
-   --    slowAdcDin  <= din;
-   -- end process;
+   process(slowAdcCsLVec, slowAdcDinVec, slowAdcSclkVec)
+      variable sclk : sl;
+      variable din  : sl;
+   begin
+      sclk := '0';
+      din  := '0';
+      for i in 0 to NUM_OF_SLOW_ADCS_G - 1 loop
+         if (slowAdcCsLVec(i) = '0') then
+            sclk := slowAdcSclkVec(i);
+            din  := slowAdcDinVec(i);
+         end if;
+      end loop;
+      slowAdcSclk <= sclk;
+      slowAdcDin  <= din;
+   end process;
 
 end mapping;

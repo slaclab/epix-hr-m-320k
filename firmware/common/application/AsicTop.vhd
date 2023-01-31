@@ -47,6 +47,8 @@ entity AsicTop is
       EN_DEVICE_DNA_G         : boolean       := true;
       CLK_PERIOD_G            : real          := 156.25E+6;
       AXIL_BASE_ADDR_G        : slv(31 downto 0);
+      NUM_OF_PSCOPE_G         : integer       := 4;
+      NUM_OF_SLOW_ADCS_G      : integer       := 2;
       BUILD_INFO_G            : BuildInfoType
    );
    port (
@@ -88,9 +90,9 @@ entity AsicTop is
       clearReadout         : in    slv(1 downto 0);
       
       -- ADC/DAC Debug Trigger Interface (axilClk domain)
-      oscopeAcqStart       : out   sl;
+      oscopeAcqStart       : out   slv(NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeTrigBus        : out   slv(11 downto 0);
-      slowAdcAcqStart      : out   slv(3 downto 0);
+      slowAdcAcqStart      : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       dacTrig              : out   sl;
 
       -- SSP Interfaces (sspClk domain)
@@ -209,7 +211,7 @@ begin
    eventClk         <= axiClk;
    eventRst         <= axiRst;
 
-   oscopeAcqStart   <= '0';
+   oscopeAcqStart   <= (others => '0');
    oscopeTrigBus    <= (others => '0');
    slowAdcAcqStart  <= (others => '0');
    dacTrig          <= '0';

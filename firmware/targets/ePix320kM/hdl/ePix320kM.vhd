@@ -31,7 +31,8 @@ entity ePix320kM is
       TPD_G                : time            := 1 ns;
       SIMULATION_G         : boolean         := false;
       NUM_OF_ASICS_G       : integer         := 4;
-      NUM_OF_CARRIER_G     : integer         := 1
+      NUM_OF_SLOW_ADCS_G   : integer         := 2;
+      NUM_OF_PSCOPE_G      : integer         := 4
    );
    port (
       ----------------------------------------------
@@ -66,8 +67,8 @@ entity ePix320kM is
       asicDataM            : in Slv24Array(3 downto 0);
 
 
-      adcMonDoutP          : in slv(11 downto 0);
-      adcMonDoutM          : in slv(11 downto 0);
+      adcMonDoutP          : in Slv8Array(1 downto 0);
+      adcMonDoutM          : in Slv8Array(1 downto 0);
       adcMonDataClkP       : in slv(1 downto 0);
       adcMonDataClkM       : in slv(1 downto 0);
       adcMonFrameClkP      : in slv(1 downto 0);
@@ -142,13 +143,13 @@ entity ePix320kM is
       adcMonClkM           : out sl;
       adcMonPdwn           : out sl;
       adcMonSpiCsL         : out sl;
-      slowAdcDout          : in  slv(1 downto 0);
-      slowAdcDrdyL         : in  slv(1 downto 0);
+      slowAdcDout          : in  sl;
+      slowAdcDrdyL         : in  sl;
       slowAdcSyncL         : out slv(1 downto 0);
-      slowAdcSclk          : out slv(1 downto 0);
+      slowAdcSclk          : out sl;
       slowAdcCsL           : out slv(1 downto 0);
-      slowAdcDin           : out slv(1 downto 0);
-      slowAdcRefClk        : out slv(1 downto 0);
+      slowAdcDin           : out sl;
+      slowAdcRefClk        : out sl;
 
       ----------------------------------------------
       --               Core Ports                 --
@@ -182,13 +183,13 @@ architecture topLevel of ePix320kM is
    signal axiRst : sl;
 
    -- AXI-Stream: Stream Interface
-   signal asicDataMasters : AxiStreamMasterArray(3 downto 0);
-   signal asicDataSlaves  : AxiStreamSlaveArray(3 downto 0);
-   signal remoteDmaPause  : slv(3 downto 0);
-   signal oscopeMasters   : AxiStreamMasterArray(NUM_OF_CARRIER_G - 1 downto 0);
-   signal oscopeSlaves    : AxiStreamSlaveArray(NUM_OF_CARRIER_G - 1 downto 0);
-   signal slowAdcMasters  : AxiStreamMasterArray(3 downto 0);
-   signal slowAdcSlaves   : AxiStreamSlaveArray(3 downto 0);
+   signal asicDataMasters : AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0);
+   signal asicDataSlaves  : AxiStreamSlaveArray(NUM_OF_ASICS_G - 1 downto 0);
+   signal remoteDmaPause  : slv(NUM_OF_ASICS_G - 1 downto 0);
+   signal oscopeMasters   : AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
+   signal oscopeSlaves    : AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
+   signal slowAdcMasters  : AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+   signal slowAdcSlaves   : AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
 
    -- AXI-Lite: Register Access
    signal axilReadMaster  : AxiLiteReadMasterType;
@@ -205,7 +206,8 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          SIMULATION_G     => SIMULATION_G,
-         NUM_OF_CARRIER_G => NUM_OF_CARRIER_G
+         NUM_OF_PSCOPE_G   => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
@@ -332,7 +334,8 @@ begin
          BUILD_INFO_G   => BUILD_INFO_G,
          SIMULATION_G   => SIMULATION_G,
          NUM_OF_ASICS_G => NUM_OF_ASICS_G,
-         NUM_OF_CARRIER_G => NUM_OF_CARRIER_G
+         NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
