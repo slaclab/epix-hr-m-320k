@@ -17,6 +17,10 @@ loadRuckusTcl $::env(TOP_DIR)/common
 loadSource      -dir  "$::DIR_PATH/hdl/"
 loadConstraints -dir  "$::DIR_PATH/hdl/"
 
+# Load the l2si-core source code
+loadSource -lib l2si_core -dir "$::env(TOP_DIR)/submodules/l2si-core/xpm/rtl"
+loadSource -lib l2si_core -dir "$::env(TOP_DIR)/submodules/l2si-core/base/rtl"
+
 # Load local SIM source Code
 loadSource -sim_only -dir "$::DIR_PATH/tb"
 set_property top {ePix320kMTb} [get_filesets sim_1]

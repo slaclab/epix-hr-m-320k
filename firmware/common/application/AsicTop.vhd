@@ -88,7 +88,7 @@ entity AsicTop is
       clearReadout         : in    slv(1 downto 0);
       
       -- ADC/DAC Debug Trigger Interface (axilClk domain)
-      oscopeAcqStart       : out   slv(3 downto 0);
+      oscopeAcqStart       : out   sl;
       oscopeTrigBus        : out   slv(11 downto 0);
       slowAdcAcqStart      : out   slv(3 downto 0);
       dacTrig              : out   sl;
@@ -209,7 +209,7 @@ begin
    eventClk         <= axiClk;
    eventRst         <= axiRst;
 
-   oscopeAcqStart   <= (others => '0');
+   oscopeAcqStart   <= '0';
    oscopeTrigBus    <= (others => '0');
    slowAdcAcqStart  <= (others => '0');
    dacTrig          <= '0';

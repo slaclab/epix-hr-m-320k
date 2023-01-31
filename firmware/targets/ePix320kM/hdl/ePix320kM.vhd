@@ -27,10 +27,11 @@ use epix_leap_core.CorePkg.all;
 
 entity ePix320kM is
    generic (
-      BUILD_INFO_G   : BuildInfoType;
-      TPD_G          : time            := 1 ns;
-      SIMULATION_G   : boolean         := false;
-      NUM_OF_ASICS_G : integer         := 4
+      BUILD_INFO_G         : BuildInfoType;
+      TPD_G                : time            := 1 ns;
+      SIMULATION_G         : boolean         := false;
+      NUM_OF_ASICS_G       : integer         := 4;
+      NUM_OF_CARRIER_G     : integer         := 1
    );
    port (
       ----------------------------------------------
@@ -38,148 +39,138 @@ entity ePix320kM is
       ----------------------------------------------
 
       -- Transceiver high speed lanes
-      fpgaOutObTransInP : out slv(11 downto 0);
-      fpgaOutObTransInM : out slv(11 downto 0);
-      fpgaInObTransOutP : in  slv(11 downto 0);
-      fpgaInObTransOutM : in  slv(11 downto 0);
+      fpgaOutObTransInP    : out slv(11 downto 0);
+      fpgaOutObTransInM    : out slv(11 downto 0);
+      fpgaInObTransOutP    : in  slv(11 downto 0);
+      fpgaInObTransOutM    : in  slv(11 downto 0);
 
       -- Transceiver low speed control
-      obTransScl    : inout sl;
-      obTransSda    : inout sl;
-      obTransResetL : out   sl;
-      obTransIntL   : in    sl;
+      obTransScl           : inout sl;
+      obTransSda           : inout sl;
+      obTransResetL        : out   sl;
+      obTransIntL          : in    sl;
 
       -- GT Clock Ports
-      gtPllClkP  : in slv(1 downto 0);
-      gtPllClkM  : in slv(1 downto 0);
-      gtRefClkP  : in slv(1 downto 0);
-      gtRefClkM  : in slv(1 downto 0);
-      gtLclsClkP : in sl;
-      gtLclsClkM : in sl;
+      gtPllClkP            : in slv(1 downto 0);
+      gtPllClkM            : in slv(1 downto 0);
+      gtRefClkP            : in slv(1 downto 0);
+      gtRefClkM            : in slv(1 downto 0);
+      gtLclsClkP           : in sl;
+      gtLclsClkM           : in sl;
 
       ----------------------------------------------
       --              Application Ports           --
       ----------------------------------------------
       -- ASIC Data Outs
-      asicDataP : in Slv24Array(3 downto 0);
-      asicDataM : in Slv24Array(3 downto 0);
+      asicDataP            : in Slv24Array(3 downto 0);
+      asicDataM            : in Slv24Array(3 downto 0);
 
 
-      adcMonDoutP  : in slv(11 downto 0);
-      adcMonDoutM  : in slv(11 downto 0);
-      adcDoClkP    : in slv(1 downto 0);
-      adcDoClkM    : in slv(1 downto 0);
-      adcFrameClkP : in slv(1 downto 0);
-      adcFrameClkM : in slv(1 downto 0);
+      adcMonDoutP          : in slv(11 downto 0);
+      adcMonDoutM          : in slv(11 downto 0);
+      adcMonDataClkP       : in slv(1 downto 0);
+      adcMonDataClkM       : in slv(1 downto 0);
+      adcMonFrameClkP      : in slv(1 downto 0);
+      adcMonFrameClkM      : in slv(1 downto 0);
 
       -- ASIC Control Ports
-      asicR0      : out sl;
-      asicGlblRst : out sl;
-      asicSync    : out sl;
-      asicAcq     : out sl;
-      asicRoClkP  : out slv(3 downto 0);
-      asicRoClkN  : out slv(3 downto 0);
-      asicSro     : out sl;
-      asicClkEn   : out sl;
-      rdClkSel    : out sl;
-      fpgaRdClkP  : out sl;
-      fpgaRdClkM  : out sl;
+      asicR0               : out sl;
+      asicGlblRst          : out sl;
+      asicSync             : out sl;
+      asicAcq              : out sl;
+      asicRoClkP           : out slv(3 downto 0);
+      asicRoClkN           : out slv(3 downto 0);
+      asicSro              : out sl;
+      asicClkEn            : out sl;
+      rdClkSel             : out sl;
+      fpgaRdClkP           : out sl;
+      fpgaRdClkM           : out sl;
 
       -- SACI Ports
-      asicSaciCmd : out sl;
-      asicSaciClk : out sl;
-      asicSaciSel : out slv(3 downto 0);
-      asicSaciRsp : in  sl;
+      asicSaciCmd          : out sl;
+      asicSaciClk          : out sl;
+      asicSaciSel          : out slv(3 downto 0);
+      asicSaciRsp          : in  sl;
 
       -- Spare ports both to carrier and to p&cb
-      pcbSpare : inout slv(5 downto 0);
-      spareM   : inout slv(1 downto 0);
-      spareP   : inout slv(1 downto 0);
+      pcbSpare             : inout slv(5 downto 0);
+      spareM               : inout slv(1 downto 0);
+      spareP               : inout slv(1 downto 0);
 
       -- Bias Dac
-      biasDacDin  : out sl;
-      biasDacSclk : out sl;
-      biasDacCsb  : out sl;
-      biasDacClrb : out sl;
+      biasDacDin           : out sl;
+      biasDacSclk          : out sl;
+      biasDacCsb           : out sl;
+      biasDacClrb          : out sl;
 
       -- High speed dac
-      hsDacSclk : out sl;
-      hsDacDin  : out sl;
-      hsCsb     : out sl;
-      hsLdacb   : out sl;
+      hsDacSclk            : out sl;
+      hsDacDin             : out sl;
+      hsCsb                : out sl;
+      hsLdacb              : out sl;
 
       -- Digital Monitor
-      digMon : in slv(1 downto 0);
+      digMon               : in slv(1 downto 0);
 
       -- External trigger Connector
-      runToFpga  : in  sl;
-      daqToFpga  : in  sl;
-      ttlToFpga  : in  sl;
-      fpgaTtlOut : out sl;
-      fpgaMps    : out sl;
-      fpgaTg     : out sl;
+      runToFpga            : in  sl;
+      daqToFpga            : in  sl;
+      ttlToFpga            : in  sl;
+      fpgaTtlOut           : out sl;
+      fpgaMps              : out sl;
+      fpgaTg               : out sl;
 
       -- Fpga Clock IO
-      fpgaClkInP  : in  sl;
-      fpgaClkInM  : in  sl;
-      fpgaClkOutP : out sl;
-      fpgaClkOutM : out sl;
-
-      -- Power and communication env Monitor
-      pcbAdcDrdyL  : in  sl;
-      pcbAdcData   : in  sl;
-      pcbAdcCsb    : out sl;
-      pcbAdcSclk   : out sl;
-      pcbAdcDin    : out sl;
-      pcbAdcSyncL  : out sl;
-      pcbAdcRefClk : out sl;
+      fpgaClkInP           : in  sl;
+      fpgaClkInM           : in  sl;
+      fpgaClkOutP          : out sl;
+      fpgaClkOutM          : out sl;
 
       -- Serial number
-      serialNumber : inout slv(2 downto 0);
+      serialNumber         : inout slv(2 downto 0);
 
       -- Power 
-      syncDcdc           : out slv(6 downto 0);
-      pwrAnaEn           : out slv(1 downto 0);
-      dcdcSync           : out sl;
-      pcbSync            : out sl;
-      pwrGood            : in  slv(1 downto 0);
+      syncDcdc             : out slv(6 downto 0);
+      pwrAnaEn             : out slv(1 downto 0);
+      pcbSync              : out sl;
+      pwrGood              : in  slv(1 downto 0);
 
       -- Digital board env monitor
-      adcSpiClk     : out sl;
-      adcSpiData    : in  sl;
-      adcMonClkP    : out sl;
-      adcMonClkM    : out sl;
-      adcMonPdwn    : out sl;
-      adcMonSpiCsb  : out sl;
-      slowAdcDout   : in  sl;
-      slowAdcDrdyL  : in  sl;
-      slowAdcSyncL  : out sl;
-      slowAdcSclk   : out sl;
-      slowAdcCsb    : out sl;
-      slowAdcDin    : out sl;
-      slowAdcRefClk : out sl;
+      adcMonSpiClk         : out sl;
+      adcMonSpiData        : inout  sl;
+      adcMonClkP           : out sl;
+      adcMonClkM           : out sl;
+      adcMonPdwn           : out sl;
+      adcMonSpiCsL         : out sl;
+      slowAdcDout          : in  slv(1 downto 0);
+      slowAdcDrdyL         : in  slv(1 downto 0);
+      slowAdcSyncL         : out slv(1 downto 0);
+      slowAdcSclk          : out slv(1 downto 0);
+      slowAdcCsL           : out slv(1 downto 0);
+      slowAdcDin           : out slv(1 downto 0);
+      slowAdcRefClk        : out slv(1 downto 0);
 
       ----------------------------------------------
       --               Core Ports                 --
       ----------------------------------------------
       -- Clock Jitter Cleaner
-      jitclnrCsL  : out sl;
-      jitclnrIntr : in  sl;
-      jitclnrLolL : in  sl;
-      jitclnrOeL  : out sl;
-      jitclnrRstL : out sl;
-      jitclnrSclk : out sl;
-      jitclnrSdio : out sl;
-      jitclnrSdo  : in  sl;
-      jitclnrSel  : out slv(1 downto 0);
+      jitclnrCsL           : out sl;
+      jitclnrIntr          : in  sl;
+      jitclnrLolL          : in  sl;
+      jitclnrOeL           : out sl;
+      jitclnrRstL          : out sl;
+      jitclnrSclk          : out sl;
+      jitclnrSdio          : out sl;
+      jitclnrSdo           : in  sl;
+      jitclnrSel           : out slv(1 downto 0);
 
       -- LMK61E2
-      pllClkScl : inout sl;
-      pllClkSda : inout sl;
+      pllClkScl            : inout sl;
+      pllClkSda            : inout sl;
 
       -- XADC Ports
-      vPIn : in sl;
-      vNIn : in sl
+      vPIn                 : in sl;
+      vNIn                 : in sl
    );
 end entity;
 
@@ -194,8 +185,8 @@ architecture topLevel of ePix320kM is
    signal asicDataMasters : AxiStreamMasterArray(3 downto 0);
    signal asicDataSlaves  : AxiStreamSlaveArray(3 downto 0);
    signal remoteDmaPause  : slv(3 downto 0);
-   signal oscopeMasters   : AxiStreamMasterArray(3 downto 0);
-   signal oscopeSlaves    : AxiStreamSlaveArray(3 downto 0);
+   signal oscopeMasters   : AxiStreamMasterArray(NUM_OF_CARRIER_G - 1 downto 0);
+   signal oscopeSlaves    : AxiStreamSlaveArray(NUM_OF_CARRIER_G - 1 downto 0);
    signal slowAdcMasters  : AxiStreamMasterArray(3 downto 0);
    signal slowAdcSlaves   : AxiStreamSlaveArray(3 downto 0);
 
@@ -205,21 +196,22 @@ architecture topLevel of ePix320kM is
    signal axilWriteMaster : AxiLiteWriteMasterType;
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal ssiCmd          : SsiCmdMasterType;
+   signal ssiCmd          : SsiCmdMasterType := SSI_CMD_MASTER_INIT_C;
 
 begin
 
    U_App : entity work.Application
       generic map (
-         TPD_G        => TPD_G,
-         BUILD_INFO_G => BUILD_INFO_G,
-         SIMULATION_G => SIMULATION_G
+         TPD_G            => TPD_G,
+         BUILD_INFO_G     => BUILD_INFO_G,
+         SIMULATION_G     => SIMULATION_G,
+         NUM_OF_CARRIER_G => NUM_OF_CARRIER_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x80000000:0xFFFFFFFF]
-         axiClk         => axiClk,
-         axiRst         => axiRst,
+         axiClk          => axiClk,
+         axiRst          => axiRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
@@ -282,6 +274,12 @@ begin
          gtLclsClkP => gtLclsClkP,
          gtLclsClkM => gtLclsClkM,
 
+         -- syncDcdc => syncDcdc,
+         pwrAnaEn => pwrAnaEn,
+         syncDcdc => syncDcdc,
+         pcbSync  => pcbSync ,
+         pwrGood  => pwrGood ,
+
          -- Serial number
          serialNumber => serialNumber,
 
@@ -294,37 +292,27 @@ begin
          fpgaTg     => fpgaTg,
 
          -- Digital board env monitor
-         adcSpiClk     => adcSpiClk,
-         adcSpiData    => adcSpiData,
+         adcMonSpiClk     => adcMonSpiClk,
+         adcMonSpiData    => adcMonSpiData,
          adcMonClkP    => adcMonClkP,
          adcMonClkM    => adcMonClkM,
          adcMonPdwn    => adcMonPdwn,
-         adcMonSpiCsb  => adcMonSpiCsb,
+         adcMonSpiCsL  => adcMonSpiCsL,
          slowAdcDout   => slowAdcDout,
          slowAdcDrdyL  => slowAdcDrdyL,
          slowAdcSyncL  => slowAdcSyncL,
          slowAdcSclk   => slowAdcSclk,
-         slowAdcCsb    => slowAdcCsb,
+         slowAdcCsL    => slowAdcCsL,
          slowAdcDin    => slowAdcDin,
          slowAdcRefClk => slowAdcRefClk,
 
          -- Fast ADC Ports
          adcMonDoutP  => adcMonDoutP,
          adcMonDoutM  => adcMonDoutM,
-         adcDoClkP    => adcDoClkP,
-         adcDoClkM    => adcDoClkM,
-         adcFrameClkP => adcFrameClkP,
-         adcFrameClkM => adcFrameClkM,
-
-         -- Power and communication env Monitor
-         pcbAdcDrdyL  => pcbAdcDrdyL,
-         pcbAdcData   => pcbAdcData,
-         pcbAdcCsb    => pcbAdcCsb,
-         pcbAdcSclk   => pcbAdcSclk,
-         pcbAdcDin    => pcbAdcDin,
-         pcbAdcSyncL  => pcbAdcSyncL,
-         pcbAdcRefClk => pcbAdcRefClk,
-         pwrGood      => pwrGood,
+         adcMonDataClkP    => adcMonDataClkP,
+         adcMonDataClkM    => adcMonDataClkM,
+         adcMonFrameClkP => adcMonFrameClkP,
+         adcMonFrameClkM => adcMonFrameClkM,
 
          -- Transceiver high speed lanes
          fpgaOutObTransInP => fpgaOutObTransInP(11 downto 8),
@@ -335,7 +323,7 @@ begin
          -- ssi commands
          ssiCmd            => ssiCmd,
 
-         jitclnrLolL => jitclnrLolL
+         jitclnrLolL       => jitclnrLolL
       );
 
    U_Core : entity epix_leap_core.Core
@@ -343,7 +331,8 @@ begin
          TPD_G          => TPD_G,
          BUILD_INFO_G   => BUILD_INFO_G,
          SIMULATION_G   => SIMULATION_G,
-         NUM_OF_ASICS_G => NUM_OF_ASICS_G
+         NUM_OF_ASICS_G => NUM_OF_ASICS_G,
+         NUM_OF_CARRIER_G => NUM_OF_CARRIER_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
@@ -398,8 +387,8 @@ begin
          gtRefClkM => gtRefClkM(0),
 
          -- XADC Ports
-         vPIn => vPIn,
-         vNIn => vNIn,
+         vPIn        => vPIn,
+         vNIn        => vNIn,
 
          -- ssi commands
          ssiCmd            => ssiCmd

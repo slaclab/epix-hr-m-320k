@@ -19,19 +19,19 @@ export RELEASE = ePix320KM
 
 # -----------------------------------
 # things needed for epix-hr-core
-export COMM_TYPE = pgp4
-export INCLUDE_PGP4_10G = 1 
+# export COMM_TYPE = pgp4
+# export INCLUDE_PGP4_10G = 1 
 # COMMON_NAME is defined by application
 export COMMON_NAME = ePix320KM
 
 # Define if this is FSBL PROM address
-export PROM_FSBL = 1
+# export PROM_FSBL = 1
 
 # Define if you want to build the DDR MIG core
-export BUILD_MIG_CORE = 0
+# export BUILD_MIG_CORE = 0
 
 # Define if you want to build the user Microblaze core
-export BUILD_MB_CORE = 0
+# export BUILD_MB_CORE = 0
 
 # -----------------------------------
 

@@ -39,9 +39,10 @@ use epix_leap_core.CorePkg.all;
 
 entity Application is
    generic (
-      TPD_G        : time := 1 ns;
-      BUILD_INFO_G : BuildInfoType;
-      SIMULATION_G : boolean := false
+      TPD_G             : time := 1 ns;
+      BUILD_INFO_G      : BuildInfoType;
+      SIMULATION_G      : boolean := false;
+      NUM_OF_CARRIER_G  : integer   := 1
    );
    port (
       ----------------------
@@ -61,8 +62,8 @@ entity Application is
       asicDataMasters    : out AxiStreamMasterArray(3 downto 0);
       asicDataSlaves     : in  AxiStreamSlaveArray(3 downto 0);
       remoteDmaPause     : in  slv(3 downto 0);
-      oscopeMasters      : out AxiStreamMasterArray(3 downto 0);
-      oscopeSlaves       : in  AxiStreamSlaveArray(3 downto 0);
+      oscopeMasters      : out AxiStreamMasterArray(NUM_OF_CARRIER_G - 1 downto 0);
+      oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_CARRIER_G - 1 downto 0);
       slowAdcMasters     : out AxiStreamMasterArray(3 downto 0);
       slowAdcSlaves      : in  AxiStreamSlaveArray(3 downto 0);
 
@@ -78,14 +79,6 @@ entity Application is
       -- ASIC Data Outs
       asicDataP          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
       asicDataM          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
-
-      -- Fast ADC Ports
-      adcMonDoutP        : in slv(11 downto 0);
-      adcMonDoutM        : in slv(11 downto 0);
-      adcDoClkP          : in slv(1 downto 0);
-      adcDoClkM          : in slv(1 downto 0);
-      adcFrameClkP       : in slv(1 downto 0);
-      adcFrameClkM       : in slv(1 downto 0);
 
       -- ASIC Control Ports
       asicR0             : out sl;
@@ -130,56 +123,56 @@ entity Application is
       hsLdacb            : out sl;
 
       -- Digital Monitor
-      digMon             : in slv(1 downto 0);
+      digMon               : in slv(1 downto 0);
 
       -- External trigger Connector
-      runToFpga          : in  sl;
-      daqToFpga          : in  sl;
-      ttlToFpga          : in  sl;
-      fpgaTtlOut         : out sl;
-      fpgaMps            : out sl;
-      fpgaTg             : out sl;
+      runToFpga            : in  sl;
+      daqToFpga            : in  sl;
+      ttlToFpga            : in  sl;
+      fpgaTtlOut           : out sl;
+      fpgaMps              : out sl;
+      fpgaTg               : out sl;
 
       -- Fpga Clock IO
-      fpgaClkInP         : in  sl;
-      fpgaClkInM         : in  sl;
-      fpgaClkOutP        : out sl;
-      fpgaClkOutM        : out sl;
-
-      -- Power and communication env Monitor
-      pcbAdcDrdyL        : in  sl;
-      pcbAdcData         : in  sl;
-      pcbAdcCsb          : out sl;
-      pcbAdcSclk         : out sl;
-      pcbAdcDin          : out sl;
-      pcbAdcSyncL        : out sl;
-      pcbAdcRefClk       : out sl;
+      fpgaClkInP           : in  sl;
+      fpgaClkInM           : in  sl;
+      fpgaClkOutP          : out sl;
+      fpgaClkOutM          : out sl;
 
       -- Serial number
-      serialNumber       : inout slv(2 downto 0);
+      serialNumber         : inout slv(2 downto 0);
 
       -- Power 
-      syncDcdc           : out slv(6 downto 0);
-      pwrAnaEn           : out slv(1 downto 0);
-      pcbSync            : out sl;
-      pwrGood            : in  slv(1 downto 0);
+      syncDcdc             : out slv(6 downto 0);
+      pwrAnaEn             : out slv(1 downto 0);
+      pcbSync              : out sl;
+      pwrGood              : in  slv(1 downto 0);
+
+      -- Fast ADC Ports
+      adcMonDoutP           : in slv(11 downto 0);
+      adcMonDoutM           : in slv(11 downto 0);
+      adcMonDataClkP        : in slv(1 downto 0);
+      adcMonDataClkM        : in slv(1 downto 0);
+      adcMonFrameClkP       : in slv(1 downto 0);
+      adcMonFrameClkM       : in slv(1 downto 0);
 
       -- Digital board env monitor
-      adcSpiClk          : out sl;
-      adcSpiData         : in  sl;
-      adcMonClkP         : out sl;
-      adcMonClkM         : out sl;
-      adcMonPdwn         : out sl;
-      adcMonSpiCsb       : out sl;
-      slowAdcDout        : in  sl;
-      slowAdcDrdyL       : in  sl;
-      slowAdcSyncL       : out sl;
-      slowAdcSclk        : out sl;
-      slowAdcCsb         : out sl;
-      slowAdcDin         : out sl;
-      slowAdcRefClk      : out sl;
+      adcMonSpiClk          : out sl;
+      adcMonSpiData         : inout  sl;
+      adcMonClkP            : out sl;
+      adcMonClkM            : out sl;
+      adcMonPdwn            : out sl;
+      adcMonSpiCsL          : out sl;
+
+      slowAdcDout           : in  slv(1 downto 0);
+      slowAdcDrdyL          : in  slv(1 downto 0);
+      slowAdcSyncL          : out slv(1 downto 0);
+      slowAdcSclk           : out slv(1 downto 0);
+      slowAdcCsL            : out slv(1 downto 0);
+      slowAdcDin            : out slv(1 downto 0);
+      slowAdcRefClk         : out slv(1 downto 0);
    
-      jitclnrLolL        : in sl
+      jitclnrLolL           : in sl
    );
 end entity;
 
@@ -243,7 +236,7 @@ architecture rtl of Application is
    signal v1LinkUp               : sl  := '0';
    signal v2LinkUp               : sl  := '0';
 
-   signal oscopeAcqStart         : slv(3 downto 0);
+   signal oscopeAcqStart         : sl;
    signal oscopeTrigBus          : slv(11 downto 0);
    signal slowAdcAcqStart        : slv(3 downto 0);
    signal dacTrig                : sl;
@@ -259,9 +252,9 @@ architecture rtl of Application is
    signal dacLoadSig             : sl;
    signal asicDigRstSig          : sl;
    signal asicClkSyncEnSig       : sl;
-   signal slowAdcDinSig          : sl;
-   signal slowAdcSyncLSig        : sl;
-   signal slowAdcRefClkSig       : sl;
+   signal slowAdcDinSig          : slv(1 downto 0);
+   signal slowAdcSyncLSig        : slv(1 downto 0);
+   signal slowAdcRefClkSig       : slv(1 downto 0);
 
    signal saciClkVec             : sl;
    signal saciCmdVec             : sl;
@@ -341,7 +334,7 @@ begin
          axiClkRst              => axiRst
       );
 
-   U_ClkGen : entity work.appClk
+   U_ClkGen : entity work.AppClk
       generic map (
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G
@@ -353,13 +346,9 @@ begin
          -- 250 Mhz Pll Output
          gtPllClkP              => gtPllClkP,
          gtPllClkM              => gtPllClkM,
-         -- 40 Mhz clock output to pll(2)
+         -- 50 Mhz clock output to pll(2)
          fpgaClkOutP            => fpgaClkOutP, 
          fpgaClkOutM            => fpgaClkOutM,
-         
-         -- 50 MHz adc clock
-         adcMonClkP             => adcMonClkP,
-         adcMonClkM             => adcMonClkM,
 
          jitclnLolL             => jitclnrLolL,
          clk156                 => clk156,
@@ -621,5 +610,55 @@ begin
          gtRxP  => fpgaInObTransOutP(10 downto 8),
          gtRxN  => fpgaInObTransOutM(10 downto 8)
       );
+  
+   U_AdcMon : entity work.AdcMon
+      generic map (
+         TPD_G            => TPD_G,
+         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(ADC_INDEX_C).baseAddr
+      )
+      port map (
+         clk250          => clk250,
+         rst250          => rst250,
+         -- Trigger Interface (axilClk domain)
+         oscopeAcqStart  => oscopeAcqStart,
+         oscopeTrigBus   => oscopeTrigBus,
+         slowAdcAcqStart => slowAdcAcqStart,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axiClk,
+         axilRst         => axiRst,
+         axilReadMaster  => axilReadMasters(ADC_INDEX_C),
+         axilReadSlave   => axilReadSlaves(ADC_INDEX_C),
+         axilWriteMaster => axilWriteMasters(ADC_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(ADC_INDEX_C),
+         -- Streaming Interfaces (axilClk domain)
+         oscopeMasters   => oscopeMasters,
+         oscopeSlaves    => oscopeSlaves,
+         slowAdcMasters  => slowAdcMasters,
+         slowAdcSlaves   => slowAdcSlaves,
+         -------------------
+         --  Top Level Ports
+         -------------------
+         -- Slow ADC Ports
+         slowAdcCsL      => slowAdcCsL,
+         slowAdcSclk     => slowAdcSclk,
+         slowAdcDin      => slowAdcDinSig,
+         slowAdcSyncL    => slowAdcSyncLSig,
+         slowAdcDout     => slowAdcDout,
+         slowAdcDrdyL    => slowAdcDrdyL,
+         slowAdcRefClk   => slowAdcRefClkSig,
+         -- ADC Monitor Ports
+         adcMonSpiCsL    => adcMonSpiCsL,
+         adcMonPdwn      => adcMonPdwn,
+         adcMonSpiClk    => adcMonSpiClk,
+         adcMonSpiData   => adcMonSpiData,
+         adcMonClkOutP   => adcMonClkP,
+         adcMonClkOutM   => adcMonClkM,
+         adcMonDoutP     => adcMonDoutP,
+         adcMonDoutM     => adcMonDoutM,
+         adcMonFrameClkP => adcMonFrameClkP,
+         adcMonFrameClkM => adcMonFrameClkM,
+         adcMonDataClkP  => adcMonDataClkP,
+         adcMonDataClkM  => adcMonDataClkM
+      );
 
-   end rtl; -- rtl
+end rtl; -- rtl

@@ -12,7 +12,7 @@ use unisim.vcomponents.all;
 library work;
 use work.AppPkg.all;
 
-entity appClk is
+entity AppClk is
    generic (
      TPD_G        : time    := 1 ns;
      SIMULATION_G : boolean := false
@@ -51,9 +51,9 @@ entity appClk is
       jitclnLolL    : in sl
       
    );
-end entity appClk;
+end entity AppClk;
 
-architecture rtl of appClk is
+architecture rtl of AppClk is
    signal fabRefClk        : sl;
    signal fabClock         : sl;
    signal fabReset         : sl;
@@ -121,25 +121,23 @@ begin
         INPUT_BUFG_G           => false,
         FB_BUFG_G              => true,
         RST_IN_POLARITY_G      => '1',     -- '0' for active low
-        NUM_CLOCKS_G           => 4,
+        NUM_CLOCKS_G           => 3,
         SIMULATION_G           => SIMULATION_G,
         -- MMCM attributes
         BANDWIDTH_G            => "OPTIMIZED",
         CLKIN_PERIOD_G         => 6.4,      -- 156.25 MHz
         CLKFBOUT_MULT_F_G      => 8.0,      -- 1.25 Ghz = 31.25 MHz * 32
         CLKOUT0_DIVIDE_F_G     => 31.25,    -- 40 MHz = 1.25 GHz / 31.25
-        CLKOUT1_DIVIDE_G       => 25,       -- 50 MHz = 1.25 GHz / 25
-        CLKOUT2_DIVIDE_G       => 5,        -- 50 MHz = 1.25 GHz / 25
-        CLKOUT3_DIVIDE_G       => 26
+        CLKOUT1_DIVIDE_G       => 5,        -- 50 MHz = 1.25 GHz / 25
+        CLKOUT2_DIVIDE_G       => 26
 
      )
      port map(
         clkIn           => fabClock,
         rstIn           => fabReset,
         clkOut(0)       => fpgaToPllClk,
-        clkOut(1)       => adcClk,
-        clkOut(2)       => iClk250,
-        clkOut(3)       => clk6Meg
+        clkOut(1)       => iClk250,
+        clkOut(2)       => clk6Meg
      );
   
    U_fpgaToPllClk : entity surf.ClkOutBufDiff
