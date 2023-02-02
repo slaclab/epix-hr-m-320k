@@ -52,8 +52,8 @@ entity ePix320kM is
       obTransIntL          : in    sl;
 
       -- GT Clock Ports
-      gtPllClkP            : in slv(1 downto 0);
-      gtPllClkM            : in slv(1 downto 0);
+      gtPllClkP            : in sl;
+      gtPllClkM            : in sl;
       gtRefClkP            : in slv(1 downto 0);
       gtRefClkM            : in slv(1 downto 0);
       gtLclsClkP           : in sl;
@@ -265,8 +265,8 @@ begin
          saciRsp => asicsaciRsp,
 
          -- GT Clock Ports
-         gtPllClkP => gtPllClkP(1),
-         gtPllClkM => gtPllClkM(1),
+         gtPllClkP => gtPllClkP,
+         gtPllClkM => gtPllClkM,
          gtRefClkP => gtRefClkP(1),
          gtRefClkM => gtRefClkM(1),
 
@@ -384,8 +384,8 @@ begin
          pllClkSda => pllClkSda,
 
          -- GT Clock Ports
-         gtPllClkP => gtPllClkP(0),
-         gtPllClkM => gtPllClkM(0),
+         gtPllClkP => '0',
+         gtPllClkM => '0',
          gtRefClkP => gtRefClkP(0),
          gtRefClkM => gtRefClkM(0),
 

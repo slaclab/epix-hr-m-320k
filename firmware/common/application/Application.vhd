@@ -358,8 +358,7 @@ begin
          clk250                 => clk250,
          rst250                 => rst250,
          sspClk                 => sspClk,
-         sspRst                 => sspRst,
-         clk6Meg                => clk6Meg
+         sspRst                 => sspRst
       );
       
    U_AsicTop : entity work.AsicTop

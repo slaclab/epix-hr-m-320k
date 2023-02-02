@@ -473,11 +473,11 @@ set_property PACKAGE_PIN R3  [get_ports {fpgaOutObTransInM[7]}]
 set_property PACKAGE_PIN P2  [get_ports {fpgaInObTransOutP[7]}]
 set_property PACKAGE_PIN P1  [get_ports {fpgaInObTransOutM[7]}]
 
-set_property PACKAGE_PIN [get_ports {gtPllClkP[1]}]
-set_property PACKAGE_PIN [get_ports {gtPllClkM[1]}]
+# set_property PACKAGE_PIN V6  [get_ports {gtPllClkP}]
+# set_property PACKAGE_PIN V5  [get_ports {gtPllClkM}]
 
-set_property PACKAGE_PIN [get_ports {gtRefClkP[1]}]
-set_property PACKAGE_PIN [get_ports {gtRefClkM[1]}]
+set_property PACKAGE_PIN T6  [get_ports {gtRefClkP[1]}]
+set_property PACKAGE_PIN T5  [get_ports {gtRefClkM[1]}]
 
 
 ##########################
@@ -503,8 +503,8 @@ set_property PACKAGE_PIN G3 [get_ports {fpgaOutObTransInM[11]}]
 set_property PACKAGE_PIN F2 [get_ports {fpgaInObTransOutP[11]}]
 set_property PACKAGE_PIN F1 [get_ports {fpgaInObTransOutM[11]}]
 
-set_property PACKAGE_PIN P6 [get_ports {altTimingClkP}]
-set_property PACKAGE_PIN P5 [get_ports {altTimingClkM}]
+#set_property PACKAGE_PIN P6 [get_ports {altTimingClkP}]
+#set_property PACKAGE_PIN P5 [get_ports {altTimingClkM}]
 
 set_property PACKAGE_PIN M6 [get_ports {gtLclsClkP}]
 set_property PACKAGE_PIN M5 [get_ports {gtLclsClkM}]
@@ -532,8 +532,8 @@ set_property PACKAGE_PIN B5 [get_ports {fpgaOutObTransInM[3]}]
 set_property PACKAGE_PIN A4 [get_ports {fpgaInObTransOutP[3]}]
 set_property PACKAGE_PIN A3 [get_ports {fpgaInObTransOutM[3]}]
 
-set_property PACKAGE_PIN K6 [get_ports {gtPllClkP[0]}]
-set_property PACKAGE_PIN K5 [get_ports {gtPllClkM[0]}]
+set_property PACKAGE_PIN K6 [get_ports {gtPllClkP}]
+set_property PACKAGE_PIN K5 [get_ports {gtPllClkM}]
 
 set_property PACKAGE_PIN H6 [get_ports {gtRefClkP[0]}]
 set_property PACKAGE_PIN H5 [get_ports {gtRefClkM[0]}]

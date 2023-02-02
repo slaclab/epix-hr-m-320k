@@ -35,10 +35,6 @@ entity AppClk is
       fpgaRdClkP    : out sl;
       fpgaRdClkM    : out sl;
 
-      -- Adc Clk
-      adcMonClkP        : out sl;
-      adcMonClkM        : out sl;
-
       -- logic Clocks
       clk156        : out sl;
       rst156        : out sl;
@@ -46,7 +42,6 @@ entity AppClk is
       rst250        : out sl;
       sspClk        : out sl;
       sspRst        : out sl;
-      clk6Meg       : out sl;
 
       jitclnLolL    : in sl
       
@@ -59,17 +54,17 @@ architecture rtl of AppClk is
    signal fabReset         : sl;
    signal fpgaToPllClk     : sl;
    signal pllToFpgaClk     : sl;
-   signal clk50            : sl;
-   signal rst50            : sl;
+   signal clk62p5            : sl;
+   signal rst62p5            : sl;
    signal iClk250          : sl;
    signal adcClk           : sl;
 
 begin
 
-   sspClk <= clk50;
+   sspClk <= clk62p5;
    clk156 <= fabClock;
    rst156 <= fabReset;
-   rst250 <= rst50;
+   rst250 <= rst62p5;
    clk250 <= iClk250;
 
    U_IBUFDS_GT : IBUFDS_GTE4
@@ -111,8 +106,7 @@ begin
    ------------------------------------------------
    -- clkIn     : 156.25 MHz PGP
    -- base clk is 1.2500 GHz
-   -- clkOut(0) : 40.00 MHz Pll Clk output
-   -- clkOut(1) : 50.00 MHz ADC Clk output
+   -- clkOut(0) : 50.00 MHz Pll Clk output
    ------------------------------------------------
    U_CoreClockGen : entity surf.ClockManagerUltraScale
      generic map(
@@ -121,23 +115,18 @@ begin
         INPUT_BUFG_G           => false,
         FB_BUFG_G              => true,
         RST_IN_POLARITY_G      => '1',     -- '0' for active low
-        NUM_CLOCKS_G           => 3,
+        NUM_CLOCKS_G           => 1,
         SIMULATION_G           => SIMULATION_G,
         -- MMCM attributes
         BANDWIDTH_G            => "OPTIMIZED",
         CLKIN_PERIOD_G         => 6.4,      -- 156.25 MHz
         CLKFBOUT_MULT_F_G      => 8.0,      -- 1.25 Ghz = 31.25 MHz * 32
-        CLKOUT0_DIVIDE_F_G     => 31.25,    -- 40 MHz = 1.25 GHz / 31.25
-        CLKOUT1_DIVIDE_G       => 5,        -- 50 MHz = 1.25 GHz / 25
-        CLKOUT2_DIVIDE_G       => 26
-
+        CLKOUT0_DIVIDE_F_G     => 25.0      -- 40 MHz = 1.25 GHz / 25
      )
      port map(
         clkIn           => fabClock,
         rstIn           => fabReset,
-        clkOut(0)       => fpgaToPllClk,
-        clkOut(1)       => iClk250,
-        clkOut(2)       => clk6Meg
+        clkOut(0)       => fpgaToPllClk
      );
   
    U_fpgaToPllClk : entity surf.ClkOutBufDiff
@@ -169,39 +158,33 @@ begin
          O  => pllToFpgaClk
       );
    
-   U_adcMonClk : entity surf.ClkOutBufDiff
-      generic map(
-         TPD_G        => TPD_G,
-         XIL_DEVICE_G => XIL_DEVICE_C
-         )
+   U_clk250 : BUFG
       port map (
-         clkIn   => adcClk,
-         clkOutP => adcMonClkP,
-         clkOutN => adcMonClkM
-         );
-
+         I => pllToFpgaClk,
+         O => iClk250
+      );
    
-   U_clk50 : BUFGCE_DIV
+   U_clk62p5 : BUFGCE_DIV
       generic map (
          BUFGCE_DIVIDE => 4
       )
       port map (
-         I   => pllToFpgaClk,
+         I   => iClk250,
          CE  => '1',
          CLR => '0',
-         O   => clk50
+         O   => clk62p5
       );
    
-   U_rst50 : entity surf.RstSync
+   U_rst62p5 : entity surf.RstSync
       generic map (
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '0',         -- active LOW
          OUT_POLARITY_G => '1'
       )
       port map (
-         clk      => clk50,
+         clk      => clk62p5,
          asyncRst => jitclnLolL,
-         syncRst  => rst50
+         syncRst  => rst62p5
       );
    
    U_sspRst : entity surf.RstPipeline
@@ -209,8 +192,8 @@ begin
          TPD_G => TPD_G
       )
       port map (
-         clk    => clk50,
-         rstIn  => rst50,
+         clk    => clk62p5,
+         rstIn  => rst62p5,
          rstOut => sspRst
       );
 
