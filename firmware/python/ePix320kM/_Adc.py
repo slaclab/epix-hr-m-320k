@@ -43,7 +43,7 @@ class Adc(pr.Device):
             trigChEnum = trigChEnum,
             inChaEnum  = inChaEnum,
             inChbEnum  = inChbEnum,
-        )
+        ))
 
 
         self.add(epixHr.MonAdcRegisters(

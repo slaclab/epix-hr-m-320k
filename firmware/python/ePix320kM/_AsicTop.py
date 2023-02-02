@@ -21,7 +21,7 @@ class AsicTop(pr.Device):
             offset = 0x0000_0000,
         ))
 
-        self.add(fpga.TriggerRegisters(
+        self.add(epix_hr_core.TriggerRegisters(
             offset = 0x0010_0000,
         ))
 
@@ -56,22 +56,22 @@ class AsicTop(pr.Device):
         self.add((
             batcher.AxiStreamBatcherEventBuilder(
                 name="BatcherEventBuilder0",
-                offset=0x0070_0000,
+                offset=0x0060_0000,
                 expand=False,
                 numberSlaves = 2),
             batcher.AxiStreamBatcherEventBuilder(
                 name="BatcherEventBuilder1",
-                offset=0x0080_0000,
+                offset=0x0070_0000,
                 expand=False,
                 numberSlaves = 2),
             batcher.AxiStreamBatcherEventBuilder(
                 name="BatcherEventBuilder2",
-                offset=0x0090_0000,
+                offset=0x0080_0000,
                 expand=False,
                 numberSlaves = 2),
             batcher.AxiStreamBatcherEventBuilder(
                 name="BatcherEventBuilder3",
-                offset=0x00A0_0000,
+                offset=0x0090_0000,
                 expand=False,
                 numberSlaves = 2),                                           
         ))

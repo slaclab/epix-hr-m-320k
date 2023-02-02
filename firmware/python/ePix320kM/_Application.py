@@ -16,15 +16,6 @@ import surf.protocols.ssp as ssp
 
 import ePix320kM as fpga
 
-#    constant SACI_INDEX_C         : natural  := 0;  -- 0:3
-#    constant DESER_INDEX_C        : natural  := 4;
-#    constant ASIC_INDEX_C         : natural  := 5;
-#    constant PWR_INDEX_C          : natural  := 6;
-#    constant ADC_INDEX_C          : natural  := 7;
-#    constant DAC_INDEX_C          : natural  := 8;
-#    constant TIMING_INDEX_C       : natural  := 9;
-
-
 class App(pr.Device):
     def __init__(self, sim=False, **kwargs):
         super().__init__(**kwargs)
@@ -44,14 +35,14 @@ class App(pr.Device):
         for i in range(num_of_asics):
             self.add(ssp.SspLowSpeedDecoderReg(
                 name        = f'SspMonGrp[{i}]',
-                offset      = 0x0500_0000+i*0x1000,
+                offset      = 0x0400_0000+i*0x1000,
                 numberLanes = 24,
             ))
         
         self.add(
             fpga.AsicTop(
                 name='Asic Top',
-                offset=0x0600_0000,
+                offset=0x0500_0000,
                 expand=False,
                 enabled=False
             )
@@ -66,23 +57,23 @@ class App(pr.Device):
             )
         )
     
-        # self.add(
-        #     AdcGroup(
-        #         name='Adcs',
-        #         offset=0x0700_0000,
-        #         expand=False,
-        #         enabled=False
-        #     )
-        # )
+        self.add(
+            fpga.Adc(
+                name='Adcs',
+                offset=0x0700_0000,
+                expand=False,
+                enabled=False
+            )
+        )
 
-        # self.add(
-        #     DacGroup(
-        #         name='Dacs',
-        #         offset=0x0800_0000,
-        #         expand=False,
-        #         enabled=False
-        #     )
-        # )
+        self.add(
+            fpga.Adc(
+                name='Dacs',
+                offset=0x0800_0000,
+                expand=False,
+                enabled=False
+            )
+        )
 
         self.add(
             fpga.TimingRx(
