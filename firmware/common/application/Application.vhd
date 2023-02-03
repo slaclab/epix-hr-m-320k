@@ -42,6 +42,7 @@ entity Application is
       TPD_G                : time            := 1 ns;
       BUILD_INFO_G         : BuildInfoType;
       SIMULATION_G         : boolean         := false;
+      NUM_DETECTORS_G      : integer         := 2;
       NUM_OF_ASICS_G       : integer         := 4;
       NUM_OF_SLOW_ADCS_G   : integer         := 2;
       NUM_OF_PSCOPE_G      : integer         := 4
@@ -219,21 +220,21 @@ architecture rtl of Application is
 
    signal triggerClk             : sl;
    signal triggerRst             : sl;
-   signal triggerData            : TriggerEventDataArray(1 downto 0);
+   signal triggerData            : TriggerEventDataArray(NUM_DETECTORS_G -1 downto 0);
 
    signal l1Clk                  : sl                    := '0';
    signal l1Rst                  : sl                    := '0';
-   signal l1Feedbacks            : TriggerL1FeedbackArray(1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
-   signal l1Acks                 : slv (1 downto 0);
+   signal l1Feedbacks            : TriggerL1FeedbackArray(NUM_DETECTORS_G -1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
+   signal l1Acks                 : slv (NUM_DETECTORS_G -1 downto 0);
 
    signal eventClk               : sl;
    signal eventRst               : sl;
-   signal eventTrigMsgMasters    : AxiStreamMasterArray(1 downto 0);
-   signal eventTrigMsgSlaves     : AxiStreamSlaveArray(1 downto 0);
-   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(1 downto 0);
-   signal eventTimingMsgMasters  : AxiStreamMasterArray(1 downto 0);
-   signal eventTimingMsgSlaves   : AxiStreamSlaveArray(1 downto 0);
-   signal clearReadout           : slv (1 downto 0) := (others => '0');
+   signal eventTrigMsgMasters    : AxiStreamMasterArray(NUM_DETECTORS_G -1 downto 0);
+   signal eventTrigMsgSlaves     : AxiStreamSlaveArray(NUM_DETECTORS_G -1 downto 0);
+   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_DETECTORS_G -1 downto 0);
+   signal eventTimingMsgMasters  : AxiStreamMasterArray(NUM_DETECTORS_G -1 downto 0);
+   signal eventTimingMsgSlaves   : AxiStreamSlaveArray(NUM_DETECTORS_G -1 downto 0);
+   signal clearReadout           : slv (NUM_DETECTORS_G -1 downto 0) := (others => '0');
 
    signal v1LinkUp               : sl  := '0';
    signal v2LinkUp               : sl  := '0';
@@ -561,7 +562,9 @@ begin
          SIMULATION_G        => SIMULATION_G,
          AXIL_CLK_FREQ_G     => AXIL_CLK_FREQ_C,
          EVENT_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_C,
-         AXIL_BASE_ADDR_G    => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr)
+         NUM_DETECTORS_G     => NUM_DETECTORS_G,
+         AXIL_BASE_ADDR_G    => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr
+      )
       port map (
          -- Trigger Interface
          triggerClk           => triggerClk,

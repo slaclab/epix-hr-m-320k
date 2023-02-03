@@ -36,26 +36,28 @@ entity TimingRx is
       SIMULATION_G        : boolean := false;
       AXIL_CLK_FREQ_G     : real    := 156.25E+6;  -- units of Hz
       EVENT_AXIS_CONFIG_G : AxiStreamConfigType;
-      AXIL_BASE_ADDR_G    : slv(31 downto 0));
+      AXIL_BASE_ADDR_G    : slv(31 downto 0);
+      NUM_DETECTORS_G     : integer range 1 to 4
+      );
    port (
       -- Trigger Interface
       triggerClk           : in  sl;
       triggerRst           : in  sl;
-      triggerData          : out TriggerEventDataArray(1 downto 0);
+      triggerData          : out TriggerEventDataArray(NUM_DETECTORS_G - 1 downto 0);
       -- L1 trigger feedback (optional)
       l1Clk                : in  sl                    := '0';
       l1Rst                : in  sl                    := '0';
-      l1Feedbacks          : in  TriggerL1FeedbackArray(1 downto 0):= (others => TRIGGER_L1_FEEDBACK_INIT_C);
-      l1Acks               : out slv(1 downto 0);
+      l1Feedbacks          : in  TriggerL1FeedbackArray(NUM_DETECTORS_G - 1 downto 0):= (others => TRIGGER_L1_FEEDBACK_INIT_C);
+      l1Acks               : out slv(NUM_DETECTORS_G - 1 downto 0);
       -- Event streams
       eventClk             : in  sl;
       eventRst             : in  sl;
-      eventTrigMsgMasters  : out AxiStreamMasterArray(1 downto 0);
-      eventTrigMsgSlaves   : in  AxiStreamSlaveArray(1 downto 0);
-      eventTrigMsgCtrl     : in  AxiStreamCtrlArray(1 downto 0);
-      eventTimingMsgMasters: out AxiStreamMasterArray(1 downto 0);
-      eventTimingMsgSlaves : in  AxiStreamSlaveArray(1 downto 0);
-      clearReadout         : out slv(1 downto 0)       := (others => '0');
+      eventTrigMsgMasters  : out AxiStreamMasterArray(NUM_DETECTORS_G - 1 downto 0);
+      eventTrigMsgSlaves   : in  AxiStreamSlaveArray(NUM_DETECTORS_G - 1 downto 0);
+      eventTrigMsgCtrl     : in  AxiStreamCtrlArray(NUM_DETECTORS_G - 1 downto 0);
+      eventTimingMsgMasters: out AxiStreamMasterArray(NUM_DETECTORS_G - 1 downto 0);
+      eventTimingMsgSlaves : in  AxiStreamSlaveArray(NUM_DETECTORS_G - 1 downto 0);
+      clearReadout         : out slv(NUM_DETECTORS_G - 1 downto 0)       := (others => '0');
       -- AXI-Lite Interface
       axilClk              : in  sl;
       axilRst              : in  sl;
@@ -455,7 +457,7 @@ begin
          TPD_G                          => TPD_G,
          EN_LCLS_I_TIMING_G             => false,
          EN_LCLS_II_TIMING_G            => true,
-         NUM_DETECTORS_G                => 2,
+         NUM_DETECTORS_G                => NUM_DETECTORS_G,
          AXIL_BASE_ADDR_G               => AXIL_CONFIG_C(TEM_INDEX_C).baseAddr,
          EVENT_AXIS_CONFIG_G            => EVENT_AXIS_CONFIG_G,
          L1_CLK_IS_TIMING_TX_CLK_G      => false,
