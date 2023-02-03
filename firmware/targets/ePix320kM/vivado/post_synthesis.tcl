@@ -42,23 +42,16 @@ set_property C_DATA_DEPTH 4096 [get_debug_cores ${ilaName}]
 #################################
 ## Set the clock for the ILA core
 #################################
-SetDebugCoreClk ${ilaName} {clk}
+SetDebugCoreClk ${ilaName} {U_App/clk250}
 
 #######################
 ## Set the debug Probes
 #######################
 
-ConfigProbe ${ilaName} {[*]}
-ConfigProbe ${ilaName} {[*]}
-ConfigProbe ${ilaName} {[*]}
-ConfigProbe ${ilaName} {[*]}
-ConfigProbe ${ilaName} {[*]}
+ConfigProbe ${ilaName} {U_App/sspSof[*]}
+ConfigProbe ${ilaName} {U_App/sspEof[*]}
 
-ConfigProbe ${ilaName} {}
-ConfigProbe ${ilaName} {}
-ConfigProbe ${ilaName} {}
-ConfigProbe ${ilaName} {}
-ConfigProbe ${ilaName} {}
+ConfigProbe ${ilaName} {U_App/rst250}
 
 ##########################
 ## Write the port map file
