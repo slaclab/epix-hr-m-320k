@@ -67,15 +67,6 @@ class App(pr.Device):
         )
 
         self.add(
-            fpga.Adc(
-                name='Dacs',
-                offset=0x0800_0000,
-                expand=False,
-                enabled=False
-            )
-        )
-
-        self.add(
             fpga.TimingRx(
                 name='Timing Rx',
                 offset=0x0900_0000,

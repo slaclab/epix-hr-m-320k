@@ -21,7 +21,6 @@ create_clock -name adcMonClkP0   -period 2.857 [get_ports { adcMonDataClkP[0] }]
 create_clock -name adcMonClkP1   -period 2.857 [get_ports { adcMonDataClkP[1] }]
 
 set_clock_groups -asynchronous \
-   -group [get_clocks -include_generated_clocks {fpgaClkInP}] \
    -group [get_clocks -include_generated_clocks {gtLclsClkP}] \
    -group [get_clocks -include_generated_clocks {gtRefClkP0}] \
    -group [get_clocks -include_generated_clocks {gtRefClkP1}] \

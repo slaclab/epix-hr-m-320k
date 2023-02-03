@@ -61,12 +61,12 @@ entity AdcMon is
       -------------------
       -- Slow ADC Ports
       slowAdcCsL      : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-      slowAdcSclk     : out   sl;
-      slowAdcDin      : out   sl;
-      slowAdcSyncL    : out   sl;
-      slowAdcDout     : in    sl;
-      slowAdcDrdyL    : in    sl;
-      slowAdcRefClk   : out   sl;
+      slowAdcSclk     : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDin      : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSyncL    : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDout     : in    slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDrdyL    : in    slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcRefClk   : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       -- ADC Monitor Ports
       adcMonSpiCsL    : out   sl;
       adcMonPdwn      : out   sl;
@@ -343,34 +343,13 @@ begin
          mAxisMaster      => slowAdcMasters(i),
          mAxisSlave       => slowAdcSlaves(i),
          -- ADC Control Signals
-         adcRefClk        => slowAdcRefClkVec(i),
-         adcDrdy          => slowAdcDrdyL,
-         adcSclk          => slowAdcSclkVec(i),
-         adcDout          => slowAdcDout,
-         adcCsL           => slowAdcCsLVec(i),
-         adcDin           => slowAdcDinVec(i)
+         adcRefClk        => slowAdcRefClk(i),
+         adcDrdy          => slowAdcDrdyL(i),
+         adcSclk          => slowAdcSclk(i),
+         adcDout          => slowAdcDout(i),
+         adcCsL           => slowAdcCsL(i),
+         adcDin           => slowAdcDin(i)
       );
    end generate GEN_SLOW_ADC;
-
-
-   slowAdcRefClk <= slowAdcRefClkVec(0);
-   slowAdcCsL    <= slowAdcCsLVec;
-   slowAdcSyncL  <= '0';
-
-   process(slowAdcCsLVec, slowAdcDinVec, slowAdcSclkVec)
-      variable sclk : sl;
-      variable din  : sl;
-   begin
-      sclk := '0';
-      din  := '0';
-      for i in 0 to NUM_OF_SLOW_ADCS_G - 1 loop
-         if (slowAdcCsLVec(i) = '0') then
-            sclk := slowAdcSclkVec(i);
-            din  := slowAdcDinVec(i);
-         end if;
-      end loop;
-      slowAdcSclk <= sclk;
-      slowAdcDin  <= din;
-   end process;
 
 end mapping;

@@ -166,13 +166,13 @@ entity Application is
       adcMonPdwn            : out sl;
       adcMonSpiCsL          : out sl;
 
-      slowAdcDout           : in  sl;
-      slowAdcDrdyL          : in  sl;
-      slowAdcSyncL          : out slv(1 downto 0);
-      slowAdcSclk           : out sl;
-      slowAdcCsL            : out slv(1 downto 0);
-      slowAdcDin            : out sl;
-      slowAdcRefClk         : out sl;
+      slowAdcDout           : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDrdyL          : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSyncL          : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSclk           : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcCsL            : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDin            : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcRefClk         : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    
       jitclnrLolL           : in sl
    );
@@ -254,24 +254,25 @@ architecture rtl of Application is
    signal dacLoadSig             : sl;
    signal asicDigRstSig          : sl;
    signal asicClkSyncEnSig       : sl;
-   signal slowAdcDinSig          : sl;
-   signal slowAdcSyncLSig        : sl;
-   signal slowAdcRefClkSig       : sl;
+   signal slowAdcDinSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+   signal slowAdcSyncLSig        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+   signal slowAdcRefClkSig       : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
 
-   signal saciClkVec             : sl;
-   signal saciCmdVec             : sl;
-   signal saciSelSig             : slv(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal saciClkSig             : sl;
+   signal saciCmdSig             : sl;
+   signal saciSelVec             : slv(NUMBER_OF_ASICS_C - 1 downto 0);
 
    signal clk6Meg                : sl;
 
 begin
 
-   saciSel       <= saciSelSig;
-   saciClk       <= saciClkVec ;
-   saciCmd       <= saciCmdVec ;
-   -- asicSync      <= asicSyncSig;
-   -- asicAcq       <= asicAcqSig;
-   -- asicGlblRst   <= asicGrSig;
+   saciSel       <= saciSelVec;
+   saciClk       <= saciClkSig;
+   saciCmd       <= saciCmdSig;
+   asicSync      <= asicSyncSig;
+   asicAcq       <= asicAcqSig;
+   asicGlblRst   <= asicGrSig;
+   asicSro       <= asicSroSig;
    -- dacDin        <= dacDinSig;
    -- dacCsL        <= dacCsLSig;
    -- dacClrL       <= dacClrLSig;
@@ -283,27 +284,25 @@ begin
    -- slowAdcRefClk <= slowAdcRefClkSig; 
 
    
-   -- fpgaTtlOut <= 
-   --       digMon(0)            when boardConfig.epixhrDbgSel1 = "00000" else
-   --       digMon(1)            when boardConfig.epixhrDbgSel1 = "00000" else
-   --       asicSyncSig          when boardConfig.epixhrDbgSel1 = "00001" else
-   --       asicAcqSig           when boardConfig.epixhrDbgSel1 = "00010" else
-   --       asicSroSig           when boardConfig.epixhrDbgSel1 = "00011" else
-   --       saciCmdVec(0)        when boardConfig.epixhrDbgSel1 = "00100" else
-   --       saciCmdVec(1)        when boardConfig.epixhrDbgSel1 = "00101" else
-   --       saciCmdVec(2)        when boardConfig.epixhrDbgSel1 = "00110" else
-   --       saciCmdVec(3)        when boardConfig.epixhrDbgSel1 = "00111" else
-   --       saciSelSig(0)        when boardConfig.epixhrDbgSel1 = "01000" else
-   --       saciSelSig(1)        when boardConfig.epixhrDbgSel1 = "01001" else
-   --       saciSelSig(2)        when boardConfig.epixhrDbgSel1 = "01010" else
-   --       saciSelSig(3)        when boardConfig.epixhrDbgSel1 = "01011" else   
+   fpgaTtlOut <= 
+         digMon(0)            when boardConfig.epixhrDbgSel1 = toSlv(0, 5) else
+         digMon(1)            when boardConfig.epixhrDbgSel1 = toSlv(1, 5) else
+         asicSyncSig          when boardConfig.epixhrDbgSel1 = toSlv(2, 5) else
+         asicAcqSig           when boardConfig.epixhrDbgSel1 = toSlv(3, 5) else
+         asicSroSig           when boardConfig.epixhrDbgSel1 = toSlv(4, 5) else
+         saciCmdSig           when boardConfig.epixhrDbgSel1 = toSlv(5, 5) else
+         saciSelVec(0)        when boardConfig.epixhrDbgSel1 = toSlv(6, 5) else
+         saciSelVec(1)        when boardConfig.epixhrDbgSel1 = toSlv(7, 5) else
+         saciSelVec(2)        when boardConfig.epixhrDbgSel1 = toSlv(8, 5) else
+         saciSelVec(3)        when boardConfig.epixhrDbgSel1 = toSlv(9, 5) else
+         saciClkSig           when boardConfig.epixhrDbgSel2 = toSlv(10, 5) else   
    --       asicGrSig            when boardConfig.epixhrDbgSel1 = "10010" else
    --       dacDinSig            when boardConfig.epixhrDbgSel1 = "10011" else
    --       dacCsLSig(0)         when boardConfig.epixhrDbgSel1 = "10100" else
    --       dacCsLSig(1)         when boardConfig.epixhrDbgSel1 = "10101" else
    --       dacClrLSig           when boardConfig.epixhrDbgSel1 = "10110" else
    --       dacLoadSig           when boardConfig.epixhrDbgSel1 = "10111" else
-   --       saciClkVec(0)        when boardConfig.epixhrDbgSel2 = "00001" else
+        
    --       saciClkVec(1)        when boardConfig.epixhrDbgSel2 = "00010" else
    --       saciClkVec(2)        when boardConfig.epixhrDbgSel2 = "00011" else
    --       saciClkVec(3)        when boardConfig.epixhrDbgSel2 = "00100" else
@@ -315,7 +314,7 @@ begin
    --       slowAdcRefClkSig     when boardConfig.epixhrDbgSel2 = "10101" else
    --       slowAdcSyncLSig      when boardConfig.epixhrDbgSel2 = "10110" else
    --       saciResp             when boardConfig.epixhrDbgSel2 = "10111" else
-   --       '0';
+         '0';
 
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
@@ -459,9 +458,9 @@ begin
          SACI_NUM_CHIPS_G   => 4)
       port map (
          -- SACI interface
-         saciClk         => saciClkVec,
-         saciCmd         => saciCmdVec,
-         saciSelL        => saciSelSig,
+         saciClk         => saciClkSig,
+         saciCmd         => saciCmdSig,
+         saciSelL        => saciSelVec,
          saciRsp(0)      => saciRsp,
          -- AXI-Lite Register Interface
          axilClk         => axiClk,
@@ -469,7 +468,8 @@ begin
          axilReadMaster  => axilReadMasters(SACI_INDEX_C),
          axilReadSlave   => axilReadSlaves(SACI_INDEX_C),
          axilWriteMaster => axilWriteMasters(SACI_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(SACI_INDEX_C));
+         axilWriteSlave  => axilWriteSlaves(SACI_INDEX_C)
+         );
 
 
    U_PwrCtrl : entity work.PowerCtrl

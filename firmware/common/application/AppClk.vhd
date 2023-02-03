@@ -151,12 +151,26 @@ begin
          clkOutN => fpgaRdClkM
          );
    
-   U_IBUFDS : IBUFDS
+   U_IBUFDS_PLL_CLK : IBUFDS_GTE4
+      generic map (
+         REFCLK_EN_TX_PATH  => '0',
+         REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
+         REFCLK_ICNTL_RX    => "00"
+      )
       port map (
-         I  => gtPllClkP,
-         IB => gtPllClkM,
-         O  => pllToFpgaClk
+         I     => gtPllClkP,
+         IB    => gtPllClkM,
+         CEB   => '0',
+         ODIV2 => open,
+         O     => pllToFpgaClk
       );
+
+   -- U_IBUFDS : IBUFDS
+   --    port map (
+   --       I  => gtPllClkP,
+   --       IB => gtPllClkM,
+   --       O  => pllToFpgaClk
+   --    );
    
    U_clk250 : BUFG
       port map (

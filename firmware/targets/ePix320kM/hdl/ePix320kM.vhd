@@ -63,8 +63,8 @@ entity ePix320kM is
       --              Application Ports           --
       ----------------------------------------------
       -- ASIC Data Outs
-      asicDataP            : in Slv24Array(3 downto 0);
-      asicDataM            : in Slv24Array(3 downto 0);
+      asicDataP            : in Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+      asicDataM            : in Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
 
 
       adcMonDoutP          : in Slv8Array(1 downto 0);
@@ -79,8 +79,8 @@ entity ePix320kM is
       asicGlblRst          : out sl;
       asicSync             : out sl;
       asicAcq              : out sl;
-      asicRoClkP           : out slv(3 downto 0);
-      asicRoClkN           : out slv(3 downto 0);
+      -- asicRoClkP           : out slv(NUM_OF_ASICS_G - 1 downto 0);
+      -- asicRoClkN           : out slv(NUM_OF_ASICS_G - 1 downto 0);
       asicSro              : out sl;
       asicClkEn            : out sl;
       rdClkSel             : out sl;
@@ -88,10 +88,10 @@ entity ePix320kM is
       fpgaRdClkM           : out sl;
 
       -- SACI Ports
-      asicSaciCmd          : out sl;
-      asicSaciClk          : out sl;
-      asicSaciSel          : out slv(3 downto 0);
-      asicSaciRsp          : in  sl;
+      saciCmd          : out sl;
+      saciClk          : out sl;
+      saciSel          : out slv(NUM_OF_ASICS_G - 1 downto 0);
+      saciRsp          : in  sl;
 
       -- Spare ports both to carrier and to p&cb
       pcbSpare             : inout slv(5 downto 0);
@@ -143,13 +143,13 @@ entity ePix320kM is
       adcMonClkM           : out sl;
       adcMonPdwn           : out sl;
       adcMonSpiCsL         : out sl;
-      slowAdcDout          : in  sl;
-      slowAdcDrdyL         : in  sl;
-      slowAdcSyncL         : out slv(1 downto 0);
-      slowAdcSclk          : out sl;
-      slowAdcCsL           : out slv(1 downto 0);
-      slowAdcDin           : out sl;
-      slowAdcRefClk        : out sl;
+      slowAdcDout          : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDrdyL         : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSyncL         : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcSclk          : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcCsL           : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDin           : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcRefClk        : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
 
       ----------------------------------------------
       --               Core Ports                 --
@@ -259,10 +259,10 @@ begin
          digMon => digMon,
 
          -- SACI Ports
-         saciCmd => asicsaciCmd,
-         saciClk => asicsaciClk,
-         saciSel => asicsaciSel,
-         saciRsp => asicsaciRsp,
+         saciCmd => saciCmd,
+         saciClk => saciClk,
+         saciSel => saciSel,
+         saciRsp => saciRsp,
 
          -- GT Clock Ports
          gtPllClkP => gtPllClkP,
