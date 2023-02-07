@@ -33,8 +33,8 @@ set_clock_groups -asynchronous \
     -group [get_clocks -of_objects [get_pins -hier -filter {NAME =~ *U_Pgp3GthUsIpWrapper_1/GEN_10G.U_Pgp3GthUsIp/inst/gen_gtwizard_gthe4_top.Pgp3GthUsIp10G_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_rx_user_clocking_internal.gen_single_instance.gtwiz_userclk_rx_inst/gen_gtwiz_userclk_rx_main.bufg_gt_usrclk2_inst/O}]] \
     -group [get_clocks -of_objects [get_pins -hier -filter {NAME =~ *U_Pgp3GthUsIpWrapper_1/GEN_10G.U_Pgp3GthUsIp/inst/gen_gtwizard_gthe4_top.Pgp3GthUsIp10G_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_channel_container[2].gen_enabled_channel.gthe4_channel_wrapper_inst/channel_inst/gthe4_channel_gen.gen_gthe4_channel_inst[0].GTHE4_CHANNEL_PRIM_INST/RXOUTCLKPCS}]]
 
-create_generated_clock -name timingGtRxOut    [get_pins {U_App/U_TimingRx/GEN_GT.U_GTH/LOCREF_G.U_TimingGthCore/inst/gen_gtwizard_gthe4_top.TimingGth_fixedlat_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_channel_container[0].gen_enabled_channel.gthe4_channel_wrapper_inst/channel_inst/gthe4_channel_gen.gen_gthe4_channel_inst[0].GTHE4_CHANNEL_PRIM_INST/RXOUTCLK}]
-create_generated_clock -name timingRefClkDiv2 [get_pins {U_App/U_TimingRx/U_gtRefClk/ODIV2}]
+# create_generated_clock -name timingGtRxOut    [get_pins {U_App/U_TimingRx/GEN_GT.U_GTH/LOCREF_G.U_TimingGthCore/inst/gen_gtwizard_gthe4_top.TimingGth_fixedlat_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_channel_container[0].gen_enabled_channel.gthe4_channel_wrapper_inst/channel_inst/gthe4_channel_gen.gen_gthe4_channel_inst[0].GTHE4_CHANNEL_PRIM_INST/RXOUTCLK}]
+create_generated_clock -name timingRefClkDiv2 [get_pins {U_App/U_TimingRx/U_gtRefClk/gtLclsClkDiv2}]
 
 
 create_generated_clock -name timingRxRecClk \
@@ -72,3 +72,7 @@ set_clock_groups -asynchronous \
 set_clock_groups -asynchronous \
     -group [get_clocks -of_objects [get_pins {U_App/U_TimingRx/GEN_GT.U_GTH/LOCREF_G.U_TimingGthCore/inst/gen_gtwizard_gthe4_top.TimingGth_fixedlat_gtwizard_gthe4_inst/gen_gtwizard_gthe4.gen_channel_container[0].gen_enabled_channel.gthe4_channel_wrapper_inst/channel_inst/gthe4_channel_gen.gen_gthe4_channel_inst[0].GTHE4_CHANNEL_PRIM_INST/RXOUTCLK}]] \
     -group [get_clocks timingRxRecClk]
+
+set_clock_groups -asynchronous \
+    -group [get_clocks -of_objects [get_pins U_App/U_ClkGen/U_clk62p5/O]] \
+    -group [get_clocks -of_objects [get_pins U_App/U_ClkGen/U_clk62p5/O]]
