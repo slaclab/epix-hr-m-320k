@@ -13,3 +13,6 @@
 [submodule "firmware/submodules/l2si-core"]
 	path = firmware/submodules/l2si-core
 	url = git@github.com:slaclab/l2si-core.git
+[submodule "firmware/submodules/epix-hr-leap-common"]
+	path = firmware/submodules/epix-hr-leap-common
+	url = git@github.com:slaclab/epix-hr-leap-common.git
