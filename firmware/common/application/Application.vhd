@@ -315,7 +315,7 @@ begin
    --       saciResp             when boardConfig.epixhrDbgSel2 = "10111" else
          '0';
 
-   U_XBAR  : entity surf.AxiLiteCrossbar
+   U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
          NUM_SLAVE_SLOTS_G      => NUM_AXIL_SLAVES_C,
          NUM_MASTER_SLOTS_G     => NUM_AXIL_MASTERS_C,
@@ -334,7 +334,7 @@ begin
          axiClkRst              => axiRst
       );
 
-   U_AppClk  : entity work.AppClk
+   U_ClkGen : entity work.AppClk
       generic map (
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G
