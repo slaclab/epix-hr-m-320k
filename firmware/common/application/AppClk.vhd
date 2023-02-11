@@ -76,14 +76,9 @@ begin
          O     => fabRefClk
       );
 
-   U_BUFG_GT : BUFG_GT
+   U_BUFG_GT : BUFG
       port map (
         I       => fabRefClk,
-        CE      => '1',
-        CEMASK  => '1',
-        CLR     => '0',
-        CLRMASK => '1',
-        DIV     => "000",              -- Divide by 1
         O       => fabClock
       );
       
