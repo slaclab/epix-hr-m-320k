@@ -21,13 +21,10 @@ use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.Ad9249Pkg.all;
 
-library epix_hr_core;
-
-library epix_leap_core;
-use epix_leap_core.CorePkg.all;
-
 library unisim;
 use unisim.vcomponents.all;
+
+use work.CorePkg.all;
 
 entity AdcMon is
    generic (
@@ -319,7 +316,7 @@ begin
    --------------------
    GEN_SLOW_ADC :
    for i in NUM_OF_SLOW_ADCS_G - 1 downto 0 generate
-      U_AdcCntrl : entity epix_hr_core.SlowAdcCntrlAxi
+      U_AdcCntrl : entity work.SlowAdcCntrlAxi
          generic map (
          SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
          ADC_CLK_PERIOD_G  => 200.0E-9,  -- 5MHz

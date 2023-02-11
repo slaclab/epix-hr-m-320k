@@ -9,8 +9,7 @@ use surf.AxiLitePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-library work;
-use work.AppPkg.all;
+use work.CorePkg.all;
 
 entity AppClk is
    generic (
@@ -54,18 +53,14 @@ architecture rtl of AppClk is
    signal fabReset         : sl;
    signal fpgaToPllClk     : sl;
    signal pllToFpgaClk     : sl;
-   signal clk62p5            : sl;
-   signal rst62p5            : sl;
-   signal iClk250          : sl;
-   signal adcClk           : sl;
+   signal clk62p5          : sl;
+   signal rst62p5          : sl;
 
 begin
 
-   sspClk <= clk62p5;
    clk156 <= fabClock;
    rst156 <= fabReset;
    rst250 <= rst62p5;
-   clk250 <= iClk250;
 
    U_IBUFDS_GT : IBUFDS_GTE4
       generic map (
@@ -146,7 +141,7 @@ begin
          XIL_DEVICE_G => XIL_DEVICE_C
          )
       port map (
-         clkIn   => iClk250,
+         clkIn   => pllToFpgaClk,
          clkOutP => fpgaRdClkP,
          clkOutN => fpgaRdClkM
          );
@@ -165,17 +160,10 @@ begin
          O     => pllToFpgaClk
       );
 
-   -- U_IBUFDS : IBUFDS
-   --    port map (
-   --       I  => gtPllClkP,
-   --       IB => gtPllClkM,
-   --       O  => pllToFpgaClk
-   --    );
-   
    U_clk250 : BUFG
       port map (
          I => pllToFpgaClk,
-         O => iClk250
+         O => clk250
       );
    
    U_clk62p5 : BUFGCE_DIV
@@ -183,12 +171,15 @@ begin
          BUFGCE_DIVIDE => 4
       )
       port map (
-         I   => iClk250,
+         I   => pllToFpgaClk,
          CE  => '1',
          CLR => '0',
          O   => clk62p5
       );
-   
+
+ sspClk <= clk62p5;
+
+
    U_rst62p5 : entity surf.RstSync
       generic map (
          TPD_G          => TPD_G,

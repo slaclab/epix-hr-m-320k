@@ -22,8 +22,7 @@ use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.SsiCmdMasterPkg.all;
 
-library epix_hr_leap_common;
-use epix_hr_leap_common.CorePkg.all;
+use work.CorePkg.all;
 
 entity ePixHrM320k is
    generic (
@@ -328,7 +327,7 @@ begin
          jitclnrLolL       => jitclnrLolL
       );
 
-   U_Core : entity epix_hr_leap_common.Core
+   U_Core : entity work.Core
       generic map(
          TPD_G          => TPD_G,
          BUILD_INFO_G   => BUILD_INFO_G,

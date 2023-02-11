@@ -32,10 +32,8 @@ use l2si_core.L2SiPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
+use work.CorePkg.all;
 use work.AppPkg.all;
-
-library epix_leap_core;
-use epix_leap_core.CorePkg.all;
 
 entity Application is
    generic (
@@ -80,8 +78,8 @@ entity Application is
       fpgaInObTransOutM  : in  slv(11 downto 8);
 
       -- ASIC Data Outs
-      asicDataP          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
-      asicDataM          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
+      asicDataP          : in Slv24Array(NUM_OF_ASICS_G -1 downto 0);
+      asicDataM          : in Slv24Array(NUM_OF_ASICS_G -1 downto 0);
 
       -- ASIC Control Ports
       asicR0             : out sl;
@@ -97,7 +95,7 @@ entity Application is
       -- SACI Ports
       saciCmd            : out sl;
       saciClk            : out sl;
-      saciSel            : out slv(NUMBER_OF_ASICS_C - 1 downto 0);
+      saciSel            : out slv(NUM_OF_ASICS_G - 1 downto 0);
       saciRsp            : in  sl;
 
       -- Spare ports both to carrier and to p&cb
@@ -211,12 +209,12 @@ architecture rtl of Application is
    signal sspClk                 : sl;
    signal sspRst                 : sl;
    
-   signal sspLinkUp              : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspValid               : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspData                : Slv16Array((NUMBER_OF_ASICS_C * 24)-1 downto 0);
-   signal sspSof                 : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspEof                 : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspEofe                : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal sspLinkUp              : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspValid               : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspData                : Slv16Array((NUM_OF_ASICS_G * 24)-1 downto 0);
+   signal sspSof                 : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspEof                 : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspEofe                : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
 
    signal triggerClk             : sl;
    signal triggerRst             : sl;
@@ -261,7 +259,7 @@ architecture rtl of Application is
 
    signal saciClkSig             : sl;
    signal saciCmdSig             : sl;
-   signal saciSelVec             : slv(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal saciSelVec             : slv(NUM_OF_ASICS_G - 1 downto 0);
 
    signal clk6Meg                : sl;
 
@@ -317,7 +315,7 @@ begin
    --       saciResp             when boardConfig.epixhrDbgSel2 = "10111" else
          '0';
 
-   U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
+   U_XBAR  : entity surf.AxiLiteCrossbar
       generic map (
          NUM_SLAVE_SLOTS_G      => NUM_AXIL_SLAVES_C,
          NUM_MASTER_SLOTS_G     => NUM_AXIL_MASTERS_C,
@@ -336,7 +334,7 @@ begin
          axiClkRst              => axiRst
       );
 
-   U_ClkGen : entity work.AppClk
+   U_AppClk  : entity work.AppClk
       generic map (
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G
@@ -360,7 +358,7 @@ begin
          sspClk                 => sspClk,
          sspRst                 => sspRst
       );
-      
+
    U_AsicTop : entity work.AsicTop
       generic map (
          TPD_G                  => TPD_G,
@@ -525,7 +523,7 @@ begin
    --------------
    -- DAC Modules
    --------------
-   U_Dac : entity work.Dac
+   U_Dac : entity work.DacTop
       generic map(
          TPD_G            => TPD_G,
          SIMULATION_G     => SIMULATION_G,

@@ -23,9 +23,7 @@ use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 
 use work.AppPkg.all;
-
-library epix_leap_core;
-use epix_leap_core.CorePkg.all;
+use work.CorePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
