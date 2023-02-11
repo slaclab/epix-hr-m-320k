@@ -4,9 +4,6 @@
 [submodule "firmware/submodules/surf"]
 	path = firmware/submodules/surf
 	url = git@github.com:slaclab/surf
-[submodule "firmware/submodules/epix-hr-core"]
-	path = firmware/submodules/epix-hr-core
-	url = git@github.com:slaclab/epix-hr-core.git
 [submodule "firmware/submodules/lcls-timing-core"]
 	path = firmware/submodules/lcls-timing-core
 	url = git@github.com:slaclab/lcls-timing-core.git
