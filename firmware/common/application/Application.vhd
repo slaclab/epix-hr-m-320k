@@ -363,6 +363,7 @@ begin
       generic map (
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G,
+         EN_DEVICE_DNA_G        => false,
          BUILD_INFO_G           => BUILD_INFO_G,
          NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
          NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
