@@ -26,6 +26,8 @@ use unisim.vcomponents.all;
 
 use work.CorePkg.all;
 
+library epix_hr_core;
+
 entity AdcMon is
    generic (
       TPD_G                : time := 1 ns;
@@ -183,7 +185,7 @@ begin
    -----------------------
    GEN_OSCOPE :
    for i in NUM_OF_PSCOPE_G - 1 downto 0 generate
-      U_PseudoScope : entity work.PseudoScopeAxi
+      U_PseudoScope : entity epix_hr_core.PseudoScopeAxi
          generic map (
          TPD_G                      => TPD_G,
          MASTER_AXI_STREAM_CONFIG_G => APP_AXIS_CONFIG_C
@@ -316,7 +318,7 @@ begin
    --------------------
    GEN_SLOW_ADC :
    for i in NUM_OF_SLOW_ADCS_G - 1 downto 0 generate
-      U_AdcCntrl : entity work.SlowAdcCntrlAxi
+      U_AdcCntrl : entity epix_hr_core.SlowAdcCntrlAxi
          generic map (
          SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
          ADC_CLK_PERIOD_G  => 200.0E-9,  -- 5MHz

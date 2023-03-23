@@ -13,3 +13,6 @@
 [submodule "firmware/submodules/epix-hr-leap-common"]
 	path = firmware/submodules/epix-hr-leap-common
 	url = git@github.com:slaclab/epix-hr-leap-common.git
+[submodule "firmware/submodules/epix-hr-core"]
+	path = firmware/submodules/epix-hr-core
+	url = git@github.com:slaclab/epix-hr-core
