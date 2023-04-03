@@ -15,14 +15,14 @@ export TOP_DIR = $(abspath $(PWD)/../..)
 export USE_XVC_DEBUG = 0
 
 # Setup for releases.yaml
-export RELEASE = ePixHrM320k
+export RELEASE = ePixHRM320k
 
 # -----------------------------------
 # things needed for epix-hr-core
 # export COMM_TYPE = pgp4
 # export INCLUDE_PGP4_10G = 1 
 # COMMON_NAME is defined by application
-export COMMON_NAME = ePixHrM320K
+export COMMON_NAME = ePixHRM320k
 
 # Define if this is FSBL PROM address
 # export PROM_FSBL = 1

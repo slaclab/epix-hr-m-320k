@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: top level for ePixHrM320k
+-- Description: top level for ePixHRM320k
 -------------------------------------------------------------------------------
--- This file is part of 'ePixHrM320k firmware'.
+-- This file is part of 'ePixHRM320k firmware'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
 -- top-level directory of this distribution and at:
 --    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
@@ -24,7 +24,7 @@ use surf.SsiCmdMasterPkg.all;
 
 use work.CorePkg.all;
 
-entity ePixHrM320k is
+entity ePixHRM320k is
    generic (
       BUILD_INFO_G         : BuildInfoType;
       TPD_G                : time            := 1 ns;
@@ -175,7 +175,7 @@ entity ePixHrM320k is
 end entity;
 
 
-architecture topLevel of ePixHrM320k is
+architecture topLevel of ePixHRM320k is
 
    -- Clock and Reset
    signal axiClk : sl;

@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: Application interface for ePix320kM
+-- Description: Application interface for ePixHRM320k
 -------------------------------------------------------------------------------
--- This file is part of 'ePix320kM firmware'.
+-- This file is part of 'ePixHRM320k firmware'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
 -- top-level directory of this distribution and at:
 --    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.

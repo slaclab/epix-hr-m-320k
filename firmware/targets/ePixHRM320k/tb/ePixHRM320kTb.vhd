@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: test bench for ePix320kM
+-- Description: test bench for ePixHRM320k
 -------------------------------------------------------------------------------
--- This file is part of 'ePix320kM firmware'.
+-- This file is part of 'ePixHRM320k firmware'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
 -- top-level directory of this distribution and at:
 --    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
@@ -23,10 +23,14 @@ use surf.AxiLitePkg.all;
 library ruckus;
 use ruckus.BuildInfoPkg.all;
 
-entity ePix320kMTb is
-end entity ePix320kMTb;
+entity ePixHRM320kTb is
+end entity ePixHRM320kTb;
 
-architecture testbench of ePix320kMTb is
+architecture testbench of ePixHRM320kTb is
+
+    constant NUM_OF_SLOW_ADCS_C: natural := 2;
+    
+    
     -- Transceiver high speed lanes
     signal fpgaOutObTransInP        : slv(11 downto 0)       := ( others => '0');
     signal fpgaOutObTransInM        : slv(11 downto 0)       := ( others => '1');
@@ -38,8 +42,8 @@ architecture testbench of ePix320kMTb is
     signal obTransResetL            : sl                     := '1';
     signal obTransIntL              : sl                     := '1';
     -- GT Clock Ports                    
-    signal gtPllClkP                : slv(1 downto 0)        := ( others => '0');
-    signal gtPllClkM                : slv(1 downto 0)        := ( others => '1');
+    signal gtPllClkP                : sl                     := '0';
+    signal gtPllClkM                : sl                     := '1';
     signal gtRefClkP                : slv(1 downto 0)        := ( others => '0');
     signal gtRefClkM                : slv(1 downto 0)        := ( others => '1');
     signal gtLclsClkP               : sl                     := '0';
@@ -48,12 +52,12 @@ architecture testbench of ePix320kMTb is
     signal asicDataP                : Slv24Array(3 downto 0) := ( others => ( others => '0'));
     signal asicDataM                : Slv24Array(3 downto 0) := ( others => ( others => '1'));
     -- ASIC Control Ports
-    signal adcMonDoutP              : slv(11 downto 0)       := ( others => '0');
-    signal adcMonDoutM              : slv(11 downto 0)       := ( others => '1');
-    signal adcDoClkP                : slv(1 downto 0)        := ( others => '0');
-    signal adcDoClkM                : slv(1 downto 0)        := ( others => '1');
-    signal adcFrameClkP             : slv(1 downto 0)        := ( others => '0');
-    signal adcFrameClkM             : slv(1 downto 0)        := ( others => '1');
+    signal adcMonDoutP              : Slv8Array(1 downto 0)  := ( others => ( others => '0'));
+    signal adcMonDoutM              : Slv8Array(1 downto 0)  := ( others => ( others => '0'));
+    signal adcMonDataClkP                : slv(1 downto 0)   := ( others => '0');
+    signal adcMonDataClkM                : slv(1 downto 0)   := ( others => '1');
+    signal adcMonFrameClkP             : slv(1 downto 0)     := ( others => '0');
+    signal adcMonFrameClkM             : slv(1 downto 0)     := ( others => '1');
     -- ASIC Control Ports        
     signal asicR0                   : sl                     := '1';
     signal asicGlblRst              : sl                     := '1';
@@ -111,21 +115,21 @@ architecture testbench of ePix320kMTb is
     signal ldoShtdnL                : slv(1 downto 0)        := ( others => '1');
     signal dcdcSync                 : sl                     := '1';
     signal pcbSync                  : sl                     := '1';
-    signal pcbLocalSupplyGood       : sl                     := '1';
+    signal pwrGood                  : slv(1 downto 0)        := ( others => '0');
     -- Digital board env monitor                     
-    signal adcSpiClk                : sl                     := '1';
-    signal adcSpiData               : sl                     := '1';
+    signal adcMonSpiClk                : sl                     := '1';
+    signal adcMonSpiData               : sl                     := '1';
     signal adcMonClkP               : sl                     := '1';
     signal adcMonClkM               : sl                     := '1';
     signal adcMonPdwn               : sl                     := '1';
     signal adcMonSpiCsb             : sl                     := '1';
-    signal slowAdcDout              : sl                     := '1';
-    signal slowAdcDrdyL             : sl                     := '1';
-    signal slowAdcSyncL             : sl                     := '1';
-    signal slowAdcSclk              : sl                     := '1';
-    signal slowAdcCsb               : sl                     := '1';
-    signal slowAdcDin               : sl                     := '1';
-    signal slowAdcRefClk            : sl                     := '1';
+    signal slowAdcDout              : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcDrdyL             : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcSyncL             : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcSclk              : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcCsL               : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcDin               : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcRefClk            : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
     -- Clock Jitter Cleaner
     signal jitclnrCsL               : sl                     := '1';
     signal jitclnrIntr              : sl                     := '1';
@@ -155,13 +159,14 @@ architecture testbench of ePix320kMTb is
        fwVersion   => GET_BUILD_INFO_C.fwVersion,
        gitHash     => x"1111_2222_3333_4444_5555_6666_7777_8888_9999_AAAA");  -- Force githash for simulation testing
     constant SIM_BUILD_INFO_C : slv(2239 downto 0) := toSlv(MOD_BUILD_INFO_C);
- 
+
 begin
 
-    U_Fpga : entity work.ePix320kM
+    U_Fpga : entity work.ePixHRM320k
     generic map (
         BUILD_INFO_G => SIM_BUILD_INFO_C,
-        SIMULATION_G => true
+        SIMULATION_G => true,
+        NUM_OF_SLOW_ADCS_G => NUM_OF_SLOW_ADCS_C
     )
     port map (
         ----------------------------------------------
@@ -198,26 +203,26 @@ begin
     
         adcMonDoutP         => adcMonDoutP , 
         adcMonDoutM         => adcMonDoutM , 
-        adcDoClkP           => adcDoClkP   , 
-        adcDoClkM           => adcDoClkM   , 
-        adcFrameClkP        => adcFrameClkP, 
-        adcFrameClkM        => adcFrameClkM, 
+        adcMonDataClkP      => adcMonDataClkP, 
+        adcMonDataClkM      => adcMonDataClkM, 
+        adcMonFrameClkP     => adcMonFrameClkP, 
+        adcMonFrameClkM     => adcMonFrameClkM, 
     
         -- ASIC Control Ports
         asicR0              => asicR0     , 
         asicGlblRst         => asicGlblRst, 
         asicSync            => asicSync   , 
         asicAcq             => asicAcq    , 
-        asicRoClkP          => asicRoClkP , 
-        asicRoClkN          => asicRoClkN , 
+        --asicRoClkP          => asicRoClkP , 
+        --asicRoClkN          => asicRoClkN , 
         asicSro             => asicSro    , 
         asicClkEn           => asicClkEn  , 
     
         -- SACI Ports
-        asicSaciCmd         => asicSaciCmd, 
-        asicSaciClk         => asicSaciClk, 
-        asicSaciSel         => asicSaciSel, 
-        asicSaciRsp         => asicSaciRsp, 
+        saciCmd         => asicSaciCmd, 
+        saciClk         => asicSaciClk, 
+        saciSel         => asicSaciSel, 
+        saciRsp         => asicSaciRsp, 
     
         -- Spare ports both to carrier and to p&cb
         pcbSpare            => pcbSpare, 
@@ -254,36 +259,36 @@ begin
         fpgaClkOutM         => fpgaClkOutM, 
     
         -- Power and communication env Monitor
-        pcbAdcDrdyL         => pcbAdcDrdyL , 
-        pcbAdcData          => pcbAdcData  , 
-        pcbAdcCsb           => pcbAdcCsb   , 
-        pcbAdcSclk          => pcbAdcSclk  , 
-        pcbAdcDin           => pcbAdcDin   , 
-        pcbAdcSyncL         => pcbAdcSyncL , 
-        pcbAdcRefClk        => pcbAdcRefClk, 
+        --pcbAdcDrdyL         => pcbAdcDrdyL , 
+        --pcbAdcData          => pcbAdcData  , 
+        --pcbAdcCsb           => pcbAdcCsb   , 
+        --pcbAdcSclk          => pcbAdcSclk  , 
+        --pcbAdcDin           => pcbAdcDin   , 
+        --pcbAdcSyncL         => pcbAdcSyncL , 
+        --pcbAdcRefClk        => pcbAdcRefClk, 
     
         -- Serial number
         serialNumber        => serialNumber, 
     
         -- Power 
         syncDcdc            => syncDcdc          , 
-        ldoShtdnL           => ldoShtdnL         , 
-        dcdcSync            => dcdcSync          , 
+        --ldoShtdnL         => ldoShtdnL         , 
+        --dcdcSync          => dcdcSync          , 
         pcbSync             => pcbSync           , 
-        pcbLocalSupplyGood  => pcbLocalSupplyGood, 
+        pwrGood             => pwrGood, 
     
         -- Digital board env monitor
-        adcSpiClk           => adcSpiClk    , 
-        adcSpiData          => adcSpiData   , 
+        adcMonSpiClk        => adcMonSpiClk    , 
+        adcMonSpiData       => adcMonSpiData   , 
         adcMonClkP          => adcMonClkP   , 
         adcMonClkM          => adcMonClkM   , 
         adcMonPdwn          => adcMonPdwn   , 
-        adcMonSpiCsb        => adcMonSpiCsb , 
+        adcMonSpiCsL        => adcMonSpiCsb , 
         slowAdcDout         => slowAdcDout  , 
         slowAdcDrdyL        => slowAdcDrdyL , 
         slowAdcSyncL        => slowAdcSyncL , 
         slowAdcSclk         => slowAdcSclk  , 
-        slowAdcCsb          => slowAdcCsb   , 
+        slowAdcCsL          => slowAdcCsL   , 
         slowAdcDin          => slowAdcDin   , 
         slowAdcRefClk       => slowAdcRefClk, 
     
@@ -310,11 +315,11 @@ begin
         vNIn => vNIn
    );
 
-    fpgaClkOutP <= Clk320P;
-    fpgaClkOutM <= Clk320M;
+   fpgaClkInP <= Clk320P;
+   fpgaClkInM <= Clk320M;
  
-    gtPllClkP <= (others => Clk320P);
-    gtPllClkM <= (others => Clk320M);
+    gtPllClkP <= Clk320P;
+    gtPllClkM <= Clk320M;
  
     gtRefClkP <= (others => Clk156P);
     gtRefClkM <= (others => Clk156M);
