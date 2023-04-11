@@ -12,6 +12,7 @@ import pyrogue as pr
 
 import ePix320kM as fpga
 import surf.protocols.batcher as batcher
+import epix_hr_core
 
 class AsicTop(pr.Device):
     def __init__( self,**kwargs):

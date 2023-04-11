@@ -66,7 +66,7 @@ class EpixMv2Asic(pr.Device):
             ))
 
         # CMD = 1, Addr = 1
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='shvc_DAC',
                               description='Config1',
 
@@ -91,11 +91,11 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')
+                              mode='WO') )
             )
 
         # CMD = 1, Addr = 2  : Pixel dummy, write data
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='Pll_RO_Reset',
                               description='Config2',
                               offset=0x00001002 * addrSize,
@@ -134,12 +134,12 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='WO') )
             )
 
         # CMD = 1, Addr = 3
         # Addr 3 has 16 bits instead of 8?
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='Pulser',
                               description='Config3',
                               offset=0x00001003 * addrSize,
@@ -194,11 +194,11 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=15,
                               base=pr.Bool,
-                              mode='WO')
+                              mode='WO') )
             )
 
         # CMD = 1, Addr = 4
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='DigMon1',
                               description='Config4',
                               offset=0x00001004 *
@@ -214,11 +214,11 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='WO') )
             )
 
         # CMD = 1, Addr = 5
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='PulserDac',
                               description='Config5',
                               offset=0x00001005 * addrSize,
@@ -241,11 +241,11 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='WO') )
                 )
 
         # CMD = 1, Addr = 6
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='Dm1En',
                  description='Config6',
                               offset=0x00001006 * addrSize,
@@ -276,12 +276,12 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=5,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='WO') )
             )
 
         # CMD = 1, Addr = 7  : Bit  5:0 = VREF[5:0]
         #                    : Bit  7:6 = VrefLow[1:0]
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='VRef_DAC',
                               description='Config7',
                               offset=0x00001007 * addrSize,
@@ -296,13 +296,13 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='WO') )
                 )
 
         # CMD = 1, Addr = 8  : Bit  0   = TPS_tcomp
         #                    : Bit  4:1 = TPS_MUX[3:0]
         #                    : Bit  7:5 = RO_Monost[2:0]
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='trbit',
                  description='Config8',
                               offset=0x00001008 * addrSize,
@@ -326,10 +326,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=5,
                               base=pr.UInt,
                               mode='WO')
-            )
+            ))
 
         # CMD = 1, Addr = 9
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='TpsGr',
                               description='Config9',
                               offset=0x00001009 * addrSize,
@@ -345,13 +345,13 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=4,
                               base=pr.UInt,
                               mode='WO')
-            )
+            ) )
 
         # CMD = 1, Addr = 10 : Bit  0   = PP_OCB_S2D
         #                    : Bit  3:1 = OCB[2:0]
         #                    : Bit  6:4 = Monost[2:0]
         #                    : Bit  7   = fastpp_enable
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='PpOcbS2d',
                  description='Config10',
                               offset=0x0000100A * addrSize,
@@ -383,12 +383,12 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=7,
                               base=pr.Bool,
                               mode='WO')
-            )
+            ) )
 
         # CMD = 1, Addr = 11 : Bit  2:0 = Preamp[2:0]
         #                    : Bit  5:3 = Pixel_CB[2:0]
         #                    : Bit  7:6 = Vld1_b[1:0]
-        self.add(
+        self.add( (
             pr.RemoteVariable(name='Preamp',
                               description='Config11',
                               offset=0x0000100B * addrSize,
@@ -412,12 +412,12 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=6,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ) )
 
         # CMD = 1, Addr = 12 : Bit  0   = S2D_tcomp
         #                    : Bit  6:1 = Filter_Dac[5:0]
         # BitOffset 6 is empty
-        self.add(
+        self.add((
             pr.RemoteVariable(name='CompTH_DAC',
                  description='Config12',
 
@@ -434,12 +434,12 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=7,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 13 : Bit  1:0 = tc[1:0]
         #                    : Bit  4:2 = S2D[2:0]
         #                    : Bit  7:5 = S2D_DAC_BIAS[2:0]
-        self.add(
+        self.add((
             pr.RemoteVariable(name='TC',
                               description='Config13',
                               offset=0x0000100D * addrSize,
@@ -463,11 +463,11 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=5,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 14 : Bit  1:0 = tps_tcDAC[1:0]
         #                    : Bit  7:2 = TPS_DAC[5:0]
-        self.add(
+        self.add((
             pr.RemoteVariable(name='Tsd_Tser',
                               description='Config14',
                               offset=0x0000100E * addrSize,
@@ -483,11 +483,11 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=2,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 15 : Bit  1:0 = S2D0_tcDAC[1:0]
         #                    : Bit  7:2 = S2D0_DAC[5:0]
-        self.add(
+        self.add((
             pr.RemoteVariable(name='PLL_RO_filter2',
                               description='Config15',
 
@@ -504,14 +504,14 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=5,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 16 : Bit  0   = test_BE
         #                    : Bit  1   = is_en
         #                    : Bit  2   = delEXEC
         #                    : Bit  3   = delCCkreg
         #                    : Bit  4   = ro_rst_exten
-        self.add(
+        self.add((
             pr.RemoteVariable(name='TestBe',
                               description='Config16',
                               offset=0x00001010 * addrSize,
@@ -575,13 +575,13 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=7,
                               base=pr.Bool,
                               mode='WO')
-            )
+            ))
 
         # CMD = 1, Addr = 17 : Row start  address[8:0]
         # CMD = 1, Addr = 18 : Row stop  address[8:0]
         # CMD = 1, Addr = 19 : Col start  address[6:0]
         # CMD = 1, Addr = 20 : Col stop  address[6:0]
-        self.add(
+        self.add((
             pr.RemoteVariable(name='RowStartAddr',
                               description='RowStartAddr',
                               offset=0x00001011 * addrSize,
@@ -616,10 +616,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=0,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         #  CMD = 1, Addr = 21 : Chip ID Read
-        self.add(
+        self.add((
             pr.RemoteVariable(name='ChipId',
                               description='ChipId',
                               offset=0x00001015 * addrSize,
@@ -627,7 +627,7 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=0,
                               base=pr.UInt,
                               mode='RO')
-                )
+                ))
 
         # CMD = 1, Addr = 22
         self.add((
@@ -656,7 +656,7 @@ class EpixMv2Asic(pr.Device):
                               mode='WO')))
 
         # CMD = 1, Addr = 23
-        self.add(
+        self.add((
             pr.RemoteVariable(name='Debug_bit',
                               description='',
                               offset=0x00001017 * addrSize,
@@ -704,10 +704,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=7,
                               base=pr.Bool,
                               mode='WO')
-            )
+            ))
 
         # CMD = 1, Addr = 24
-        self.add(
+        self.add((
             pr.RemoteVariable(name='SDclk_b',
                               description='',
                               offset=0x00001018 * addrSize,
@@ -723,10 +723,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=4,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 25
-        self.add(
+        self.add((
             pr.RemoteVariable(name='Filter_DAC',
                               description='',
                               offset=0x00001019 * addrSize,
@@ -741,10 +741,10 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO'))
+                              mode='WO')))
 
         # CMD = 1, Addr = 26
-        self.add(
+        self.add((
             pr.RemoteVariable(name='CompEn',
                               description='',
                               offset=0x0000101a * addrSize,
@@ -775,10 +775,10 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO'))
+                              mode='WO')))
 
         # CMD = 1, Addr = 27
-        self.add(
+        self.add((
             pr.RemoteVariable(name='rowCK2matrix_delay',
                               description='',
                               offset=0x0000101b * addrSize,
@@ -794,10 +794,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=4,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 28
-        self.add(
+        self.add((
             pr.RemoteVariable(name='RefinN',
                               description='',
                               offset=0x0000101c * addrSize,
@@ -813,10 +813,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=3,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 29
-        self.add(
+        self.add((
             pr.RemoteVariable(name='RefinP',
                               description='',
                               offset=0x0000101d * addrSize,
@@ -832,10 +832,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=3,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 30
-        self.add(
+        self.add((
             pr.RemoteVariable(name='SDclk1_b',
                               description='',
                               offset=0x0000101e * addrSize,
@@ -851,10 +851,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=4,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 31
-        self.add(
+        self.add((
             pr.RemoteVariable(name='SDclk2_b',
                               description='',
                               offset=0x0000101f * addrSize,
@@ -870,10 +870,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=4,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 1, Addr = 32
-        self.add(
+        self.add((
             pr.RemoteVariable(name='SDclk3_b',
                               description='',
                               offset=0x00001020 * addrSize,
@@ -888,7 +888,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO'))
+                              mode='WO')))
 
         # CMD = 1, Addr = 33
         self.add(
@@ -911,7 +911,7 @@ class EpixMv2Asic(pr.Device):
                               mode='WO'))
 
         # CMD = 1, Addr = 35
-        self.add(
+        self.add((
             pr.RemoteVariable(name='FE_CLK_dly',
                               description='',
                               offset=0x00001023 * addrSize,
@@ -951,10 +951,10 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=7,
                               base=pr.Bool,
                               mode='WO')
-            )
+            ))
 
         # CMD = 1, Addr = 36
-        self.add(
+        self.add((
             pr.RemoteVariable(name='pipoclk_delay_row0',
                               description='',
                               offset=0x00001024 * addrSize,
@@ -969,10 +969,10 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO'))
+                              mode='WO')))
 
         # CMD = 1, Addr = 36
-        self.add(
+        self.add((
             pr.RemoteVariable(name='pipoclk_delay_row2',
                               description='',
                               offset=0x00001025 * addrSize,
@@ -988,7 +988,7 @@ class EpixMv2Asic(pr.Device):
                               bitOffset=4,
                               base=pr.UInt,
                               mode='WO')
-                )
+                ))
 
         # CMD = 6, Addr = 17 : Row counter[8:0]
         self.add(
@@ -1058,20 +1058,21 @@ class EpixMv2Asic(pr.Device):
         # CMD = 7,
         #  Addr = X  : Prepare to write chip ID
         self.add((
-            pr.Variable(name='PrepareWriteChipIdA',
+            pr.RemoteVariable(name='PrepareWriteChipIdA',
                         description='PrepareWriteChipIdA',
                         offset=0x00007000 * addrSize,
                         bitSize=32,
                         bitOffset=0,
-                        base='hex',
+                        base=pr.UInt,
                         mode='RO'),
 
-            pr.Variable(name='PrepareWriteChipIdB',
+
+            pr.RemoteVariable(name='PrepareWriteChipIdB',
                         description='PrepareWriteChipIdB',
                         offset=0x00007015 * addrSize,
                         bitSize=32,
                         bitOffset=0,
-                        base='hex',
+                        base=pr.UInt,
                         mode='RO')))
 
         # CMD = 8,

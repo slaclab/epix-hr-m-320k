@@ -37,46 +37,22 @@ class Adc(pr.Device):
                 AdcChannelEnum = AdcChannelEnum[i],
             ))
 
-        self.add(epixHr.OscilloscopeRegisters(
-            name       = 'Oscope',
-            offset     = 0x0001_0000,
-            trigChEnum = trigChEnum,
-            inChaEnum  = inChaEnum,
-            inChbEnum  = inChbEnum,
-        ))
+        for i in range(4):
+            self.add(epixHr.OscilloscopeRegisters(
+                name       = f'Oscope[{i}]',
+                offset     = (i+2)*0x0001_0000,
+                trigChEnum = trigChEnum,
+                inChaEnum  = inChaEnum,
+                inChbEnum  = inChbEnum,
+            ))
 
-
-        self.add(epixHr.MonAdcRegisters(
-            name   = 'FastADCsDebug',
-            offset = 0x0001_0000,
-        ))
+        for i in range(2):
+            self.add(epixHr.MonAdcRegisters(
+                name   = f'FastADCsDebug[{i}]',
+                offset = (6+i)*0x0001_0000,
+            ))
 
         self.add(adi.Ad9249ConfigGroup(
-            name   = 'FastADcConfig',
-            offset = 10*0x0001_0000,
+            name   = 'FastADCsConfig',
+            offset = 8*0x0001_0000,
         ))
-
-        Power_Comm_Adc = ['Analog_6V_IMon',
-        'Digital_6V_IMon',
-        'Humidity_Sense',
-        '3V3_Mon',
-        'Digital_6V_Volt',
-        'Analog_6V_Volt']
-
-        Digital_Board_Mon_Adc
-
-        Ana_Voltage_Mon[0]
-        Ana_Voltage_Mon[1]
-        Ana_Voltage_Mon[2]
-        Ana_Voltage_Mon[3]
-        Ana_Voltage_Mon[4]
-
-        Dig_Voltage_Mon[0]
-        Dig_Voltage_Mon[1]
-
-        Dig_Voltage_Mon[3]
-        Dig_Voltage_Mon[4]
-        Ana_Voltage_Mon[1]
-        Ana_Voltage_Mon[2]
-        Ana_Voltage_Mon[3]
-        Ana_Voltage_Mon[4]
