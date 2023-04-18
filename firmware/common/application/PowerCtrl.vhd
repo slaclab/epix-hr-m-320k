@@ -60,14 +60,12 @@ end entity PowerCtrl;
 architecture rtl of PowerCtrl is
 
    type RegType is record
-      pwrEnable6V    : sl;
       ldoShtDnL      : slv(1 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
 
    constant REG_INIT_C : RegType := (
-      pwrEnable6V    => '0',
       ldoShtDnL       => (others => '0'),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
@@ -90,8 +88,8 @@ begin
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
       -- Register Mapping
-      axiSlaveRegister (axilEp, x"4", 0, v.ldoShtDnL);
-      axiSlaveRegisterR(axilEp, x"C", 0, pwrGood);
+      axiSlaveRegister (axilEp, x"0", 0, v.ldoShtDnL);
+      axiSlaveRegisterR(axilEp, x"4", 0, pwrGood);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
