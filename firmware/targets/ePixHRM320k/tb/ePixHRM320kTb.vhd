@@ -42,12 +42,12 @@ architecture testbench of ePixHRM320kTb is
     signal obTransResetL            : sl                     := '1';
     signal obTransIntL              : sl                     := '1';
     -- GT Clock Ports                    
-    signal gtPllClkP                : sl                     := '0';
-    signal gtPllClkM                : sl                     := '1';
+    signal gtPllClkP                : slv(1 downto 0)        := (others => '0');
+    signal gtPllClkM                : slv(1 downto 0)        := (others => '1');
     signal gtRefClkP                : slv(1 downto 0)        := ( others => '0');
     signal gtRefClkM                : slv(1 downto 0)        := ( others => '1');
-    signal gtLclsClkP               : sl                     := '0';
-    signal gtLclsClkM               : sl                     := '1';
+    signal gtLclsIITimingClkP       : sl                     := '0';
+    signal gtLclsIITimingClkM       : sl                     := '1';
     -- ASIC Data Outs
     signal asicDataP                : Slv24Array(3 downto 0) := ( others => ( others => '0'));
     signal asicDataM                : Slv24Array(3 downto 0) := ( others => ( others => '1'));
@@ -190,9 +190,10 @@ begin
         gtPllClkM          => gtPllClkM , 
         gtRefClkP          => gtRefClkP , 
         gtRefClkM          => gtRefClkM , 
-        gtLclsClkP         => gtLclsClkP, 
-        gtLclsClkM         => gtLclsClkM, 
-    
+        gtLclsIITimingClkP => gtLclsIITimingClkP, 
+        gtLclsIITimingClkM => gtLclsIITimingClkM, 
+        altTimingClkP      => '0',
+        altTimingClkM      => '1',
     
         ----------------------------------------------
         --              Application Ports           --
@@ -213,8 +214,6 @@ begin
         asicGlblRst         => asicGlblRst, 
         asicSync            => asicSync   , 
         asicAcq             => asicAcq    , 
-        --asicRoClkP          => asicRoClkP , 
-        --asicRoClkN          => asicRoClkN , 
         asicSro             => asicSro    , 
         asicClkEn           => asicClkEn  , 
     
@@ -258,22 +257,15 @@ begin
         fpgaClkOutP         => fpgaClkOutP, 
         fpgaClkOutM         => fpgaClkOutM, 
     
-        -- Power and communication env Monitor
-        --pcbAdcDrdyL         => pcbAdcDrdyL , 
-        --pcbAdcData          => pcbAdcData  , 
-        --pcbAdcCsb           => pcbAdcCsb   , 
-        --pcbAdcSclk          => pcbAdcSclk  , 
-        --pcbAdcDin           => pcbAdcDin   , 
-        --pcbAdcSyncL         => pcbAdcSyncL , 
-        --pcbAdcRefClk        => pcbAdcRefClk, 
-    
         -- Serial number
         serialNumber        => serialNumber, 
     
-        -- Power 
+        -- Digial board Power 
         syncDcdc            => syncDcdc          , 
-        --ldoShtdnL         => ldoShtdnL         , 
-        --dcdcSync          => dcdcSync          , 
+        ldoShtdnL           => ldoShtdnL         , 
+
+        -- Power and comm board power
+        dcdcSync            => dcdcSync          , 
         pcbSync             => pcbSync           , 
         pwrGood             => pwrGood, 
     
@@ -318,9 +310,9 @@ begin
    fpgaClkInP <= Clk320P;
    fpgaClkInM <= Clk320M;
  
-    gtPllClkP <= Clk320P;
-    gtPllClkM <= Clk320M;
- 
+    gtPllClkP <= (others => Clk320P);
+    gtPllClkM <= (others => Clk320M);
+
     gtRefClkP <= (others => Clk156P);
     gtRefClkM <= (others => Clk156M);
  
@@ -350,8 +342,8 @@ begin
             RST_START_DELAY_G => 0 ns,
             RST_HOLD_TIME_G   => 1000 ns)
        port map (
-            clkP => gtLclsClkP,
-            clkN => gtLclsClkM
+            clkP => gtLclsIITimingClkP,
+            clkN => gtLclsIITimingClkM
         );
 
 end architecture;

@@ -108,8 +108,8 @@ entity Application is
       gtPllClkM          : in sl;
       gtRefClkP          : in sl;
       gtRefClkM          : in sl;
-      gtLclsClkP         : in sl;
-      gtLclsClkM         : in sl;
+      gtLclsIITimingClkP : in sl;
+      gtLclsIITimingClkM : in sl;
 
       -- Bias Dac
       biasDacDin         : out sl;
@@ -143,9 +143,12 @@ entity Application is
       -- Serial number
       serialNumber         : inout slv(2 downto 0);
 
-      -- Power 
+      -- Digital Power 
       syncDcdc             : out slv(6 downto 0);
-      pwrAnaEn             : out slv(1 downto 0);
+      ldoShtDnL             : out slv(1 downto 0);
+
+      -- Power and comm board power
+      dcdcSync             : out sl;
       pcbSync              : out sl;
       pwrGood              : in  slv(1 downto 0);
 
@@ -247,12 +250,9 @@ architecture rtl of Application is
    signal asicAcqSig             : sl;
    signal asicSroSig             : sl;
    signal asicGrSig              : sl;
-   signal dacDinSig              : sl;
-   signal dacCsLSig              : sl;
-   signal dacClrLSig             : sl;
-   signal dacLoadSig             : sl;
-   signal asicDigRstSig          : sl;
-   signal asicClkSyncEnSig       : sl;
+   signal biasDacDinSig          : sl;
+   signal biasDacCsbSig          : sl;
+   signal biasDacClrbSig         : sl;
    signal slowAdcDinSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcSyncLSig        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcRefClkSig       : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
@@ -272,15 +272,12 @@ begin
    asicAcq       <= asicAcqSig;
    asicGlblRst   <= asicGrSig;
    asicSro       <= asicSroSig;
-   -- dacDin        <= dacDinSig;
-   -- dacCsL        <= dacCsLSig;
-   -- dacClrL       <= dacClrLSig;
-   -- dacLoad       <= dacLoadSig;
-   -- asicDigRst    <= asicDigRstSig;
-   -- asicClkSyncEn <= asicClkSyncEnSig;
-   -- slowAdcDin    <= slowAdcDinSig;    
-   -- slowAdcSyncL  <= slowAdcSyncLSig;  
-   -- slowAdcRefClk <= slowAdcRefClkSig; 
+   biasDacDin    <= biasDacDinSig;
+   biasDacCsb    <= biasDacCsbSig;
+   biasDacClrb   <= biasDacClrbSig;
+   slowAdcDin    <= slowAdcDinSig;    
+   slowAdcSyncL  <= slowAdcSyncLSig;  
+   slowAdcRefClk <= slowAdcRefClkSig; 
 
    
    fpgaTtlOut <= 
@@ -305,8 +302,6 @@ begin
    --       saciClkVec(1)        when boardConfig.epixhrDbgSel2 = "00010" else
    --       saciClkVec(2)        when boardConfig.epixhrDbgSel2 = "00011" else
    --       saciClkVec(3)        when boardConfig.epixhrDbgSel2 = "00100" else
-   --       asicDigRstSig        when boardConfig.epixhrDbgSel2 = "10000" else
-   --       asicClkSyncEnSig     when boardConfig.epixhrDbgSel2 = "10001" else   
    --       slowAdcDinSig        when boardConfig.epixhrDbgSel2 = "10010" else
    --       slowAdcDout          when boardConfig.epixhrDbgSel2 = "10011" else
    --       slowAdcDrdyL         when boardConfig.epixhrDbgSel2 = "10100" else
@@ -433,8 +428,8 @@ begin
          asicAcq              => asicAcqSig,
          asicSync             => asicSyncSig,
          asicSro              => asicSroSig,
-         asicDigRst           => asicDigRstSig,
-         asicClkSyncEn        => asicClkSyncEnSig,
+         asicDigRst           => open,
+         asicClkSyncEn        => open,
          -- Clocking ports
          rdClkSel        => rdClkSel,
          -- Digital Ports
@@ -483,11 +478,10 @@ begin
          axilReadSlave      => axilReadSlaves(PWR_INDEX_C),
          axilWriteMaster    => axilWriteMasters(PWR_INDEX_C),
          axilWriteSlave     => axilWriteSlaves(PWR_INDEX_C),
-         clk6Meg            => clk6Meg,
          syncDcdc           => syncDcdc,
-         pwrAnaEn           => pwrAnaEn,
-         PwrSync1MHzClk     => open,
-         -- pcbSync            => pcbSync,
+         ldoShtDnL          => ldoShtDnL,
+         pcbSync            => pcbSync,
+         dcdcSync           => dcdcSync,
          pwrGood            => pwrGood
       );
    
@@ -543,10 +537,10 @@ begin
          -------------------
          -- DAC Ports
          -- Bias DAC
-         biasDacDin  => biasDacDin,
+         biasDacDin  => biasDacDinSig,
          biasDacSclk => biasDacSclk,
-         biasDacCsb  => biasDacCsb,
-         biasDacClrb => biasDacClrb,
+         biasDacCsb  => biasDacCsbSig,
+         biasDacClrb => biasDacClrbSig,
 
          -- High Speed DAC
          hsDacSclk   => hsDacSclk,
@@ -591,8 +585,8 @@ begin
          axilWriteMaster      => axilWriteMasters(TIMING_INDEX_C),
          axilWriteSlave       => axilWriteSlaves(TIMING_INDEX_C),
          -- GT Clock Ports
-         gtLclsClkP           => gtLclsClkP,
-         gtLclsClkN           => gtLclsClkM,
+         gtLclsClkP           => gtLclsIITimingClkP,
+         gtLclsClkN           => gtLclsIITimingClkM,
          -- LEAP Transceiver Ports
          leapTxP              => fpgaOutObTransInP(11),
          leapTxN              => fpgaOutObTransInM(11),

@@ -51,12 +51,14 @@ entity ePixHRM320k is
       obTransIntL          : in    sl;
 
       -- GT Clock Ports
-      gtPllClkP            : in sl;
-      gtPllClkM            : in sl;
+      gtPllClkP            : in slv(1 downto 0);
+      gtPllClkM            : in slv(1 downto 0);
       gtRefClkP            : in slv(1 downto 0);
       gtRefClkM            : in slv(1 downto 0);
-      gtLclsClkP           : in sl;
-      gtLclsClkM           : in sl;
+      gtLclsIITimingClkP   : in sl;
+      gtLclsIITimingClkM   : in sl;
+      altTimingClkP        : in sl;
+      altTimingClkM        : in sl;
 
       ----------------------------------------------
       --              Application Ports           --
@@ -78,8 +80,6 @@ entity ePixHRM320k is
       asicGlblRst          : out sl;
       asicSync             : out sl;
       asicAcq              : out sl;
-      -- asicRoClkP           : out slv(NUM_OF_ASICS_G - 1 downto 0);
-      -- asicRoClkN           : out slv(NUM_OF_ASICS_G - 1 downto 0);
       asicSro              : out sl;
       asicClkEn            : out sl;
       rdClkSel             : out sl;
@@ -129,9 +129,12 @@ entity ePixHRM320k is
       -- Serial number
       serialNumber         : inout slv(2 downto 0);
 
-      -- Power 
+      -- Digial board Power 
       syncDcdc             : out slv(6 downto 0);
-      pwrAnaEn             : out slv(1 downto 0);
+      ldoShtDnL            : out slv(1 downto 0);  -- LDO_SHTDN_L[1:0]
+
+      -- Power and comm board power
+      dcdcSync             : out sl;
       pcbSync              : out sl;
       pwrGood              : in  slv(1 downto 0);
 
@@ -142,8 +145,8 @@ entity ePixHRM320k is
       adcMonClkM           : out sl;
       adcMonPdwn           : out sl;
       adcMonSpiCsL         : out sl;
-      slowAdcDout          : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-      slowAdcDrdyL         : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDout          : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0); -- [1] P&CB ADC
+      slowAdcDrdyL         : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0); -- [0] 
       slowAdcSyncL         : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       slowAdcSclk          : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       slowAdcCsL           : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
@@ -264,22 +267,22 @@ begin
          saciRsp => saciRsp,
 
          -- GT Clock Ports
-         gtPllClkP => gtPllClkP,
-         gtPllClkM => gtPllClkM,
+         gtPllClkP => gtPllClkP(1),
+         gtPllClkM => gtPllClkM(1),
          gtRefClkP => gtRefClkP(1),
          gtRefClkM => gtRefClkM(1),
 
          fpgaClkInP => fpgaClkInP,
          fpgaClkInM => fpgaClkInM,
 
-         gtLclsClkP => gtLclsClkP,
-         gtLclsClkM => gtLclsClkM,
+         gtLclsIITimingClkP => gtLclsIITimingClkP,
+         gtLclsIITimingClkM => gtLclsIITimingClkM,
 
-         -- syncDcdc => syncDcdc,
-         pwrAnaEn => pwrAnaEn,
+         ldoShtDnL => ldoShtDnL,
          syncDcdc => syncDcdc,
-         pcbSync  => pcbSync ,
-         pwrGood  => pwrGood ,
+         dcdcSync => dcdcSync,
+         pcbSync  => pcbSync,
+         pwrGood  => pwrGood,
 
          -- Serial number
          serialNumber => serialNumber,
@@ -383,8 +386,8 @@ begin
          pllClkSda => pllClkSda,
 
          -- GT Clock Ports
-         gtPllClkP => '0',
-         gtPllClkM => '0',
+         gtPllClkP => gtPllClkP(0),
+         gtPllClkM => gtPllClkM(0),
          gtRefClkP => gtRefClkP(0),
          gtRefClkM => gtRefClkM(0),
 
