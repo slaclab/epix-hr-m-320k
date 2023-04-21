@@ -344,6 +344,9 @@ begin
          -- 50 Mhz clock output to pll(2)
          fpgaClkOutP            => fpgaClkOutP, 
          fpgaClkOutM            => fpgaClkOutM,
+         -- 250 Mhz ASIC readout clock
+         fpgaRdClkP             => fpgaRdClkP,
+         fpgaRdClkM             => fpgaRdClkM,
 
          jitclnLolL             => jitclnrLolL,
          clk156                 => clk156,

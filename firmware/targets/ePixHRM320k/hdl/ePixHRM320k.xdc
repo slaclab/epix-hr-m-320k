@@ -341,8 +341,8 @@ set_property -dict {DIFF_TERM_ADV TERM_100} [get_ports {adcMonFrameClkP[0]}]
 ##	Bank 65
 ##########################
 
-set_property -dict {PACKAGE_PIN M25 IOSTANDARD LVCMOS18} [get_ports fpgaRdClkP]
-set_property -dict {PACKAGE_PIN M26 IOSTANDARD LVCMOS18} [get_ports fpgaRdClkM]
+set_property -dict {PACKAGE_PIN M25 IOSTANDARD LVDS} [get_ports fpgaRdClkP]
+set_property -dict {PACKAGE_PIN M26 IOSTANDARD LVDS} [get_ports fpgaRdClkM]
 
 set_property -dict {PACKAGE_PIN K25 IOSTANDARD LVCMOS18} [get_ports rdClkSel]
 

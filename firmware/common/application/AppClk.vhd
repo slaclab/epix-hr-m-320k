@@ -101,7 +101,6 @@ begin
    --    Generate clocks from 156.25 MHz PGP     --
    ------------------------------------------------
    -- clkIn     : 156.25 MHz PGP
-   -- base clk is 1.2500 GHz
    -- clkOut(0) : 50.00 MHz Pll Clk output
    ------------------------------------------------
    U_CoreClockGen : entity surf.ClockManagerUltraScale
@@ -142,7 +141,7 @@ begin
          XIL_DEVICE_G => XIL_DEVICE_C
          )
       port map (
-         clkIn   => pllToFpgaClk,
+         clkIn   => local250Clk,
          clkOutP => fpgaRdClkP,
          clkOutN => fpgaRdClkM
          );
