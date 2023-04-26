@@ -12,16 +12,17 @@
 # Common Clocks
 ###############
 
-create_clock -period 4.000 -name gtPllClkP   [get_ports { gtPllClkP }]
+create_clock -period 4.000 -name gtPllClkP0  [get_ports { gtPllClkP[0] }]
+create_clock -period 4.000 -name gtPllClkP1  [get_ports { gtPllClkP[1] }]
 create_clock -period 6.400 -name gtRefClkP0  [get_ports { gtRefClkP[0] }]
 create_clock -period 6.400 -name gtRefClkP1  [get_ports { gtRefClkP[1] }]
-#create_clock -name fpgaClkInP    -period 4     [get_ports { fpgaClkInP }]
-create_clock -period 2.691 -name gtLclsClkP  [get_ports { gtLclsClkP }]
+create_clock -period 4.000 -name fpgaClkInP  [get_ports { fpgaClkInP }]
+create_clock -period 2.691 -name gtLclsIITimingClkP  [get_ports { gtLclsIITimingClkP }]
 create_clock -period 2.857 -name adcMonClkP0 [get_ports { adcMonDataClkP[0] }]
 create_clock -period 2.857 -name adcMonClkP1 [get_ports { adcMonDataClkP[1] }]
 
 set_clock_groups -asynchronous \
-    -group [get_clocks -include_generated_clocks { gtLclsClkP }] \
+    -group [get_clocks -include_generated_clocks { gtLclsIITimingClkP }] \
     -group [get_clocks -include_generated_clocks { gtRefClkP0 }] \
     -group [get_clocks -include_generated_clocks { gtRefClkP1 }] \
     -group [get_clocks -include_generated_clocks { adcMonClkP0 }] \
@@ -81,4 +82,5 @@ set_clock_groups -asynchronous \
 
 set_clock_groups -asynchronous \
     -group [get_clocks -of_objects [get_pins U_Core/GEN_PGP.U_axilClock/PllGen.U_Pll/CLKOUT0]] \
-    -group [get_clocks gtPllClkP]
+    -group [get_clocks gtPllClkP0 ] \
+    -group [get_clocks gtPllClkP1 ]

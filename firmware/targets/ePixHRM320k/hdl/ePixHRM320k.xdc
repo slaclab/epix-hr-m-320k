@@ -511,8 +511,8 @@ set_property PACKAGE_PIN F1 [get_ports {fpgaInObTransOutM[11]}]
 set_property PACKAGE_PIN P6 [get_ports {altTimingClkP}]
 set_property PACKAGE_PIN P5 [get_ports {altTimingClkM}]
 
-set_property PACKAGE_PIN M6 [get_ports {gtLclsClkP}]
-set_property PACKAGE_PIN M5 [get_ports {gtLclsClkM}]
+set_property PACKAGE_PIN M6 [get_ports {gtLclsIITimingClkP}]
+set_property PACKAGE_PIN M5 [get_ports {gtLclsIITimingClkM}]
 
 
 ##########################

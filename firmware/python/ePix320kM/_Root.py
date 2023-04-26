@@ -38,13 +38,11 @@ class Root(pr.Root):
 
         if (self.sim):
             # Set the timeout
-            # firmware simulation slow and timeout base on real time (not simulation time)
-            kwargs['timeout'] = 100000000
+            kwargs['timeout'] = 5.0 # firmware simulation slow and timeout base on real time (not simulation time)
 
         else:
             # Set the timeout
-            # 5.0 seconds default
-            kwargs['timeout'] = 5000000
+            kwargs['timeout'] = 1.0 # 5.0 seconds default
 
         super().__init__(**kwargs)
 
@@ -71,17 +69,17 @@ class Root(pr.Root):
             
             self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
-            self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
+            #self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
             for vc in range(4):
                 self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
                 self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
             # # Create (Xilinx Virtual Cable) XVC on localhost
-            self.xvc = rogue.protocols.xilinx.Xvc(2542)
-            self.addProtocol(self.xvc)
+            #self.xvc = rogue.protocols.xilinx.Xvc(2542)
+            #self.addProtocol(self.xvc)
 
             # # Connect xvcStream to XVC module
-            self.xvcStream == self.xvc
+            #self.xvcStream == self.xvc
 
             # # Create SRPv3
             self.srp = rogue.protocols.srp.SrpV3()
