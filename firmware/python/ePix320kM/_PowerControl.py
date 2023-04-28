@@ -5,16 +5,26 @@ class PowerControl(pr.Device):
         super().__init__(**kwargs)
 
         self.add(pr.RemoteVariable(
-            name         = 'PwrEnAna',
+            name         = 'DigitalSupplyEn',
             offset       = 0x0,
             bitSize      = 2,
             mode         = 'RW',
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'PwrGood',
+            name         = 'CBSupplyGood',
             offset       = 0x4,
-            bitSize      = 2,
+            bitSize      = 1,
             mode         = 'RO',
+            bitOffset    = 0,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'Analog6VGood',
+            offset       = 0x4,
+            bitSize      = 1,
+            mode         = 'RO',
+            bitOffset    = 1,
             pollInterval = 1,
         ))

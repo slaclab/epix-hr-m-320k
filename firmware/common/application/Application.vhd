@@ -198,6 +198,24 @@ architecture rtl of Application is
 
    constant XBAR_CONFIG_C        : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXI_BASE_ADDR_C, 28, 24);
 
+   constant TTLOUT_WIDTH_C         : natural  := 5;
+
+   constant DIGMON0_INDEX_C         : natural  := 0;
+   constant DIGMON1_INDEX_C         : natural  := DIGMON0_INDEX_C     + 1;
+   constant ASICSYNC_INDEX_C        : natural  := DIGMON1_INDEX_C     + 1;
+   constant ASICACQ_INDEX_C         : natural  := ASICSYNC_INDEX_C    + 1;
+   constant ASICSRO_INDEX_C         : natural  := ASICACQ_INDEX_C     + 1;
+   constant ASICGR_INDEX_C          : natural  := ASICSRO_INDEX_C     + 1;
+   constant SACICMD_INDEX_C         : natural  := ASICGR_INDEX_C      + 1;
+   constant SACICLK_INDEX_C         : natural  := SACICMD_INDEX_C     + 1;
+   constant SACISELVEC0_INDEX_C     : natural  := SACICLK_INDEX_C     + 1;
+   constant SACISELVEC1_INDEX_C     : natural  := SACISELVEC0_INDEX_C + 1;
+   constant SACISELVEC2_INDEX_C     : natural  := SACISELVEC1_INDEX_C + 1;
+   constant SACISELVEC3_INDEX_C     : natural  := SACISELVEC2_INDEX_C + 1;
+   constant LDOSHTDNL0_INDEX_C      : natural := SACISELVEC3_INDEX_C  + 1;
+   constant LDOSHTDNL1_INDEX_C      : natural := LDOSHTDNL0_INDEX_C   + 1;
+   constant GITCLNRLOLL_INDEX_C     : natural := LDOSHTDNL1_INDEX_C   + 1;
+
    -- AXI-Lite Signals
    signal axilWriteMasters       : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilWriteSlaves        : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
@@ -256,7 +274,7 @@ architecture rtl of Application is
    signal slowAdcDinSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcSyncLSig        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcRefClkSig       : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-
+   signal ldoShtDnLSig           : slv(1 downto 0);
    signal saciClkSig             : sl;
    signal saciCmdSig             : sl;
    signal saciSelVec             : slv(NUM_OF_ASICS_G - 1 downto 0);
@@ -278,21 +296,28 @@ begin
    slowAdcDin    <= slowAdcDinSig;    
    slowAdcSyncL  <= slowAdcSyncLSig;  
    slowAdcRefClk <= slowAdcRefClkSig; 
-
+   ldoShtDnL     <= ldoShtDnLSig; 
    
+   
+
+
    fpgaTtlOut <= 
-         digMon(0)            when boardConfig.epixhrDbgSel1 = toSlv(0, 5) else
-         digMon(1)            when boardConfig.epixhrDbgSel1 = toSlv(1, 5) else
-         asicSyncSig          when boardConfig.epixhrDbgSel1 = toSlv(2, 5) else
-         asicAcqSig           when boardConfig.epixhrDbgSel1 = toSlv(3, 5) else
-         asicSroSig           when boardConfig.epixhrDbgSel1 = toSlv(4, 5) else
-         saciCmdSig           when boardConfig.epixhrDbgSel1 = toSlv(5, 5) else
-         saciSelVec(0)        when boardConfig.epixhrDbgSel1 = toSlv(6, 5) else
-         saciSelVec(1)        when boardConfig.epixhrDbgSel1 = toSlv(7, 5) else
-         saciSelVec(2)        when boardConfig.epixhrDbgSel1 = toSlv(8, 5) else
-         saciSelVec(3)        when boardConfig.epixhrDbgSel1 = toSlv(9, 5) else
-         saciClkSig           when boardConfig.epixhrDbgSel2 = toSlv(10, 5) else   
-   --       asicGrSig            when boardConfig.epixhrDbgSel1 = "10010" else
+         digMon(0)            when boardConfig.epixhrDbgSel1 = toSlv(DIGMON0_INDEX_C, TTLOUT_WIDTH_C) else
+         digMon(1)            when boardConfig.epixhrDbgSel1 = toSlv(DIGMON1_INDEX_C, TTLOUT_WIDTH_C) else
+         asicSyncSig          when boardConfig.epixhrDbgSel1 = toSlv(ASICSYNC_INDEX_C, TTLOUT_WIDTH_C) else
+         asicAcqSig           when boardConfig.epixhrDbgSel1 = toSlv(ASICACQ_INDEX_C, TTLOUT_WIDTH_C) else
+         asicSroSig           when boardConfig.epixhrDbgSel1 = toSlv(ASICSRO_INDEX_C, TTLOUT_WIDTH_C) else
+         asicGrSig            when boardConfig.epixhrDbgSel1 = toSlv(ASICGR_INDEX_C, TTLOUT_WIDTH_C) else
+         saciCmdSig           when boardConfig.epixhrDbgSel1 = toSlv(SACICMD_INDEX_C, TTLOUT_WIDTH_C) else
+         saciClkSig           when boardConfig.epixhrDbgSel1 = toSlv(SACICLK_INDEX_C, TTLOUT_WIDTH_C) else  
+         saciSelVec(0)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC0_INDEX_C, TTLOUT_WIDTH_C) else
+         saciSelVec(1)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC1_INDEX_C, TTLOUT_WIDTH_C) else
+         saciSelVec(2)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC2_INDEX_C, TTLOUT_WIDTH_C) else
+         saciSelVec(3)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC3_INDEX_C, TTLOUT_WIDTH_C) else
+         ldoShtDnLSig(0)      when boardConfig.epixhrDbgSel1 = toSlv(LDOSHTDNL0_INDEX_C, TTLOUT_WIDTH_C) else
+         ldoShtDnLSig(1)      when boardConfig.epixhrDbgSel1 = toSlv(LDOSHTDNL1_INDEX_C, TTLOUT_WIDTH_C) else
+         jitclnrLolL          when boardConfig.epixhrDbgSel1 = toSlv(GITCLNRLOLL_INDEX_C, TTLOUT_WIDTH_C) else
+         '0';
    --       dacDinSig            when boardConfig.epixhrDbgSel1 = "10011" else
    --       dacCsLSig(0)         when boardConfig.epixhrDbgSel1 = "10100" else
    --       dacCsLSig(1)         when boardConfig.epixhrDbgSel1 = "10101" else
@@ -308,7 +333,6 @@ begin
    --       slowAdcRefClkSig     when boardConfig.epixhrDbgSel2 = "10101" else
    --       slowAdcSyncLSig      when boardConfig.epixhrDbgSel2 = "10110" else
    --       saciResp             when boardConfig.epixhrDbgSel2 = "10111" else
-         '0';
 
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
@@ -482,7 +506,7 @@ begin
          axilWriteMaster    => axilWriteMasters(PWR_INDEX_C),
          axilWriteSlave     => axilWriteSlaves(PWR_INDEX_C),
          syncDcdc           => syncDcdc,
-         ldoShtDnL          => ldoShtDnL,
+         ldoShtDnL          => ldoShtDnLSig,
          pcbSync            => pcbSync,
          dcdcSync           => dcdcSync,
          pwrGood            => pwrGood

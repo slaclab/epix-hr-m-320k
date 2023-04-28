@@ -30,7 +30,7 @@ class Core(pr.Device):
             offset = 0x0000_0000,
             expand = True,
         ))
-
+        
         self.add(xil.AxiSysMonUltraScale(
             offset  = 0x0001_0000,
             enabled = not sim and not promProg,
@@ -58,8 +58,8 @@ class Core(pr.Device):
             enabled = not sim and not promProg,
         ))
 
-        numVc = [1,1,1,1,1,2,4,4]
-
+        numVc = [1,1,1,1,1,3,4,4]
+'''
         for lane in range(8):
             self.add(pgp.Pgp4AxiL(
                 name    = f'PgpMon[{lane}]',
@@ -68,3 +68,4 @@ class Core(pr.Device):
                 writeEn = False,
                 enabled = not sim and not promProg,
             ))
+    '''

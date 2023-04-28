@@ -37,11 +37,12 @@ class App(pr.Device):
                 name        = f'SspMonGrp[{i}]',
                 offset      = 0x0400_0000+i*0x1000,
                 numberLanes = 24,
+                enabled=False
             ))
         
         self.add(
             fpga.AsicTop(
-                name='Asic Top',
+                name='AsicTop',
                 offset=0x0500_0000,
                 expand=False,
                 enabled=False
@@ -50,7 +51,7 @@ class App(pr.Device):
 
         self.add(
             fpga.PowerControl(
-                name='Power Control',
+                name='PowerControl',
                 offset=0x0600_0000,
                 expand=False,
                 enabled=False
@@ -68,7 +69,7 @@ class App(pr.Device):
 
         self.add(
             fpga.TimingRx(
-                name='Timing Rx',
+                name='TimingRx',
                 offset=0x0900_0000,
                 expand=False,
                 enabled=False
