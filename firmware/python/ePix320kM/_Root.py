@@ -65,13 +65,13 @@ class Root(pr.Root):
             for lane in range(numOfAsics):
                 self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
             
-            self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + 0, 1)
+            self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
             
             self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
             #self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
             for vc in range(4):
-                self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 4 + vc, 1)
+                self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
                 self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
             # # Create (Xilinx Virtual Cable) XVC on localhost

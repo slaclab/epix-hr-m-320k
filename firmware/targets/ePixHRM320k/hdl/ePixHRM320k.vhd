@@ -275,6 +275,9 @@ begin
          fpgaClkInP => fpgaClkInP,
          fpgaClkInM => fpgaClkInM,
 
+         fpgaClkOutP => fpgaClkOutP,
+         fpgaClkOutM => fpgaClkOutM,
+
          gtLclsIITimingClkP => gtLclsIITimingClkP,
          gtLclsIITimingClkM => gtLclsIITimingClkM,
 
