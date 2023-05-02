@@ -113,14 +113,15 @@ begin
         NUM_CLOCKS_G           => 1,
         SIMULATION_G           => SIMULATION_G,
         -- MMCM attributes
-        BANDWIDTH_G            => "OPTIMIZED",
         CLKIN_PERIOD_G         => 6.4,      -- 156.25 MHz
         CLKFBOUT_MULT_F_G      => 8.0,      -- 1.25 Ghz = 156.25 MHz * 8
-        CLKOUT0_DIVIDE_F_G     => 25.0      -- 50 MHz = 1.25 GHz / 25
+        CLKOUT0_DIVIDE_F_G     => 31.25     -- 40 MHz = 1.25GHz/31.25
      )
      port map(
+        -- Clock Input
         clkIn           => fabClock,
         rstIn           => fabReset,
+        -- Clock Outputs
         clkOut(0)       => fpgaToPllClk
      );
   

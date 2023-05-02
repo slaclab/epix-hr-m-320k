@@ -362,8 +362,8 @@ set_property -dict {PACKAGE_PIN AH19 IOSTANDARD LVCMOS18} [get_ports {syncDcdc[2
 set_property -dict {PACKAGE_PIN AJ15 IOSTANDARD LVCMOS18} [get_ports {syncDcdc[1]}]
 set_property -dict {PACKAGE_PIN AJ14 IOSTANDARD LVCMOS18} [get_ports {syncDcdc[0]}]
 
-set_property -dict {PACKAGE_PIN AH16 IOSTANDARD LVCMOS18} [get_ports fpgaClkInP]
-set_property -dict {PACKAGE_PIN AJ16 IOSTANDARD LVCMOS18} [get_ports fpgaClkInM]
+set_property -dict {PACKAGE_PIN AH16 IOSTANDARD LVDS DIFF_TERM_ADV TERM_100} [get_ports fpgaClkInP]
+set_property -dict {PACKAGE_PIN AJ16 IOSTANDARD LVDS DIFF_TERM_ADV TERM_100} [get_ports fpgaClkInM]
 
 set_property -dict {PACKAGE_PIN AH18 IOSTANDARD LVDS} [get_ports fpgaClkOutP]
 set_property -dict {PACKAGE_PIN AH17 IOSTANDARD LVDS} [get_ports fpgaClkOutM]
