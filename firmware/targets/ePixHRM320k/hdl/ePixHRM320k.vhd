@@ -338,7 +338,7 @@ begin
          TPD_G          => TPD_G,
          BUILD_INFO_G   => BUILD_INFO_G,
          SIMULATION_G   => SIMULATION_G,
-         NUM_OF_ASICS_G => NUM_OF_ASICS_G,
+         NUM_OF_LANES_G => NUM_OF_ASICS_G,
          NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
          NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
