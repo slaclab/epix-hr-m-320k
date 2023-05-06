@@ -34,10 +34,10 @@ entity PowerCtrl is
     );
     port (
       -- Global Signals
-      axiClk         : in  sl;
-      axiRst         : in  sl;
+      axilClk         : in  sl;
+      axilRst         : in  sl;
       
-      -- AXI-Lite Register Interface (axiClk domain)
+      -- AXI-Lite Register Interface (axilClk domain)
       axilReadMaster  : in  AxiLiteReadMasterType;
       axilReadSlave   : out AxiLiteReadSlaveType;
       axilWriteMaster : in  AxiLiteWriteMasterType;
@@ -77,7 +77,7 @@ architecture rtl of PowerCtrl is
 
 begin
 
-   comb : process (axilReadMaster, axiRst, axilWriteMaster, pwrGood, r) is
+   comb : process (axilReadMaster, axilRst, axilWriteMaster, pwrGood, r) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
    begin
@@ -95,7 +95,7 @@ begin
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
 
       -- Synchronous Reset
-      if (axiRst = '1') then
+      if (axilRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -112,9 +112,9 @@ begin
 
    end process comb;
 
-   seq : process (axiClk) is
+   seq : process (axilClk) is
    begin
-      if (rising_edge(axiClk)) then
+      if (rising_edge(axilClk)) then
          r <= rin after TPD_G;
       end if;
    end process seq;

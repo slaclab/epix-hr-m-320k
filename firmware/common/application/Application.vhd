@@ -40,7 +40,7 @@ entity Application is
       TPD_G                : time            := 1 ns;
       BUILD_INFO_G         : BuildInfoType;
       SIMULATION_G         : boolean         := false;
-      NUM_DETECTORS_G      : integer         := 2;
+      NUM_EVENT_CHANNELS_G : integer         := 2;
       NUM_OF_ASICS_G       : integer         := 4;
       NUM_OF_SLOW_ADCS_G   : integer         := 2;
       NUM_OF_PSCOPE_G      : integer         := 4
@@ -49,8 +49,8 @@ entity Application is
       ----------------------
       -- Top Level Ports --
       ----------------------
-      axiClk            : in sl;
-      axiRst            : in sl;
+      axilClk            : in sl;
+      axilRst            : in sl;
 
       -- AXI-Lite Register Interface (sysClk domain)
       -- Register Address Range = [0x80000000:0xFFFFFFFF]
@@ -239,21 +239,21 @@ architecture rtl of Application is
 
    signal triggerClk             : sl;
    signal triggerRst             : sl;
-   signal triggerData            : TriggerEventDataArray(NUM_DETECTORS_G -1 downto 0);
+   signal triggerData            : TriggerEventDataArray(NUM_EVENT_CHANNELS_G -1 downto 0);
 
    signal l1Clk                  : sl                    := '0';
    signal l1Rst                  : sl                    := '0';
-   signal l1Feedbacks            : TriggerL1FeedbackArray(NUM_DETECTORS_G -1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
-   signal l1Acks                 : slv (NUM_DETECTORS_G -1 downto 0);
+   signal l1Feedbacks            : TriggerL1FeedbackArray(NUM_EVENT_CHANNELS_G -1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
+   signal l1Acks                 : slv (NUM_EVENT_CHANNELS_G -1 downto 0);
 
    signal eventClk               : sl;
    signal eventRst               : sl;
-   signal eventTrigMsgMasters    : AxiStreamMasterArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTrigMsgSlaves     : AxiStreamSlaveArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTimingMsgMasters  : AxiStreamMasterArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTimingMsgSlaves   : AxiStreamSlaveArray(NUM_DETECTORS_G -1 downto 0);
-   signal clearReadout           : slv (NUM_DETECTORS_G -1 downto 0) := (others => '0');
+   signal eventTrigMsgMasters    : AxiStreamMasterArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTrigMsgSlaves     : AxiStreamSlaveArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTimingMsgMasters  : AxiStreamMasterArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTimingMsgSlaves   : AxiStreamSlaveArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal clearReadout           : slv (NUM_EVENT_CHANNELS_G -1 downto 0) := (others => '0');
 
    signal v1LinkUp               : sl  := '0';
    signal v2LinkUp               : sl  := '0';
@@ -280,7 +280,7 @@ architecture rtl of Application is
    signal saciSelVec             : slv(NUM_OF_ASICS_G - 1 downto 0);
 
    signal clk6Meg                : sl;
-
+   signal fpgaTtlOutSig          : sl;
 begin
 
    saciSel       <= saciSelVec;
@@ -297,11 +297,11 @@ begin
    slowAdcSyncL  <= slowAdcSyncLSig;  
    slowAdcRefClk <= slowAdcRefClkSig; 
    ldoShtDnL     <= ldoShtDnLSig; 
-   
+   fpgaTtlOut    <= fpgaTtlOutSig;
    
 
 
-   fpgaTtlOut <= 
+   fpgaTtlOutSig <= 
          digMon(0)            when boardConfig.epixhrDbgSel1 = toSlv(DIGMON0_INDEX_C, TTLOUT_WIDTH_C) else
          digMon(1)            when boardConfig.epixhrDbgSel1 = toSlv(DIGMON1_INDEX_C, TTLOUT_WIDTH_C) else
          asicSyncSig          when boardConfig.epixhrDbgSel1 = toSlv(ASICSYNC_INDEX_C, TTLOUT_WIDTH_C) else
@@ -349,8 +349,8 @@ begin
          mAxiWriteSlaves        => axilWriteSlaves,    -- to masters
          mAxiReadMasters        => axilReadMasters,    -- to masters
          mAxiReadSlaves         => axilReadSlaves,     -- to masters
-         axiClk                 => axiClk,
-         axiClkRst              => axiRst
+         axiClk                 => axilClk,
+         axiClkRst              => axilRst
       );
 
    U_ClkGen : entity work.AppClk
@@ -387,8 +387,9 @@ begin
          SIMULATION_G           => SIMULATION_G,
          EN_DEVICE_DNA_G        => false,
          BUILD_INFO_G           => BUILD_INFO_G,
-         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
+         NUM_OF_PSCOPE_G        => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G     => NUM_OF_SLOW_ADCS_G,
+         NUM_LANES_G            => NUM_OF_ASICS_G,
          AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr
       )
       port map (
@@ -405,11 +406,11 @@ begin
          l1Feedbacks          => l1Feedbacks,
          l1Acks               => l1Acks,
          -- External trigger inputs
-         ttlToFpga           => ttlToFpga,
-         daqToFpga           => daqToFpga,
+         runTrigger           => ttlToFpga,
+         daqTrigger           => daqToFpga,
          -- SW trigger in (from VC)
          ssiCmd               => ssiCmd,   
-         -- Register Inputs/Outputs (axiClk domain)
+         -- Register Inputs/Outputs (axilClk domain)
          boardConfig          => boardConfig,               
          -- Event streams
          eventClk             => eventClk,
@@ -435,8 +436,8 @@ begin
          sspEof               => sspEof,
          sspEofe              => sspEofe,
          -- AXI-Lite Interface (axilClk domain)
-         axiClk              => axiClk,
-         axiRst              => axiRst,
+         axilClk              => axilClk,
+         axilRst              => axilRst,
          axilReadMaster       => axilReadMasters(ASIC_INDEX_C),
          axilReadSlave        => axilReadSlaves(ASIC_INDEX_C),
          axilWriteMaster      => axilWriteMasters(ASIC_INDEX_C),
@@ -449,8 +450,8 @@ begin
          --  Top Level Ports
          -------------------
          -- ASIC Ports
-         digMon               => digMon,
-         asicGlblRst               => asicGlblRst,
+         asicDm               => digMon,
+         asicGr               => asicGlblRst,
          asicR0               => asicR0,
          asicAcq              => asicAcqSig,
          asicSync             => asicSyncSig,
@@ -464,7 +465,11 @@ begin
          serialNumber         => serialNumber,
          -- Timing link up status
          v1LinkUp             => v1LinkUp,
-         v2LinkUp             => v2LinkUp
+         v2LinkUp             => v2LinkUp,
+
+         digOut(0)            => fpgaTtlOutSig,
+         digOut(1)            => '0',
+         pwrGood              => '0'
       );
    
    ----------------------------
@@ -485,8 +490,8 @@ begin
          saciSelL        => saciSelVec,
          saciRsp(0)      => saciRsp,
          -- AXI-Lite Register Interface
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(SACI_INDEX_C),
          axilReadSlave   => axilReadSlaves(SACI_INDEX_C),
          axilWriteMaster => axilWriteMasters(SACI_INDEX_C),
@@ -499,8 +504,8 @@ begin
          TPD_G             => TPD_G
       )
       port map (
-         axiClk             => axiClk,
-         axiRst             => axiRst,
+         axilClk             => axilClk,
+         axilRst             => axilRst,
          axilReadMaster     => axilReadMasters(PWR_INDEX_C),
          axilReadSlave      => axilReadSlaves(PWR_INDEX_C),
          axilWriteMaster    => axilWriteMasters(PWR_INDEX_C),
@@ -520,8 +525,8 @@ begin
       )
       port map (
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(DESER_INDEX_C),
          axilReadSlave   => axilReadSlaves(DESER_INDEX_C),
          axilWriteMaster => axilWriteMasters(DESER_INDEX_C),
@@ -530,7 +535,7 @@ begin
          asicDataP       => asicDataP,
          asicDataM       => asicDataM,
          -- ref ports
-         clk250          => clk250,
+         sspClk4x        => clk250,
          -- Streaming Interfaces (sspClk domain)
          sspClk          => sspClk,
          sspRst          => sspRst,
@@ -553,8 +558,8 @@ begin
       port map (
          dacTrig         => dacTrig,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(DAC_INDEX_C),
          axilReadSlave   => axilReadSlaves(DAC_INDEX_C),
          axilWriteMaster => axilWriteMasters(DAC_INDEX_C),
@@ -578,12 +583,12 @@ begin
    
    U_TimingRx : entity work.TimingRx
       generic map (
-         TPD_G               => TPD_G,
-         SIMULATION_G        => SIMULATION_G,
-         AXIL_CLK_FREQ_G     => AXIL_CLK_FREQ_C,
-         EVENT_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_C,
-         NUM_DETECTORS_G     => NUM_DETECTORS_G,
-         AXIL_BASE_ADDR_G    => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr
+         TPD_G                 => TPD_G,
+         SIMULATION_G          => SIMULATION_G,
+         AXIL_CLK_FREQ_G       => AXIL_CLK_FREQ_C,
+         EVENT_AXIS_CONFIG_G   => PGP4_AXIS_CONFIG_C,
+         NUM_EVENT_CHANNELS_G  => NUM_EVENT_CHANNELS_G,
+         AXIL_BASE_ADDR_G      => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr
       )
       port map (
          -- Trigger Interface
@@ -605,8 +610,8 @@ begin
          eventTimingMsgSlaves => eventTimingMsgSlaves,
          clearReadout         => clearReadout,
          -- AXI-Lite Interface
-         axilClk              => axiClk,
-         axilRst              => axiRst,
+         axilClk              => axilClk,
+         axilRst              => axilRst,
          axilReadMaster       => axilReadMasters(TIMING_INDEX_C),
          axilReadSlave        => axilReadSlaves(TIMING_INDEX_C),
          axilWriteMaster      => axilWriteMasters(TIMING_INDEX_C),
@@ -630,7 +635,7 @@ begin
          WIDTH_G => 3
       )
       port map (
-         refClk => axiClk,
+         refClk => axilClk,
          gtTxP  => fpgaOutObTransInP(10 downto 8),
          gtTxN  => fpgaOutObTransInM(10 downto 8),
          gtRxP  => fpgaInObTransOutP(10 downto 8),
@@ -652,8 +657,8 @@ begin
          oscopeTrigBus   => oscopeTrigBus,
          slowAdcAcqStart => slowAdcAcqStart,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(ADC_INDEX_C),
          axilReadSlave   => axilReadSlaves(ADC_INDEX_C),
          axilWriteMaster => axilWriteMasters(ADC_INDEX_C),

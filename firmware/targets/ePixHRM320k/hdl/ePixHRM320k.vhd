@@ -181,8 +181,8 @@ end entity;
 architecture topLevel of ePixHRM320k is
 
    -- Clock and Reset
-   signal axiClk : sl;
-   signal axiRst : sl;
+   signal axilClk : sl;
+   signal axilRst : sl;
 
    -- AXI-Stream: Stream Interface
    signal asicDataMasters : AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0);
@@ -205,17 +205,17 @@ begin
 
    U_App : entity work.Application
       generic map (
-         TPD_G            => TPD_G,
-         BUILD_INFO_G     => BUILD_INFO_G,
-         SIMULATION_G     => SIMULATION_G,
-         NUM_OF_PSCOPE_G   => NUM_OF_PSCOPE_G,
+         TPD_G                => TPD_G,
+         BUILD_INFO_G         => BUILD_INFO_G,
+         SIMULATION_G         => SIMULATION_G,
+         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
          NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x80000000:0xFFFFFFFF]
-         axiClk          => axiClk,
-         axiRst          => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
@@ -345,8 +345,8 @@ begin
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x00000000:0x80000000]
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
