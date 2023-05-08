@@ -521,7 +521,8 @@ begin
       generic map (
          TPD_G             => TPD_G,
          SIMULATION_G      => SIMULATION_G,
-         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
+         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr,
+         NUM_OF_LANES_G    => NUM_OF_ASICS_G
       )
       port map (
          -- AXI-Lite Interface (axilClk domain)
