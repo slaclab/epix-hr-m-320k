@@ -19,6 +19,7 @@ import rogue.interfaces.stream
 import rogue.utilities.fileio
 
 import ePix320kM as fpgaBoard
+import epix_hr_leap_common as leapCommon
 
 rogue.Version.minVersion('5.14.0')
 
@@ -134,7 +135,7 @@ class Root(pr.Root):
         #################################################################
 
         # Add Devices
-        self.add(fpgaBoard.Core(
+        self.add(leapCommon.Core(
             offset   = 0x0000_0000,
             memBase  = self.srp,
             sim      = self.sim,

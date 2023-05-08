@@ -12,7 +12,6 @@
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
-
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -20,7 +19,6 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
-use surf.SsiCmdMasterPkg.all;
 use surf.Pgp4Pkg.all;
 
 library lcls_timing_core;
@@ -31,6 +29,8 @@ use l2si_core.L2SiPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
+
+use surf.SsiCmdMasterPkg.all;
 
 use work.CorePkg.all;
 use work.AppPkg.all;

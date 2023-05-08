@@ -17,6 +17,13 @@ entity AppClk is
      SIMULATION_G : boolean := false
    );
    port (
+      -- logic Clocks
+      clk156        : out sl;
+      rst156        : out sl;
+      clk250        : out sl;
+      rst250        : out sl;
+      sspClk        : out sl;
+      sspRst        : out sl;
       -- 156.25 MHz Clock input
       gtRefClkP     : in sl;
       gtRefClkM     : in sl;
@@ -34,13 +41,7 @@ entity AppClk is
       fpgaRdClkP    : out sl;
       fpgaRdClkM    : out sl;
 
-      -- logic Clocks
-      clk156        : out sl;
-      rst156        : out sl;
-      clk250        : out sl;
-      rst250        : out sl;
-      sspClk        : out sl;
-      sspRst        : out sl;
+
 
       jitclnLolL    : in sl
       

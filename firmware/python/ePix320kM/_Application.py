@@ -15,6 +15,7 @@ import surf
 import surf.protocols.ssp as ssp
 
 import ePix320kM as fpga
+import epix_hr_leap_common as ePixHrleapCommon
 
 class App(pr.Device):
     def __init__(self, sim=False, **kwargs):
@@ -41,7 +42,7 @@ class App(pr.Device):
             ))
         
         self.add(
-            fpga.AsicTop(
+            ePixHrleapCommon.AsicTop(
                 name='AsicTop',
                 offset=0x0500_0000,
                 expand=False,
@@ -68,7 +69,7 @@ class App(pr.Device):
         )
 
         self.add(
-            fpga.TimingRx(
+            ePixHrleapCommon.TimingRx(
                 name='TimingRx',
                 offset=0x0900_0000,
                 expand=False,
