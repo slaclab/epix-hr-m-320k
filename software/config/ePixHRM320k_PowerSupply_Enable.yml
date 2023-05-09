@@ -1,0 +1,10 @@
+ePixHr10kT2M:
+  enable: True
+  ForceWrite: False
+  App:
+    enable: True
+    PwrCtrl:
+      enable: True
+      PwrEnable6V: 1
+      PwrEnAna: 31
+      PwrEnDig: 31

@@ -1,0 +1,32 @@
+ePixHr10kT2M:
+  enable: True
+  ForceWrite: False
+  App:
+    enable: True
+    AsicTop:
+      enable: True
+      BatcherEventBuilder0:
+        enable: True
+        Bypass: 0x1
+        Timeout: 0x0
+        Blowoff: False
+      BatcherEventBuilder1:
+        enable: True
+        Bypass: 0x0
+        Timeout: 0x0
+        Blowoff: True
+      BatcherEventBuilder2:
+        enable: True
+        Bypass: 0x0
+        Timeout: 0x0
+        Blowoff: True
+      BatcherEventBuilder3:
+        enable: True
+        Bypass: 0x0
+        Timeout: 0x0
+        Blowoff: True
+      BatcherEventBuilder4:
+        enable: True
+        Bypass: 0x0
+        Timeout: 0x0
+        Blowoff: True

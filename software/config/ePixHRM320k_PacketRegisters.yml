@@ -1,0 +1,32 @@
+ePixHr10kT2M:
+  enable: True
+  ForceWrite: False
+  App:
+    enable: True
+    AsicTop:
+      enable: True
+      DigAsicStrmRegisters0:
+        enable: True
+        asicDataReq: 4608
+        DisableLane: 0xffffff
+        EnumerateDisLane: 0xffffff
+      DigAsicStrmRegisters1:
+        enable: True
+        asicDataReq: 4608
+        DisableLane: 0xffffff
+        EnumerateDisLane: 0x0
+      DigAsicStrmRegisters2:
+        enable: True
+        asicDataReq: 4608
+        DisableLane: 0xffffff
+        EnumerateDisLane: 0x0
+      DigAsicStrmRegisters3:
+        enable: True
+        asicDataReq: 4608
+        DisableLane: 0xffffff
+        EnumerateDisLane: 0x0
+      DigAsicStrmRegisters4:
+        enable: True
+        asicDataReq: 4608
+        DisableLane: 0xffffff
+        EnumerateDisLane: 0x0
