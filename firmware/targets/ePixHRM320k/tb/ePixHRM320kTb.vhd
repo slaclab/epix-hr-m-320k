@@ -150,8 +150,8 @@ architecture testbench of ePixHRM320kTb is
     signal Clk156P : sl := '0';
     signal Clk156M : sl := '1';
  
-    signal Clk320P : sl := '0';
-    signal Clk320M : sl := '1';
+    signal Clk250P : sl := '0';
+    signal Clk250M : sl := '1';
 
     constant GET_BUILD_INFO_C : BuildInfoRetType := toBuildInfo(BUILD_INFO_C);
     constant MOD_BUILD_INFO_C : BuildInfoRetType := (
@@ -307,11 +307,11 @@ begin
         vNIn => vNIn
    );
 
-   fpgaClkInP <= Clk320P;
-   fpgaClkInM <= Clk320M;
+   fpgaClkInP <= Clk250P;
+   fpgaClkInM <= Clk250M;
  
-    gtPllClkP <= (others => Clk320P);
-    gtPllClkM <= (others => Clk320M);
+    gtPllClkP <= (others => Clk250P);
+    gtPllClkM <= (others => Clk250M);
 
     gtRefClkP <= (others => Clk156P);
     gtRefClkM <= (others => Clk156M);
@@ -326,14 +326,14 @@ begin
             clkN => Clk156M
         );
  
-    U_Clk320 : entity surf.ClkRst
+    U_Clk250 : entity surf.ClkRst
        generic map (
-            CLK_PERIOD_G      => 3.125 ns,  -- 320 MHz
+            CLK_PERIOD_G      => 4 ns,  -- 250 MHz
             RST_START_DELAY_G => 10 ns,
             RST_HOLD_TIME_G   => 1000 ns)
        port map (
-          clkP => Clk320P,
-          clkN => Clk320M
+          clkP => Clk250P,
+          clkN => Clk250M
         );
  
     U_Clk371 : entity surf.ClkRst

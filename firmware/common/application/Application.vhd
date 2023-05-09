@@ -198,7 +198,7 @@ architecture rtl of Application is
 
    constant XBAR_CONFIG_C        : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXI_BASE_ADDR_C, 28, 24);
 
-   constant TTLOUT_WIDTH_C         : natural  := 5;
+   constant TTLOUT_WIDTH_C         : natural  := 6;
 
    constant DIGMON0_INDEX_C         : natural  := 0;
    constant DIGMON1_INDEX_C         : natural  := DIGMON0_INDEX_C     + 1;
@@ -268,6 +268,8 @@ architecture rtl of Application is
    signal asicAcqSig             : sl;
    signal asicSroSig             : sl;
    signal asicGrSig              : sl;
+   signal asicClkEnSig           : sl;
+   signal asicR0Sig              : sl;
    signal biasDacDinSig          : sl;
    signal biasDacCsbSig          : sl;
    signal biasDacClrbSig         : sl;
@@ -290,6 +292,8 @@ begin
    asicAcq       <= asicAcqSig;
    asicGlblRst   <= asicGrSig;
    asicSro       <= asicSroSig;
+   asicClkEn     <= asicClkEnSig;
+   asicR0        <= asicR0Sig;
    biasDacDin    <= biasDacDinSig;
    biasDacCsb    <= biasDacCsbSig;
    biasDacClrb   <= biasDacClrbSig;
@@ -451,15 +455,15 @@ begin
          -------------------
          -- ASIC Ports
          asicDm               => digMon,
-         asicGr               => asicGlblRst,
-         asicR0               => asicR0,
+         asicGr               => asicGrSig,
+         asicR0               => asicR0Sig,
          asicAcq              => asicAcqSig,
          asicSync             => asicSyncSig,
          asicSro              => asicSroSig,
          asicDigRst           => open,
-         asicClkSyncEn        => open,
+         asicClkSyncEn        => asicClkEnSig,
          -- Clocking ports
-         rdClkSel        => rdClkSel,
+         rdClkSel             => rdClkSel,
          -- Digital Ports
          -- spareIo              => spareIo,
          serialNumber         => serialNumber,
