@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: Application interface for ePix320kM
+-- Description: Application interface for ePixHRM320k
 -------------------------------------------------------------------------------
--- This file is part of 'ePix320kM firmware'.
+-- This file is part of 'ePixHRM320k firmware'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
 -- top-level directory of this distribution and at:
 --    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
@@ -12,7 +12,6 @@
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
-
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -20,7 +19,6 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
-use surf.SsiCmdMasterPkg.all;
 use surf.Pgp4Pkg.all;
 
 library lcls_timing_core;
@@ -32,17 +30,17 @@ use l2si_core.L2SiPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-use work.AppPkg.all;
+use surf.SsiCmdMasterPkg.all;
 
-library epix_leap_core;
-use epix_leap_core.CorePkg.all;
+use work.CorePkg.all;
+use work.AppPkg.all;
 
 entity Application is
    generic (
       TPD_G                : time            := 1 ns;
       BUILD_INFO_G         : BuildInfoType;
       SIMULATION_G         : boolean         := false;
-      NUM_DETECTORS_G      : integer         := 2;
+      NUM_EVENT_CHANNELS_G : integer         := 2;
       NUM_OF_ASICS_G       : integer         := 4;
       NUM_OF_SLOW_ADCS_G   : integer         := 2;
       NUM_OF_PSCOPE_G      : integer         := 4
@@ -51,8 +49,8 @@ entity Application is
       ----------------------
       -- Top Level Ports --
       ----------------------
-      axiClk            : in sl;
-      axiRst            : in sl;
+      axilClk            : in sl;
+      axilRst            : in sl;
 
       -- AXI-Lite Register Interface (sysClk domain)
       -- Register Address Range = [0x80000000:0xFFFFFFFF]
@@ -80,8 +78,8 @@ entity Application is
       fpgaInObTransOutM  : in  slv(11 downto 8);
 
       -- ASIC Data Outs
-      asicDataP          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
-      asicDataM          : in Slv24Array(NUMBER_OF_ASICS_C -1 downto 0);
+      asicDataP          : in Slv24Array(NUM_OF_ASICS_G -1 downto 0);
+      asicDataM          : in Slv24Array(NUM_OF_ASICS_G -1 downto 0);
 
       -- ASIC Control Ports
       asicR0             : out sl;
@@ -97,7 +95,7 @@ entity Application is
       -- SACI Ports
       saciCmd            : out sl;
       saciClk            : out sl;
-      saciSel            : out slv(NUMBER_OF_ASICS_C - 1 downto 0);
+      saciSel            : out slv(NUM_OF_ASICS_G - 1 downto 0);
       saciRsp            : in  sl;
 
       -- Spare ports both to carrier and to p&cb
@@ -110,8 +108,8 @@ entity Application is
       gtPllClkM          : in sl;
       gtRefClkP          : in sl;
       gtRefClkM          : in sl;
-      gtLclsClkP         : in sl;
-      gtLclsClkM         : in sl;
+      gtLclsIITimingClkP : in sl;
+      gtLclsIITimingClkM : in sl;
 
       -- Bias Dac
       biasDacDin         : out sl;
@@ -145,9 +143,12 @@ entity Application is
       -- Serial number
       serialNumber         : inout slv(2 downto 0);
 
-      -- Power 
+      -- Digital Power 
       syncDcdc             : out slv(6 downto 0);
-      pwrAnaEn             : out slv(1 downto 0);
+      ldoShtDnL             : out slv(1 downto 0);
+
+      -- Power and comm board power
+      dcdcSync             : out sl;
       pcbSync              : out sl;
       pwrGood              : in  slv(1 downto 0);
 
@@ -197,6 +198,35 @@ architecture rtl of Application is
 
    constant XBAR_CONFIG_C        : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXI_BASE_ADDR_C, 28, 24);
 
+   constant TTLOUT_WIDTH_C         : natural  := 6;
+
+   constant DIGMON0_INDEX_C         : natural  := 0;
+   constant DIGMON1_INDEX_C         : natural  := DIGMON0_INDEX_C     + 1;
+   constant ASICSYNC_INDEX_C        : natural  := DIGMON1_INDEX_C     + 1;
+   constant ASICACQ_INDEX_C         : natural  := ASICSYNC_INDEX_C    + 1;
+   constant ASICSRO_INDEX_C         : natural  := ASICACQ_INDEX_C     + 1;
+   constant ASICGR_INDEX_C          : natural  := ASICSRO_INDEX_C     + 1;
+   constant ASICR0_INDEX_C          : natural  := ASICGR_INDEX_C      + 1;
+   constant ASICCLKEN_INDEX_C       : natural  := ASICR0_INDEX_C      + 1;
+   constant SACICMD_INDEX_C         : natural  := ASICCLKEN_INDEX_C   + 1;
+   constant SACICLK_INDEX_C         : natural  := SACICMD_INDEX_C     + 1;
+   constant SACISELVEC0_INDEX_C     : natural  := SACICLK_INDEX_C     + 1;
+   constant SACISELVEC1_INDEX_C     : natural  := SACISELVEC0_INDEX_C + 1;
+   constant SACISELVEC2_INDEX_C     : natural  := SACISELVEC1_INDEX_C + 1;
+   constant SACISELVEC3_INDEX_C     : natural  := SACISELVEC2_INDEX_C + 1;
+   constant LDOSHTDNL0_INDEX_C      : natural := SACISELVEC3_INDEX_C  + 1;
+   constant LDOSHTDNL1_INDEX_C      : natural := LDOSHTDNL0_INDEX_C   + 1;
+   constant GITCLNRLOLL_INDEX_C     : natural := LDOSHTDNL1_INDEX_C   + 1;
+   constant BIASDACDIN_INDEX_C      : natural := GITCLNRLOLL_INDEX_C  + 1;
+   constant BIASDACSCLK_INDEX_C     : natural := BIASDACDIN_INDEX_C   + 1;
+   constant BIASDACCSB_INDEX_C      : natural := BIASDACSCLK_INDEX_C  + 1;
+   constant BIASDACCLRB_INDEX_C     : natural := BIASDACCSB_INDEX_C   + 1;
+   constant HSCSB_INDEX_C           : natural := BIASDACCLRB_INDEX_C  + 1;
+   constant HSDACSCLK_INDEX_C       : natural := HSCSB_INDEX_C        + 1;
+   constant HSDACDIN_INDEX_C        : natural := HSDACSCLK_INDEX_C    + 1;
+   constant HSLDACB_INDEX_C         : natural := HSDACDIN_INDEX_C     + 1;
+
+
    -- AXI-Lite Signals
    signal axilWriteMasters       : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilWriteSlaves        : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
@@ -211,30 +241,30 @@ architecture rtl of Application is
    signal sspClk                 : sl;
    signal sspRst                 : sl;
    
-   signal sspLinkUp              : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspValid               : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspData                : Slv16Array((NUMBER_OF_ASICS_C * 24)-1 downto 0);
-   signal sspSof                 : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspEof                 : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
-   signal sspEofe                : Slv24Array(NUMBER_OF_ASICS_C - 1 downto 0);
+   signal sspLinkUp              : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspValid               : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspData                : Slv16Array((NUM_OF_ASICS_G * 24)-1 downto 0);
+   signal sspSof                 : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspEof                 : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
+   signal sspEofe                : Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
 
    signal triggerClk             : sl;
    signal triggerRst             : sl;
-   signal triggerData            : TriggerEventDataArray(NUM_DETECTORS_G -1 downto 0);
+   signal triggerData            : TriggerEventDataArray(NUM_EVENT_CHANNELS_G -1 downto 0);
 
    signal l1Clk                  : sl                    := '0';
    signal l1Rst                  : sl                    := '0';
-   signal l1Feedbacks            : TriggerL1FeedbackArray(NUM_DETECTORS_G -1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
-   signal l1Acks                 : slv (NUM_DETECTORS_G -1 downto 0);
+   signal l1Feedbacks            : TriggerL1FeedbackArray(NUM_EVENT_CHANNELS_G -1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
+   signal l1Acks                 : slv (NUM_EVENT_CHANNELS_G -1 downto 0);
 
    signal eventClk               : sl;
    signal eventRst               : sl;
-   signal eventTrigMsgMasters    : AxiStreamMasterArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTrigMsgSlaves     : AxiStreamSlaveArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTimingMsgMasters  : AxiStreamMasterArray(NUM_DETECTORS_G -1 downto 0);
-   signal eventTimingMsgSlaves   : AxiStreamSlaveArray(NUM_DETECTORS_G -1 downto 0);
-   signal clearReadout           : slv (NUM_DETECTORS_G -1 downto 0) := (others => '0');
+   signal eventTrigMsgMasters    : AxiStreamMasterArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTrigMsgSlaves     : AxiStreamSlaveArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTimingMsgMasters  : AxiStreamMasterArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTimingMsgSlaves   : AxiStreamSlaveArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal clearReadout           : slv (NUM_EVENT_CHANNELS_G -1 downto 0) := (others => '0');
 
    signal v1LinkUp               : sl  := '0';
    signal v2LinkUp               : sl  := '0';
@@ -249,21 +279,24 @@ architecture rtl of Application is
    signal asicAcqSig             : sl;
    signal asicSroSig             : sl;
    signal asicGrSig              : sl;
-   signal dacDinSig              : sl;
-   signal dacCsLSig              : sl;
-   signal dacClrLSig             : sl;
-   signal dacLoadSig             : sl;
-   signal asicDigRstSig          : sl;
-   signal asicClkSyncEnSig       : sl;
+   signal asicClkEnSig           : sl;
+   signal asicR0Sig              : sl;
    signal slowAdcDinSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcSyncLSig        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcRefClkSig       : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-
+   signal ldoShtDnLSig           : slv(1 downto 0);
    signal saciClkSig             : sl;
    signal saciCmdSig             : sl;
-   signal saciSelVec             : slv(NUMBER_OF_ASICS_C - 1 downto 0);
-
-   signal clk6Meg                : sl;
+   signal saciSelVec             : slv(NUM_OF_ASICS_G - 1 downto 0);
+   signal fpgaTtlOutSig          : sl;
+   signal hsCsbSig               : sl;
+   signal hsDacSclkSig           : sl;
+   signal hsDacDinSig            : sl;
+   signal hsLdacbSig             : sl;
+   signal biasDacDinSig          : sl;
+   signal biasDacSclkSig         : sl;
+   signal biasDacCsbSig          : sl;
+   signal biasDacClrbSig         : sl;
 
 begin
 
@@ -274,48 +307,54 @@ begin
    asicAcq       <= asicAcqSig;
    asicGlblRst   <= asicGrSig;
    asicSro       <= asicSroSig;
-   -- dacDin        <= dacDinSig;
-   -- dacCsL        <= dacCsLSig;
-   -- dacClrL       <= dacClrLSig;
-   -- dacLoad       <= dacLoadSig;
-   -- asicDigRst    <= asicDigRstSig;
-   -- asicClkSyncEn <= asicClkSyncEnSig;
-   -- slowAdcDin    <= slowAdcDinSig;    
-   -- slowAdcSyncL  <= slowAdcSyncLSig;  
-   -- slowAdcRefClk <= slowAdcRefClkSig; 
-
+   asicClkEn     <= asicClkEnSig;
+   asicR0        <= asicR0Sig;
+   slowAdcDin    <= slowAdcDinSig;    
+   slowAdcSyncL  <= slowAdcSyncLSig;  
+   slowAdcRefClk <= slowAdcRefClkSig; 
+   ldoShtDnL     <= ldoShtDnLSig; 
+   fpgaTtlOut    <= fpgaTtlOutSig;
    
-   fpgaTtlOut <= 
-         digMon(0)            when boardConfig.epixhrDbgSel1 = toSlv(0, 5) else
-         digMon(1)            when boardConfig.epixhrDbgSel1 = toSlv(1, 5) else
-         asicSyncSig          when boardConfig.epixhrDbgSel1 = toSlv(2, 5) else
-         asicAcqSig           when boardConfig.epixhrDbgSel1 = toSlv(3, 5) else
-         asicSroSig           when boardConfig.epixhrDbgSel1 = toSlv(4, 5) else
-         saciCmdSig           when boardConfig.epixhrDbgSel1 = toSlv(5, 5) else
-         saciSelVec(0)        when boardConfig.epixhrDbgSel1 = toSlv(6, 5) else
-         saciSelVec(1)        when boardConfig.epixhrDbgSel1 = toSlv(7, 5) else
-         saciSelVec(2)        when boardConfig.epixhrDbgSel1 = toSlv(8, 5) else
-         saciSelVec(3)        when boardConfig.epixhrDbgSel1 = toSlv(9, 5) else
-         saciClkSig           when boardConfig.epixhrDbgSel2 = toSlv(10, 5) else   
-   --       asicGrSig            when boardConfig.epixhrDbgSel1 = "10010" else
-   --       dacDinSig            when boardConfig.epixhrDbgSel1 = "10011" else
-   --       dacCsLSig(0)         when boardConfig.epixhrDbgSel1 = "10100" else
-   --       dacCsLSig(1)         when boardConfig.epixhrDbgSel1 = "10101" else
-   --       dacClrLSig           when boardConfig.epixhrDbgSel1 = "10110" else
-   --       dacLoadSig           when boardConfig.epixhrDbgSel1 = "10111" else
-        
-   --       saciClkVec(1)        when boardConfig.epixhrDbgSel2 = "00010" else
-   --       saciClkVec(2)        when boardConfig.epixhrDbgSel2 = "00011" else
-   --       saciClkVec(3)        when boardConfig.epixhrDbgSel2 = "00100" else
-   --       asicDigRstSig        when boardConfig.epixhrDbgSel2 = "10000" else
-   --       asicClkSyncEnSig     when boardConfig.epixhrDbgSel2 = "10001" else   
-   --       slowAdcDinSig        when boardConfig.epixhrDbgSel2 = "10010" else
-   --       slowAdcDout          when boardConfig.epixhrDbgSel2 = "10011" else
-   --       slowAdcDrdyL         when boardConfig.epixhrDbgSel2 = "10100" else
-   --       slowAdcRefClkSig     when boardConfig.epixhrDbgSel2 = "10101" else
-   --       slowAdcSyncLSig      when boardConfig.epixhrDbgSel2 = "10110" else
-   --       saciResp             when boardConfig.epixhrDbgSel2 = "10111" else
+   hsCsb         <= hsCsbSig;
+   hsDacSclk     <= hsDacSclkSig;
+   hsDacDin      <= hsDacDinSig;
+   hsLdacb       <= hsLdacbSig;
+   biasDacDin    <= biasDacDinSig;
+   biasDacSclk   <= biasDacSclkSig;
+   biasDacCsb    <= biasDacCsbSig;
+   biasDacClrb   <= biasDacClrbSig;
+
+
+   fpgaTtlOutSig <= 
+         digMon(0)            when boardConfig.epixhrDbgSel1 = toSlv(DIGMON0_INDEX_C,     TTLOUT_WIDTH_C) else
+         digMon(1)            when boardConfig.epixhrDbgSel1 = toSlv(DIGMON1_INDEX_C,     TTLOUT_WIDTH_C) else
+         asicSyncSig          when boardConfig.epixhrDbgSel1 = toSlv(ASICSYNC_INDEX_C,    TTLOUT_WIDTH_C) else
+         asicAcqSig           when boardConfig.epixhrDbgSel1 = toSlv(ASICACQ_INDEX_C,     TTLOUT_WIDTH_C) else
+         asicSroSig           when boardConfig.epixhrDbgSel1 = toSlv(ASICSRO_INDEX_C,     TTLOUT_WIDTH_C) else
+         asicGrSig            when boardConfig.epixhrDbgSel1 = toSlv(ASICGR_INDEX_C,      TTLOUT_WIDTH_C) else
+         asicClkEnSig         when boardConfig.epixhrDbgSel1 = toSlv(ASICR0_INDEX_C,      TTLOUT_WIDTH_C) else
+         asicR0Sig            when boardConfig.epixhrDbgSel1 = toSlv(ASICCLKEN_INDEX_C,   TTLOUT_WIDTH_C) else
+         saciCmdSig           when boardConfig.epixhrDbgSel1 = toSlv(SACICMD_INDEX_C,     TTLOUT_WIDTH_C) else
+         saciClkSig           when boardConfig.epixhrDbgSel1 = toSlv(SACICLK_INDEX_C,     TTLOUT_WIDTH_C) else  
+         saciSelVec(0)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC0_INDEX_C, TTLOUT_WIDTH_C) else
+         saciSelVec(1)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC1_INDEX_C, TTLOUT_WIDTH_C) else
+         saciSelVec(2)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC2_INDEX_C, TTLOUT_WIDTH_C) else
+         saciSelVec(3)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC3_INDEX_C, TTLOUT_WIDTH_C) else
+         ldoShtDnLSig(0)      when boardConfig.epixhrDbgSel1 = toSlv(LDOSHTDNL0_INDEX_C,  TTLOUT_WIDTH_C) else
+         ldoShtDnLSig(1)      when boardConfig.epixhrDbgSel1 = toSlv(LDOSHTDNL1_INDEX_C,  TTLOUT_WIDTH_C) else
+         jitclnrLolL          when boardConfig.epixhrDbgSel1 = toSlv(GITCLNRLOLL_INDEX_C, TTLOUT_WIDTH_C) else
+         biasDacDinSig        when boardConfig.epixhrDbgSel1 = toSlv(BIASDACDIN_INDEX_C,  TTLOUT_WIDTH_C) else
+         biasDacSclkSig       when boardConfig.epixhrDbgSel1 = toSlv(BIASDACSCLK_INDEX_C, TTLOUT_WIDTH_C) else
+         biasDacCsbSig        when boardConfig.epixhrDbgSel1 = toSlv(BIASDACCSB_INDEX_C,  TTLOUT_WIDTH_C) else
+         biasDacClrbSig       when boardConfig.epixhrDbgSel1 = toSlv(BIASDACCLRB_INDEX_C, TTLOUT_WIDTH_C) else
+         hsCsbSig             when boardConfig.epixhrDbgSel1 = toSlv(HSCSB_INDEX_C,       TTLOUT_WIDTH_C) else
+         hsDacSclkSig         when boardConfig.epixhrDbgSel1 = toSlv(HSDACSCLK_INDEX_C,   TTLOUT_WIDTH_C) else
+         hsDacDinSig          when boardConfig.epixhrDbgSel1 = toSlv(HSDACDIN_INDEX_C,    TTLOUT_WIDTH_C) else
+         hsLdacbSig           when boardConfig.epixhrDbgSel1 = toSlv(HSLDACB_INDEX_C,     TTLOUT_WIDTH_C) else
          '0';
+
+
+
 
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
@@ -332,8 +371,8 @@ begin
          mAxiWriteSlaves        => axilWriteSlaves,    -- to masters
          mAxiReadMasters        => axilReadMasters,    -- to masters
          mAxiReadSlaves         => axilReadSlaves,     -- to masters
-         axiClk                 => axiClk,
-         axiClkRst              => axiRst
+         axiClk                 => axilClk,
+         axiClkRst              => axilRst
       );
 
    U_ClkGen : entity work.AppClk
@@ -351,6 +390,9 @@ begin
          -- 50 Mhz clock output to pll(2)
          fpgaClkOutP            => fpgaClkOutP, 
          fpgaClkOutM            => fpgaClkOutM,
+         -- 250 Mhz ASIC readout clock
+         fpgaRdClkP             => fpgaRdClkP,
+         fpgaRdClkM             => fpgaRdClkM,
 
          jitclnLolL             => jitclnrLolL,
          clk156                 => clk156,
@@ -360,14 +402,16 @@ begin
          sspClk                 => sspClk,
          sspRst                 => sspRst
       );
-      
+
    U_AsicTop : entity work.AsicTop
       generic map (
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G,
+         EN_DEVICE_DNA_G        => false,
          BUILD_INFO_G           => BUILD_INFO_G,
-         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
+         NUM_OF_PSCOPE_G        => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G     => NUM_OF_SLOW_ADCS_G,
+         NUM_LANES_G            => NUM_OF_ASICS_G,
          AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr
       )
       port map (
@@ -384,11 +428,11 @@ begin
          l1Feedbacks          => l1Feedbacks,
          l1Acks               => l1Acks,
          -- External trigger inputs
-         ttlToFpga           => ttlToFpga,
-         daqToFpga           => daqToFpga,
+         runTrigger           => ttlToFpga,
+         daqTrigger           => daqToFpga,
          -- SW trigger in (from VC)
          ssiCmd               => ssiCmd,   
-         -- Register Inputs/Outputs (axiClk domain)
+         -- Register Inputs/Outputs (axilClk domain)
          boardConfig          => boardConfig,               
          -- Event streams
          eventClk             => eventClk,
@@ -414,8 +458,8 @@ begin
          sspEof               => sspEof,
          sspEofe              => sspEofe,
          -- AXI-Lite Interface (axilClk domain)
-         axiClk              => axiClk,
-         axiRst              => axiRst,
+         axilClk              => axilClk,
+         axilRst              => axilRst,
          axilReadMaster       => axilReadMasters(ASIC_INDEX_C),
          axilReadSlave        => axilReadSlaves(ASIC_INDEX_C),
          axilWriteMaster      => axilWriteMasters(ASIC_INDEX_C),
@@ -428,22 +472,26 @@ begin
          --  Top Level Ports
          -------------------
          -- ASIC Ports
-         digMon               => digMon,
-         asicGlblRst               => asicGlblRst,
-         asicR0               => asicR0,
+         asicDm               => digMon,
+         asicGr               => asicGrSig,
+         asicR0               => asicR0Sig,
          asicAcq              => asicAcqSig,
          asicSync             => asicSyncSig,
          asicSro              => asicSroSig,
-         asicDigRst           => asicDigRstSig,
-         asicClkSyncEn        => asicClkSyncEnSig,
+         asicDigRst           => open,
+         asicClkSyncEn        => asicClkEnSig,
          -- Clocking ports
-         rdClkSel        => rdClkSel,
+         rdClkSel             => rdClkSel,
          -- Digital Ports
          -- spareIo              => spareIo,
          serialNumber         => serialNumber,
          -- Timing link up status
          v1LinkUp             => v1LinkUp,
-         v2LinkUp             => v2LinkUp
+         v2LinkUp             => v2LinkUp,
+
+         digOut(0)            => fpgaTtlOutSig,
+         digOut(1)            => '0',
+         pwrGood              => '0'
       );
    
    ----------------------------
@@ -464,8 +512,8 @@ begin
          saciSelL        => saciSelVec,
          saciRsp(0)      => saciRsp,
          -- AXI-Lite Register Interface
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(SACI_INDEX_C),
          axilReadSlave   => axilReadSlaves(SACI_INDEX_C),
          axilWriteMaster => axilWriteMasters(SACI_INDEX_C),
@@ -478,17 +526,16 @@ begin
          TPD_G             => TPD_G
       )
       port map (
-         axiClk             => axiClk,
-         axiRst             => axiRst,
+         axilClk             => axilClk,
+         axilRst             => axilRst,
          axilReadMaster     => axilReadMasters(PWR_INDEX_C),
          axilReadSlave      => axilReadSlaves(PWR_INDEX_C),
          axilWriteMaster    => axilWriteMasters(PWR_INDEX_C),
          axilWriteSlave     => axilWriteSlaves(PWR_INDEX_C),
-         clk6Meg            => clk6Meg,
          syncDcdc           => syncDcdc,
-         pwrAnaEn           => pwrAnaEn,
-         PwrSync1MHzClk     => open,
-         -- pcbSync            => pcbSync,
+         ldoShtDnL          => ldoShtDnLSig,
+         pcbSync            => pcbSync,
+         dcdcSync           => dcdcSync,
          pwrGood            => pwrGood
       );
    
@@ -496,12 +543,13 @@ begin
       generic map (
          TPD_G             => TPD_G,
          SIMULATION_G      => SIMULATION_G,
-         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
+         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr,
+         NUM_OF_LANES_G    => NUM_OF_ASICS_G
       )
       port map (
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(DESER_INDEX_C),
          axilReadSlave   => axilReadSlaves(DESER_INDEX_C),
          axilWriteMaster => axilWriteMasters(DESER_INDEX_C),
@@ -510,7 +558,7 @@ begin
          asicDataP       => asicDataP,
          asicDataM       => asicDataM,
          -- ref ports
-         clk250          => clk250,
+         sspClk4x        => clk250,
          -- Streaming Interfaces (sspClk domain)
          sspClk          => sspClk,
          sspRst          => sspRst,
@@ -525,7 +573,7 @@ begin
    --------------
    -- DAC Modules
    --------------
-   U_Dac : entity work.Dac
+   U_Dac : entity work.DacTop
       generic map(
          TPD_G            => TPD_G,
          SIMULATION_G     => SIMULATION_G,
@@ -533,8 +581,8 @@ begin
       port map (
          dacTrig         => dacTrig,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(DAC_INDEX_C),
          axilReadSlave   => axilReadSlaves(DAC_INDEX_C),
          axilWriteMaster => axilWriteMasters(DAC_INDEX_C),
@@ -542,28 +590,28 @@ begin
          -------------------
          --  Top Level Ports
          -------------------
-         -- DAC Ports
-         -- Bias DAC
-         biasDacDin  => biasDacDin,
-         biasDacSclk => biasDacSclk,
-         biasDacCsb  => biasDacCsb,
-         biasDacClrb => biasDacClrb,
+         -- Fast DAC Ports
+         fastDacCsL   => hsCsb,
+         fastDacSclk  => hsDacSclk,
+         fastDacDin   => hsDacDin,
+         fastDacLoadL => hsLdacb,
+   
+         -- Slow Dac
+         slowDacDin   => biasDacDin,
+         slowDacSclk  => biasDacSclk,
+         slowDacCsL   => biasDacCsb,
+         slowDacClrL  => biasDacClrb
 
-         -- High Speed DAC
-         hsDacSclk   => hsDacSclk,
-         hsDacDin    => hsDacDin,
-         hsCsb       => hsCsb,
-         hsLdacb     => hsLdacb
-         );
+      );
    
    U_TimingRx : entity work.TimingRx
       generic map (
-         TPD_G               => TPD_G,
-         SIMULATION_G        => SIMULATION_G,
-         AXIL_CLK_FREQ_G     => AXIL_CLK_FREQ_C,
-         EVENT_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_C,
-         NUM_DETECTORS_G     => NUM_DETECTORS_G,
-         AXIL_BASE_ADDR_G    => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr
+         TPD_G                 => TPD_G,
+         SIMULATION_G          => SIMULATION_G,
+         AXIL_CLK_FREQ_G       => AXIL_CLK_FREQ_C,
+         EVENT_AXIS_CONFIG_G   => PGP4_AXIS_CONFIG_C,
+         NUM_EVENT_CHANNELS_G  => NUM_EVENT_CHANNELS_G,
+         AXIL_BASE_ADDR_G      => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr
       )
       port map (
          -- Trigger Interface
@@ -585,15 +633,15 @@ begin
          eventTimingMsgSlaves => eventTimingMsgSlaves,
          clearReadout         => clearReadout,
          -- AXI-Lite Interface
-         axilClk              => axiClk,
-         axilRst              => axiRst,
+         axilClk              => axilClk,
+         axilRst              => axilRst,
          axilReadMaster       => axilReadMasters(TIMING_INDEX_C),
          axilReadSlave        => axilReadSlaves(TIMING_INDEX_C),
          axilWriteMaster      => axilWriteMasters(TIMING_INDEX_C),
          axilWriteSlave       => axilWriteSlaves(TIMING_INDEX_C),
          -- GT Clock Ports
-         gtLclsClkP           => gtLclsClkP,
-         gtLclsClkN           => gtLclsClkM,
+         gtLclsClkP           => gtLclsIITimingClkP,
+         gtLclsClkN           => gtLclsIITimingClkM,
          -- LEAP Transceiver Ports
          leapTxP              => fpgaOutObTransInP(11),
          leapTxN              => fpgaOutObTransInM(11),
@@ -610,7 +658,7 @@ begin
          WIDTH_G => 3
       )
       port map (
-         refClk => axiClk,
+         refClk => axilClk,
          gtTxP  => fpgaOutObTransInP(10 downto 8),
          gtTxN  => fpgaOutObTransInM(10 downto 8),
          gtRxP  => fpgaInObTransOutP(10 downto 8),
@@ -632,8 +680,8 @@ begin
          oscopeTrigBus   => oscopeTrigBus,
          slowAdcAcqStart => slowAdcAcqStart,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(ADC_INDEX_C),
          axilReadSlave   => axilReadSlaves(ADC_INDEX_C),
          axilWriteMaster => axilWriteMasters(ADC_INDEX_C),

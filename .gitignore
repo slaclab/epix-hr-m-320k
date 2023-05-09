@@ -48,3 +48,8 @@ bin*
 *.pdi
 *.bif
 *.elf
+
+#vivado log files
+*.jou
+*.log
+*.str

@@ -21,13 +21,12 @@ use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.Ad9249Pkg.all;
 
-library epix_hr_core;
-
-library epix_leap_core;
-use epix_leap_core.CorePkg.all;
-
 library unisim;
 use unisim.vcomponents.all;
+
+use work.CorePkg.all;
+
+library epix_hr_core;
 
 entity AdcMon is
    generic (
@@ -186,7 +185,7 @@ begin
    -----------------------
    GEN_OSCOPE :
    for i in NUM_OF_PSCOPE_G - 1 downto 0 generate
-      U_PseudoScope : entity work.PseudoScopeAxi
+      U_PseudoScope : entity epix_hr_core.PseudoScopeAxi
          generic map (
          TPD_G                      => TPD_G,
          MASTER_AXI_STREAM_CONFIG_G => APP_AXIS_CONFIG_C

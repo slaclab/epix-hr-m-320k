@@ -9,5 +9,5 @@
 ##############################################################################
 
 set format   "mcs"
-set inteface "SPIx8"
+set inteface "SPIx1"
 set size     "512"

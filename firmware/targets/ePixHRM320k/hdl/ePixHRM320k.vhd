@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: top level for ePix320kM
+-- Description: top level for ePixHRM320k
 -------------------------------------------------------------------------------
--- This file is part of 'ePix320kM firmware'.
+-- This file is part of 'ePixHRM320k firmware'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
 -- top-level directory of this distribution and at:
 --    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
@@ -22,10 +22,9 @@ use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.SsiCmdMasterPkg.all;
 
-library epix_leap_core;
-use epix_leap_core.CorePkg.all;
+use work.CorePkg.all;
 
-entity ePix320kM is
+entity ePixHRM320k is
    generic (
       BUILD_INFO_G         : BuildInfoType;
       TPD_G                : time            := 1 ns;
@@ -52,12 +51,14 @@ entity ePix320kM is
       obTransIntL          : in    sl;
 
       -- GT Clock Ports
-      gtPllClkP            : in sl;
-      gtPllClkM            : in sl;
+      gtPllClkP            : in slv(1 downto 0);
+      gtPllClkM            : in slv(1 downto 0);
       gtRefClkP            : in slv(1 downto 0);
       gtRefClkM            : in slv(1 downto 0);
-      gtLclsClkP           : in sl;
-      gtLclsClkM           : in sl;
+      gtLclsIITimingClkP   : in sl;
+      gtLclsIITimingClkM   : in sl;
+      altTimingClkP        : in sl;
+      altTimingClkM        : in sl;
 
       ----------------------------------------------
       --              Application Ports           --
@@ -79,8 +80,6 @@ entity ePix320kM is
       asicGlblRst          : out sl;
       asicSync             : out sl;
       asicAcq              : out sl;
-      -- asicRoClkP           : out slv(NUM_OF_ASICS_G - 1 downto 0);
-      -- asicRoClkN           : out slv(NUM_OF_ASICS_G - 1 downto 0);
       asicSro              : out sl;
       asicClkEn            : out sl;
       rdClkSel             : out sl;
@@ -130,9 +129,12 @@ entity ePix320kM is
       -- Serial number
       serialNumber         : inout slv(2 downto 0);
 
-      -- Power 
+      -- Digial board Power 
       syncDcdc             : out slv(6 downto 0);
-      pwrAnaEn             : out slv(1 downto 0);
+      ldoShtDnL            : out slv(1 downto 0);  -- LDO_SHTDN_L[1:0]
+
+      -- Power and comm board power
+      dcdcSync             : out sl;
       pcbSync              : out sl;
       pwrGood              : in  slv(1 downto 0);
 
@@ -143,8 +145,8 @@ entity ePix320kM is
       adcMonClkM           : out sl;
       adcMonPdwn           : out sl;
       adcMonSpiCsL         : out sl;
-      slowAdcDout          : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-      slowAdcDrdyL         : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcDout          : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0); -- [1] P&CB ADC
+      slowAdcDrdyL         : in  slv(NUM_OF_SLOW_ADCS_G - 1 downto 0); -- [0] 
       slowAdcSyncL         : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       slowAdcSclk          : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       slowAdcCsL           : out slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
@@ -176,11 +178,11 @@ entity ePix320kM is
 end entity;
 
 
-architecture topLevel of ePix320kM is
+architecture topLevel of ePixHRM320k is
 
    -- Clock and Reset
-   signal axiClk : sl;
-   signal axiRst : sl;
+   signal axilClk : sl;
+   signal axilRst : sl;
 
    -- AXI-Stream: Stream Interface
    signal asicDataMasters : AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0);
@@ -203,17 +205,17 @@ begin
 
    U_App : entity work.Application
       generic map (
-         TPD_G            => TPD_G,
-         BUILD_INFO_G     => BUILD_INFO_G,
-         SIMULATION_G     => SIMULATION_G,
-         NUM_OF_PSCOPE_G   => NUM_OF_PSCOPE_G,
+         TPD_G                => TPD_G,
+         BUILD_INFO_G         => BUILD_INFO_G,
+         SIMULATION_G         => SIMULATION_G,
+         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
          NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x80000000:0xFFFFFFFF]
-         axiClk          => axiClk,
-         axiRst          => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
@@ -265,22 +267,25 @@ begin
          saciRsp => saciRsp,
 
          -- GT Clock Ports
-         gtPllClkP => gtPllClkP,
-         gtPllClkM => gtPllClkM,
+         gtPllClkP => gtPllClkP(1),
+         gtPllClkM => gtPllClkM(1),
          gtRefClkP => gtRefClkP(1),
          gtRefClkM => gtRefClkM(1),
 
          fpgaClkInP => fpgaClkInP,
          fpgaClkInM => fpgaClkInM,
 
-         gtLclsClkP => gtLclsClkP,
-         gtLclsClkM => gtLclsClkM,
+         fpgaClkOutP => fpgaClkOutP,
+         fpgaClkOutM => fpgaClkOutM,
 
-         -- syncDcdc => syncDcdc,
-         pwrAnaEn => pwrAnaEn,
+         gtLclsIITimingClkP => gtLclsIITimingClkP,
+         gtLclsIITimingClkM => gtLclsIITimingClkM,
+
+         ldoShtDnL => ldoShtDnL,
          syncDcdc => syncDcdc,
-         pcbSync  => pcbSync ,
-         pwrGood  => pwrGood ,
+         dcdcSync => dcdcSync,
+         pcbSync  => pcbSync,
+         pwrGood  => pwrGood,
 
          -- Serial number
          serialNumber => serialNumber,
@@ -328,20 +333,20 @@ begin
          jitclnrLolL       => jitclnrLolL
       );
 
-   U_Core : entity epix_leap_core.Core
+   U_Core : entity work.Core
       generic map(
          TPD_G          => TPD_G,
          BUILD_INFO_G   => BUILD_INFO_G,
          SIMULATION_G   => SIMULATION_G,
-         NUM_OF_ASICS_G => NUM_OF_ASICS_G,
+         NUM_OF_LANES_G => NUM_OF_ASICS_G,
          NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
          NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x00000000:0x80000000]
-         axilClk         => axiClk,
-         axilRst         => axiRst,
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
@@ -384,8 +389,8 @@ begin
          pllClkSda => pllClkSda,
 
          -- GT Clock Ports
-         gtPllClkP => '0',
-         gtPllClkM => '0',
+         gtPllClkP => gtPllClkP(0),
+         gtPllClkM => gtPllClkM(0),
          gtRefClkP => gtRefClkP(0),
          gtRefClkM => gtRefClkM(0),
 
