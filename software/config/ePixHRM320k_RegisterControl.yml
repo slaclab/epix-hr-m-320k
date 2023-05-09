@@ -1,11 +1,11 @@
-ePixHr10kT2M:
+Root:
   enable: True
   ForceWrite: False
   App:
     enable: True
     AsicTop:
       enable: True
-      RegisterControl:
+      RegisterControlDualClock:
         enable: True
         GlblRstPolarityN: True
         ClkSyncEn: False

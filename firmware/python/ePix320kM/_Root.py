@@ -182,12 +182,12 @@ class Root(pr.Root):
         arguments = np.asarray(arg)
         if arguments[0] == 1:
             self.filenamePll              = self.root.top_level + "../config/EPixHR10k2MPllConfigClk5En-Registers.csv"
-            self.filenamePowerSupply       = self.root.top_level + "../config/ePixHr10k2M_PowerSupply_Enable.yml"
-            self.filenameRegisterControl   = self.root.top_level + "../config/ePixHr10k2M_RegisterControl.yml"
-            self.filenameASIC              = self.root.top_level + "../config/ePixHr10kT_PLLBypass_320MHz_ASIC_0.yml"
-            self.filenamePacketReg         = self.root.top_level + "../config/ePixHr10k2M_PacketRegisters.yml"
-            self.filenameTriggerReg        = self.root.top_level + "../config/ePixHr10k2M_TriggerRegisters.yml"
-            self.filenameBatcher           = self.root.top_level + "../config/ePixHr10k2M_BatcherEventBuilder.yml"
+            self.filenamePowerSupply       = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
+            self.filenameRegisterControl   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
+            self.filenameASIC              = self.root.top_level + "../config/"
+            self.filenamePacketReg         = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
+            self.filenameTriggerReg        = self.root.top_level + "../config/ePixHRM320k_TriggerRegisters.yml"
+            self.filenameBatcher           = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"
 #/afs/slac/g/controls/development/users/dnajjar/sandBox/ePixHR10k-2M-dev/software/config/ePixHr10kT_PLLBypass_320MHz_ASIC_0.yml
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
@@ -216,11 +216,11 @@ class Root(pr.Root):
         delay = 1
 
         #Make sure clock is disabled at the ASIC level
-        self.App.AsicTop.RegisterControl.ClkSyncEn.set(False)
+        self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(False)
 
-        self.App.AsicTop.RegisterControl.GlblRstPolarityN.set(False)
+        self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
         time.sleep(delay) 
-        self.App.AsicTop.RegisterControl.GlblRstPolarityN.set(True)
+        self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
         time.sleep(delay) 
 
        
@@ -231,13 +231,13 @@ class Root(pr.Root):
         print("Loading ASIC configurations")
         self.root.LoadConfig(self.filenameASIC)
 
-        self.App.AsicTop.RegisterControl.RoLogicRstN.set(False)
+        self.App.AsicTop.RegisterControlDualClock.RoLogicRstN.set(False)
         time.sleep(delay)
-        self.App.AsicTop.RegisterControl.RoLogicRstN.set(True)
+        self.App.AsicTop.RegisterControlDualClock.RoLogicRstN.set(True)
         time.sleep(delay)
         
         # starting clock inside the ASIC
-        self.App.AsicTop.RegisterControl.ClkSyncEn.set(True)
+        self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
 
 
         print("Initialization routine completed.")

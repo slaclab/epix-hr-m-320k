@@ -1,10 +1,8 @@
-ePixHr10kT2M:
+Root:
   enable: True
   ForceWrite: False
   App:
     enable: True
-    PwrCtrl:
+    PowerControl:
       enable: True
-      PwrEnable6V: 1
-      PwrEnAna: 31
-      PwrEnDig: 31
+      DigitalSupplyEn: 0x3
