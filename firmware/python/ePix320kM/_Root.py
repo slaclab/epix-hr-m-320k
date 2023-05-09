@@ -18,25 +18,35 @@ import rogue.hardware.axi
 import rogue.interfaces.stream
 import rogue.utilities.fileio
 
+import os
+import numpy as np
+import time
+import subprocess
+
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
 
-rogue.Version.minVersion('5.14.0')
+rogue.Version.minVersion('5.15.3')
 
 
 class Root(pr.Root):
-    def __init__(self,
-                 dev      = '/dev/datadev_0',
-                 pollEn   = True,   # Enable automatic polling registers
-                 initRead = True,   # Read all registers at start of the system
-                 promProg = False,  # Flag to disable all devices not related to PROM programming
-                 **kwargs):
-        numOfAsics = 4
+    def __init__(   self,
+            top_level = '',
+            dev       = '/dev/datadev_0',
+            pollEn    = True,  # Enable automatic polling registers
+            initRead  = True,  # Read all registers at start of the system
+            promProg  = False, # Flag to disable all devices not related to PROM programming
+            **kwargs):
+
         #################################################################
 
         self.promProg = promProg
         self.sim      = (dev == 'sim')
 
+        self.top_level = top_level
+        
+        numOfAsics = 4
+        
         if (self.sim):
             # Set the timeout
             kwargs['timeout'] = 5.0 # firmware simulation slow and timeout base on real time (not simulation time)
@@ -148,7 +158,13 @@ class Root(pr.Root):
             memBase  = self.srp,
             sim      = self.sim,
             enabled  = not self.promProg,
-            expand   = True,
+            expand   = False,
+        ))
+
+        self.add(pr.LocalCommand(name='InitASIC',
+                                 description='[routine, asic0, asic1, asic2, asic3]',
+                                 value=[0,0,0,0,0],
+                                 function=self.fnInitAsic
         ))
 
         #################################################################
@@ -158,3 +174,82 @@ class Root(pr.Root):
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
+
+
+    def fnInitAsic(self, dev,cmd,arg):
+        """SetTestBitmap command function"""       
+        print("Rysync ASIC started")
+        arguments = np.asarray(arg)
+        if arguments[0] == 1:
+            self.filenamePll              = self.root.top_level + "../config/EPixHR10k2MPllConfigClk5En-Registers.csv"
+            self.filenamePowerSupply       = self.root.top_level + "../config/ePixHr10k2M_PowerSupply_Enable.yml"
+            self.filenameRegisterControl   = self.root.top_level + "../config/ePixHr10k2M_RegisterControl.yml"
+            self.filenameASIC              = self.root.top_level + "../config/ePixHr10kT_PLLBypass_320MHz_ASIC_0.yml"
+            self.filenamePacketReg         = self.root.top_level + "../config/ePixHr10k2M_PacketRegisters.yml"
+            self.filenameTriggerReg        = self.root.top_level + "../config/ePixHr10k2M_TriggerRegisters.yml"
+            self.filenameBatcher           = self.root.top_level + "../config/ePixHr10k2M_BatcherEventBuilder.yml"
+#/afs/slac/g/controls/development/users/dnajjar/sandBox/ePixHR10k-2M-dev/software/config/ePixHr10kT_PLLBypass_320MHz_ASIC_0.yml
+        if arguments[0] != 0:
+            self.fnInitAsicScript(dev,cmd,arg)
+
+    def fnInitAsicScript(self, dev,cmd,arg):
+        """SetTestBitmap command function"""       
+        print("Init ASIC script started")
+
+        # load config that sets prog supply
+        print("Loading supply configuration")
+        self.root.LoadConfig(self.filenamePowerSupply)
+        print(self.filenamePowerSupply)
+        print("Loaded supply configuration")
+
+        # load config that sets waveforms
+        print("Loading register control (waveforms) configuration")
+        self.root.LoadConfig(self.filenameRegisterControl)
+        print(self.filenameRegisterControl)
+        print("Loaded register control (waveforms) configuration")
+
+
+        # load config that sets packet registers
+        print("Loading packet registers")
+        self.root.LoadConfig(self.filenamePacketReg)
+
+        delay = 1
+
+        #Make sure clock is disabled at the ASIC level
+        self.App.AsicTop.RegisterControl.ClkSyncEn.set(False)
+
+        self.App.AsicTop.RegisterControl.GlblRstPolarityN.set(False)
+        time.sleep(delay) 
+        self.App.AsicTop.RegisterControl.GlblRstPolarityN.set(True)
+        time.sleep(delay) 
+
+       
+        ## load config for the asic
+        print("Loading ASIC and timing configuration")
+        #disable all asic to let the files define which ones should be set
+        
+        print("Loading ASIC configurations")
+        self.root.LoadConfig(self.filenameASIC)
+
+        self.App.AsicTop.RegisterControl.RoLogicRstN.set(False)
+        time.sleep(delay)
+        self.App.AsicTop.RegisterControl.RoLogicRstN.set(True)
+        time.sleep(delay)
+        
+        # starting clock inside the ASIC
+        self.App.AsicTop.RegisterControl.ClkSyncEn.set(True)
+
+
+        print("Initialization routine completed.")
+        
+        '''
+        # batcher settings
+        self.root.LoadConfig(self.filenameBatcher)
+
+        ## load config for the asic
+        print("Loading Trigger settings")
+        self.root.LoadConfig(self.filenameTriggerReg)
+        print(self.filenameTriggerReg)
+
+        
+        '''

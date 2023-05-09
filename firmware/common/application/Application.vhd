@@ -568,19 +568,19 @@ begin
          -------------------
          --  Top Level Ports
          -------------------
-         -- DAC Ports
-         -- Bias DAC
-         biasDacDin  => biasDacDinSig,
-         biasDacSclk => biasDacSclk,
-         biasDacCsb  => biasDacCsbSig,
-         biasDacClrb => biasDacClrbSig,
+         -- Fast DAC Ports
+         fastDacCsL   => hsCsb,
+         fastDacSclk  => hsDacSclk,
+         fastDacDin   => hsDacDin,
+         fastDacLoadL => hsLdacb,
+   
+         -- Slow Dac
+         slowDacDin   => biasDacDin,
+         slowDacSclk  => biasDacSclk,
+         slowDacCsL   => biasDacCsb,
+         slowDacClrL  => biasDacClrb
 
-         -- High Speed DAC
-         hsDacSclk   => hsDacSclk,
-         hsDacDin    => hsDacDin,
-         hsCsb       => hsCsb,
-         hsLdacb     => hsLdacb
-         );
+      );
    
    U_TimingRx : entity work.TimingRx
       generic map (
