@@ -37,7 +37,9 @@ class App(pr.Device):
                         5: 'AsicGRst', 6:'AsicSaciCmd(0)', 7:'AsicSaciClk', 
                         8:'AsicSaciSelL(0)', 9:'AsicSaciSelL(1)', 10:'AsicSaciSelL(2)',
                         11:'AsicSaciSelL(3)', 12:'LdoShutDnl0', 13:'LdoShutDnl1',
-                        14: 'pllLolL'},
+                        14: 'pllLolL', 15:'biasDacDin', 16: 'biasDacSclk',
+                        17: 'biasDacCsb', 18: 'biasDacClrb', 19: 'hsDacCsb',
+                        20: 'hsDacSclk', 21: 'hsDacDin', 22:'hsLdacb'},
 
                     {0:'AsicDM(1)'}]
 
