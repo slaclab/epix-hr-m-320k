@@ -281,9 +281,6 @@ architecture rtl of Application is
    signal asicGrSig              : sl;
    signal asicClkEnSig           : sl;
    signal asicR0Sig              : sl;
-   signal biasDacDinSig          : sl;
-   signal biasDacCsbSig          : sl;
-   signal biasDacClrbSig         : sl;
    signal slowAdcDinSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcSyncLSig        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcRefClkSig       : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
@@ -291,10 +288,7 @@ architecture rtl of Application is
    signal saciClkSig             : sl;
    signal saciCmdSig             : sl;
    signal saciSelVec             : slv(NUM_OF_ASICS_G - 1 downto 0);
-
-   signal clk6Meg                : sl;
    signal fpgaTtlOutSig          : sl;
-
    signal hsCsbSig               : sl;
    signal hsDacSclkSig           : sl;
    signal hsDacDinSig            : sl;
