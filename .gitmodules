@@ -16,3 +16,6 @@
 [submodule "firmware/submodules/epix-hr-core"]
 	path = firmware/submodules/epix-hr-core
 	url = git@github.com:slaclab/epix-hr-core
+[submodule "firmware/python/ePixViewer"]
+	path = firmware/python/ePixViewer
+	url = git@github.com:slaclab/ePixViewer.git

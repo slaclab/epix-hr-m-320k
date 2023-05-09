@@ -25,6 +25,7 @@ import subprocess
 
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
+from ePixViewer.software.deviceFiles import ePixHrMv2
 
 rogue.Version.minVersion('5.15.3')
 
@@ -64,7 +65,8 @@ class Root(pr.Root):
         self.adcMonStream  = [None for i in range(4)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
-
+        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(5)]
+        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(5)]
         # Check if not VCS simulation
         if (not self.sim):
 
@@ -141,6 +143,26 @@ class Root(pr.Root):
             for vc in range(4):
                 self.adcMonStream[vc] >> self.dataWriter.getChannel(vc + 8)
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
+
+        for lane in range(numOfAsics):
+            self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
+            self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
+
+        @self.command()
+        def DisplayViewer0():
+            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0"], shell=False)
+
+        @self.command()
+        def DisplayViewer1():
+            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1"], shell=False)
+
+        @self.command()
+        def DisplayViewer2():
+            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2"], shell=False)
+
+        @self.command()
+        def DisplayViewer3():
+            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3"], shell=False)
 
         #################################################################
 
