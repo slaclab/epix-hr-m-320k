@@ -18,22 +18,22 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 ############################
 ## Open the synthesis design
 ############################
-open_run synth_1
+# open_run synth_1
 
 ###############################
 ## Set the name of the ILA core
 ###############################
-set ilaName u_ila_1
+# set ilaName u_ila_1
 
 ##################
 ## Create the core
 ##################
-CreateDebugCore ${ilaName}
+# CreateDebugCore ${ilaName}
 
 #######################
 ## Set the record depth
 #######################
-set_property C_DATA_DEPTH 2048 [get_debug_cores ${ilaName}]
+# set_property C_DATA_DEPTH 2048 [get_debug_cores ${ilaName}]
 
 #################################
 ## Set the clock for the ILA core
@@ -44,7 +44,7 @@ set_property C_DATA_DEPTH 2048 [get_debug_cores ${ilaName}]
 #SetDebugCoreClk ${ilaName} {U_Core/U_DdrMem/ddrClk}
 #SetDebugCoreClk ${ilaName} {U_App/U_MonAdcReadout/GEN_ULTRASCALE_AD9249.U_AD9249_0/adcBitClkRD4}
 #SetDebugCoreClk ${ilaName} {U_App/U_MonAdcReadout/GEN_ULTRASCALE_AD9249.U_AD9249_0/adcBitClkIo}
-SetDebugCoreClk ${ilaName} {U_App/byteClk}
+# SetDebugCoreClk ${ilaName} {U_App/byteClk}
 
 #######################
 ## Set the debug Probes
@@ -96,7 +96,7 @@ SetDebugCoreClk ${ilaName} {U_App/byteClk}
 #ConfigProbe ${ilaName} {U_App/U_MonAdcReadout/GEN_ULTRASCALE_AD9249.U_AD9249_0/adcBitClkR}
 
 
-ConfigProbe ${ilaName} {U_App/iAsicAcq}
+# ConfigProbe ${ilaName} {U_App/iAsicAcq}
 #ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/s[*]}
 #ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/sAxisMaster[*]}
 #ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/imAxisMaster[*]}
@@ -116,20 +116,20 @@ ConfigProbe ${ilaName} {U_App/iAsicAcq}
 #ConfigProbe ${ilaName} {U_App/U_MonAdcReadout/GenData[0].U_DATA_DESERIALIZER/loadDelaySync}
 #ConfigProbe ${ilaName} {U_App/U_MonAdcReadout/U_FRAME_DESERIALIZER/loadDelaySync}
 
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[0].U_DATA_DESERIALIZER/adcDV4R[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[0].U_DATA_DESERIALIZER/adcDV5R[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[1].U_DATA_DESERIALIZER/adcDV4R[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[1].U_DATA_DESERIALIZER/adcDV5R[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/adcData[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/dataValid[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/adcR[*]}
-#ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/tenbData[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/rxDataCs[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/rxValidCs}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/decDataOut[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/decValidOut[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/decSof[*]}
-ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/s[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[0].U_DATA_DESERIALIZER/adcDV4R[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[0].U_DATA_DESERIALIZER/adcDV5R[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[1].U_DATA_DESERIALIZER/adcDV4R[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[1].U_DATA_DESERIALIZER/adcDV5R[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/adcData[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/dataValid[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/adcR[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/tenbData[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/rxDataCs[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/rxValidCs}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/decDataOut[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/decValidOut[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/decSof[*]}
+# ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/s[*]}
 #ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_AXI_ASIC/GEN_ULTRASCALE_HRADC16.U_HrADC_0/GenData[0].U_DATA_DESERIALIZER/sData_i[*]}
 
 
@@ -140,6 +140,6 @@ ConfigProbe ${ilaName} {U_App/G_ASICS[0].U_Framers/s[*]}
 ##########################
 ## Write the port map file
 ##########################
-WriteDebugProbes ${ilaName} ${PROJ_DIR}/images/debug_probes.ltx
+# WriteDebugProbes ${ilaName} ${PROJ_DIR}/images/debug_probes.ltx
 
 

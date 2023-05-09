@@ -1,0 +1,8 @@
+Root:
+  enable: True
+  ForceWrite: False
+  App:
+    enable: True
+    PowerControl:
+      enable: True
+      DigitalSupplyEn: 0x3
