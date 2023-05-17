@@ -34,12 +34,12 @@ class App(pr.Device):
       #############################################
 
         debugChEnum=[  {0:'AsicDM(0)', 1:'AsicDM(1)', 2:'AsicSync', 3:'AsicAcq', 4:'AsicSR0',  
-                        5: 'AsicGRst', 6:'AsicSaciCmd(0)', 7:'AsicSaciClk', 
-                        8:'AsicSaciSelL(0)', 9:'AsicSaciSelL(1)', 10:'AsicSaciSelL(2)',
-                        11:'AsicSaciSelL(3)', 12:'LdoShutDnl0', 13:'LdoShutDnl1',
-                        14: 'pllLolL', 15:'biasDacDin', 16: 'biasDacSclk',
-                        17: 'biasDacCsb', 18: 'biasDacClrb', 19: 'hsDacCsb',
-                        20: 'hsDacSclk', 21: 'hsDacDin', 22:'hsLdacb'},
+                        5: 'AsicGRst', 6:'AsicClkEn', 7:'AsicR0', 8:'AsicSaciCmd(0)', 9:'AsicSaciClk', 
+                        10:'AsicSaciSelL(0)', 10:'AsicSaciSelL(1)', 12:'AsicSaciSelL(2)',
+                        13:'AsicSaciSelL(3)', 14:'LdoShutDnl0', 15:'LdoShutDnl1',
+                        16: 'pllLolL', 17:'biasDacDin', 18: 'biasDacSclk',
+                        19: 'biasDacCsb', 20: 'biasDacClrb', 21: 'hsDacCsb',
+                        22: 'hsDacSclk', 23: 'hsDacDin', 24:'hsLdacb'},
 
                     {0:'AsicDM(1)'}]
 
