@@ -203,64 +203,86 @@ class Root(pr.Root):
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
         if arguments[0] == 1:
-            self.filenamePLL         = self.root.top_level + "../config/ePixHRM320k_PLL_250MHz.csv"
+            self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig250Mhz.csv"
             self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
             self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
-            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u3_PLLBypass.yml"
+            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
             self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_DESER_250MHz.yml"
             self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
             self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"
+        if arguments[0] == 2:
+            self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig125Mhz.csv"
+            self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
+            self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
+            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
+            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_DESER_250MHz.yml"
+            self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
+            self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"            
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
     def fnInitAsicScript(self, dev,cmd,arg):
-        """SetTestBitmap command function"""       
+        """SetTestBitmap command function"""  
+        arguments = np.asarray(arg)
+
         print("Init ASIC script started")
         delay = 1
+
+
+        # configure PLL
+        print("Loading PLL configuration")
+        self.App.enable.set(False)
+        self.Core.Si5345Pll.enable.set(True)
+        self.Core.Si5345Pll.LoadCsvFile(self.filenamePLL)
+        print("Loaded. Waiting for lock...")
+        time.sleep(6) 
+        self.App.enable.set(True)
+        self.Core.Si5345Pll.enable.set(False)
 
         # load config that sets prog supply
         print("Loading supply configuration")
         self.root.LoadConfig(self.filenamePowerSupply)
-        print(self.filenamePowerSupply)
+        print("Loading {}".format(self.filenamePowerSupply))
         time.sleep(delay) 
 
 
         # load config that sets waveforms
         print("Loading waveforms configuration")
         self.root.LoadConfig(self.filenameWaveForms)
-        print(self.filenameWaveForms)
+        print("Loading {}".format(self.filenameWaveForms))
         time.sleep(delay) 
 
         # load config that sets packet registers
         print("Loading packet registers")
         self.root.LoadConfig(self.filenamePacketReg)
-        print(self.filenamePacketReg)
+        print("Loading {}".format(self.filenamePacketReg))
         time.sleep(delay)         
 
         # load batcher
         print("Loading packet registers")
         self.root.LoadConfig(self.filenameBatcher)
-        print(self.filenameBatcher)
+        print("Loading {}".format(self.filenameBatcher))
         time.sleep(delay)  
 
-        ## takes the asic off of reset
-        for i in range(2):
-            print("Taking asic off of reset")
-            self.App.AsicTop.RegisterControlDualClock.enable.set(True)
-            self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(False)
-            self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
-            time.sleep(delay) 
-            self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
-            time.sleep(delay) 
-            self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
-            self.root.readBlocks()
-            time.sleep(delay) 
+        ## takes the asics off of reset
+        print("Taking asic off of reset")
+        self.App.AsicTop.RegisterControlDualClock.enable.set(True)
+        self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(False)
+        self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
+        time.sleep(delay) 
+        self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
+        time.sleep(delay) 
+        self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
+        self.root.readBlocks()
+        time.sleep(delay) 
 
         ## load config for the asic
-        print("Loading ASIC and timing configuration")
-        if arg[1] != 0:
-            self.root.LoadConfig(self.filenameASIC)
-        time.sleep(5*delay) 
+        print("Loading ASICs and timing configuration")
+        for asicIndex in range(1 ,5, 1):
+            if arguments[asicIndex] != 0:
+                self.root.LoadConfig(self.filenameASIC.format(asicIndex))
+                print("Loading {}".format(self.filenameASIC.format(asicIndex)))
+                time.sleep(5*delay) 
 
         print("Initialization routine completed.")
 
