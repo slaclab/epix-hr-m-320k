@@ -203,75 +203,124 @@ class Root(pr.Root):
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
         if arguments[0] == 1:
-            self.filenamePll              = self.root.top_level + "../config/EPixHR10k2MPllConfigClk5En-Registers.csv"
-            self.filenamePowerSupply       = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
-            self.filenameRegisterControl   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
-            self.filenameASIC              = self.root.top_level + "../config/"
-            self.filenamePacketReg         = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
-            self.filenameTriggerReg        = self.root.top_level + "../config/ePixHRM320k_TriggerRegisters.yml"
-            self.filenameBatcher           = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"
-#/afs/slac/g/controls/development/users/dnajjar/sandBox/ePixHR10k-2M-dev/software/config/ePixHr10kT_PLLBypass_320MHz_ASIC_0.yml
+            self.filenamePLL         = self.root.top_level + "../config/ePixHRM320k_PLL_250MHz.csv"
+            self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
+            self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
+            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u3_PLLBypass.yml"
+            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_DESER_250MHz.yml"
+            self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
+            self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""       
         print("Init ASIC script started")
+        delay = 1
 
         # load config that sets prog supply
         print("Loading supply configuration")
         self.root.LoadConfig(self.filenamePowerSupply)
         print(self.filenamePowerSupply)
-        print("Loaded supply configuration")
+        time.sleep(delay) 
+
 
         # load config that sets waveforms
-        print("Loading register control (waveforms) configuration")
-        self.root.LoadConfig(self.filenameRegisterControl)
-        print(self.filenameRegisterControl)
-        print("Loaded register control (waveforms) configuration")
-
+        print("Loading waveforms configuration")
+        self.root.LoadConfig(self.filenameWaveForms)
+        print(self.filenameWaveForms)
+        time.sleep(delay) 
 
         # load config that sets packet registers
         print("Loading packet registers")
         self.root.LoadConfig(self.filenamePacketReg)
+        print(self.filenamePacketReg)
+        time.sleep(delay)         
 
-        delay = 1
+        # load batcher
+        print("Loading packet registers")
+        self.root.LoadConfig(self.filenameBatcher)
+        print(self.filenameBatcher)
+        time.sleep(delay)  
 
-        #Make sure clock is disabled at the ASIC level
-        self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(False)
+        ## takes the asic off of reset
+        for i in range(2):
+            print("Taking asic off of reset")
+            self.App.AsicTop.RegisterControlDualClock.enable.set(True)
+            self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(False)
+            self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
+            time.sleep(delay) 
+            self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
+            time.sleep(delay) 
+            self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
+            self.root.readBlocks()
+            time.sleep(delay) 
 
-        self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
-        time.sleep(delay) 
-        self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
-        time.sleep(delay) 
-
-       
         ## load config for the asic
         print("Loading ASIC and timing configuration")
-        #disable all asic to let the files define which ones should be set
-        
-        print("Loading ASIC configurations")
-        self.root.LoadConfig(self.filenameASIC)
-
-        self.App.AsicTop.RegisterControlDualClock.RoLogicRstN.set(False)
-        time.sleep(delay)
-        self.App.AsicTop.RegisterControlDualClock.RoLogicRstN.set(True)
-        time.sleep(delay)
-        
-        # starting clock inside the ASIC
-        self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
-
+        if arg[1] != 0:
+            self.root.LoadConfig(self.filenameASIC)
+        time.sleep(5*delay) 
 
         print("Initialization routine completed.")
-        
-        '''
-        # batcher settings
-        self.root.LoadConfig(self.filenameBatcher)
 
-        ## load config for the asic
-        print("Loading Trigger settings")
-        self.root.LoadConfig(self.filenameTriggerReg)
-        print(self.filenameTriggerReg)
+        return
+        ## start deserializer config for the asic
+        if self.filenameDESER == "":
+            EN_DESERIALIZERS_0 = arg[1]
 
+        else:
+            print("Loading deserializer parameters")
+            EN_DESERIALIZERS_0 = False
+            self.DeserRegisters0.enable.set(True)
+            self.root.LoadConfig(self.filenameDESER)                    
+            self.root.readBlocks()
+            time.sleep(delay)                   
+            self.DeserRegisters0.Resync.set(True)
+            time.sleep(delay) 
+            self.DeserRegisters0.Resync.set(False)
+            time.sleep(delay) 
+            #
+            self.DeserRegisters0.BERTRst.set(True)
+            time.sleep(delay) 
+            self.DeserRegisters0.BERTRst.set(False)
         
-        '''
+
+        if EN_DESERIALIZERS_0 : 
+            print("Starting deserializer")
+            self.serializerSyncAttempsts = 0
+            while True:
+                #make sure idle
+                self.DeserRegisters0.enable.set(True)
+                self.DeserRegisters0.IdelayRst.set(0)
+                self.DeserRegisters0.IserdeseRst.set(0)
+                self.root.readBlocks()
+                time.sleep(2*delay) 
+                self.DeserRegisters0.InitAdcDelay()
+                time.sleep(delay)                   
+                self.DeserRegisters0.Resync.set(True)
+                time.sleep(delay) 
+                self.DeserRegisters0.Resync.set(False)
+                time.sleep(5*delay) 
+                if (self.DeserRegisters0.Locked0.get() and self.DeserRegisters0.Locked1.get() and self.DeserRegisters0.Locked2.get() and  self.DeserRegisters0.Locked3.get() and self.DeserRegisters0.Locked4.get() and  self.DeserRegisters0.Locked5.get()):
+                    break
+                #limits the number of attempts to get serializer synch.
+                self.serializerSyncAttempsts = self.serializerSyncAttempsts + 1
+                if self.serializerSyncAttempsts > 0:
+                    break
+
+            self.DeserRegisters0.BERTRst.set(True)
+            time.sleep(delay) 
+            self.DeserRegisters0.BERTRst.set(False)
+
+            print("Starting deserializer - 2")
+            self.serializerSyncAttempsts = 0
+            while True:
+                #make sure idle
+                #self.DeserRegisters0.AdcDelayFineTune()
+                #limits the number of attempts to get serializer synch.
+                self.serializerSyncAttempsts = self.serializerSyncAttempsts + 1
+                if self.serializerSyncAttempsts > 0:
+                    break
+
+        print("Initialization routine completed.")

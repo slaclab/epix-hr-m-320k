@@ -7,21 +7,21 @@ Root:
       enable: True
       DigAsicStrmRegisters0:
         enable: True
-        asicDataReq: 4608
+        asicDataReq: 3071
         DisableLane: 0xffffff
         EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters1:
         enable: True
-        asicDataReq: 4608
+        asicDataReq: 3071
         DisableLane: 0xffffff
-        EnumerateDisLane: 0x0
+        EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters2:
         enable: True
-        asicDataReq: 4608
+        asicDataReq: 3071
         DisableLane: 0xffffff
-        EnumerateDisLane: 0x0
+        EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters3:
         enable: True
-        asicDataReq: 4608
+        asicDataReq: 3071
         DisableLane: 0xffffff
-        EnumerateDisLane: 0x0
+        EnumerateDisLane: 0xffffff

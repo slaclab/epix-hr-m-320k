@@ -35,20 +35,20 @@ class App(pr.Device):
 
         debugChEnum=[  {0:'AsicDM(0)', 1:'AsicDM(1)', 2:'AsicSync', 3:'AsicAcq', 4:'AsicSR0',  
                         5: 'AsicGRst', 6:'AsicClkEn', 7:'AsicR0', 8:'AsicSaciCmd(0)', 9:'AsicSaciClk', 
-                        10:'AsicSaciSelL(0)', 10:'AsicSaciSelL(1)', 12:'AsicSaciSelL(2)',
-                        13:'AsicSaciSelL(3)', 14:'LdoShutDnl0', 15:'LdoShutDnl1',
-                        16: 'pllLolL', 17:'biasDacDin', 18: 'biasDacSclk',
-                        19: 'biasDacCsb', 20: 'biasDacClrb', 21: 'hsDacCsb',
-                        22: 'hsDacSclk', 23: 'hsDacDin', 24:'hsLdacb'},
+                        10:'AsicSaciSelL(0)', 11:'AsicSaciSelL(1)', 12:'AsicSaciSelL(2)',
+                        13:'AsicSaciSelL(3)', 14: 'AsicRsp', 15:'LdoShutDnl0', 16:'LdoShutDnl1',
+                        17: 'pllLolL', 18:'biasDacDin', 19: 'biasDacSclk',
+                        20: 'biasDacCsb', 21: 'biasDacClrb', 22: 'hsDacCsb',
+                        23: 'hsDacSclk', 24: 'hsDacDin', 25:'hsLdacb'},
 
                     {0:'AsicDM(1)'}]
 
 
-        for i in range(num_of_asics):
+        for asicIdx in range(num_of_asics):
             self.add(
                 fpga.EpixMv2Asic(
-                    name='Mv2Asic[{}]'.format(i),
-                    offset=0x0000_0000 + 0x0100_0000 * i,
+                    name='Mv2Asic[{}]'.format(asicIdx),
+                    offset=0x40_0000 * asicIdx,
                     expand=False,
                     enabled=False
                 )

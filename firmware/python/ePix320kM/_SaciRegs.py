@@ -74,7 +74,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='fastPP_enable',
                               description='Config1',
@@ -83,7 +83,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=6,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='PulserSync',
                               description='Config1',
@@ -91,7 +91,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO') )
+                              mode='RW') )
             )
 
         # CMD = 1, Addr = 2  : Pixel dummy, write data
@@ -102,7 +102,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=0,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Pll_Itune',
                               description='Config2',
@@ -110,7 +110,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=1,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Pll_KVCO',
                               description='Config2',
@@ -118,7 +118,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Pll_filter1LSB',
                               description='Config2',
@@ -126,7 +126,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Pll_filter1MSB',
                               description='Config15',
@@ -134,7 +134,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO') )
+                              mode='RW') )
             )
 
         # CMD = 1, Addr = 3
@@ -146,7 +146,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=10,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='pbit',
                  description='Config3',
@@ -154,7 +154,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=10,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='atest',
                               description='Config3',
@@ -162,7 +162,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=11,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='test',
                  description='Config3',
@@ -170,7 +170,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=12,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='sab_test',
                               description='Config3',
@@ -178,7 +178,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=13,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='hrtest',
                               description='Config3',
@@ -186,7 +186,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=14,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='PulserR',
                               description='Config3',
@@ -194,7 +194,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=15,
                               base=pr.Bool,
-                              mode='WO') )
+                              mode='RW') )
             )
 
         # CMD = 1, Addr = 4
@@ -206,7 +206,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DigMon2',
                               description='Config4',
@@ -214,7 +214,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO') )
+                              mode='RW') )
             )
 
         # CMD = 1, Addr = 5
@@ -225,7 +225,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='MonostPulser',
                               description='Config5',
@@ -233,7 +233,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=3,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='RefGenB',
                               description='Config5',
@@ -241,7 +241,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO') )
+                              mode='RW') )
                 )
 
         # CMD = 1, Addr = 6
@@ -252,7 +252,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=0,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Dm2En',
                  description='Config6',
@@ -260,7 +260,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=1,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='emph_bd',
                               description='Config6',
@@ -268,7 +268,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=2,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='emph_bc',
                               description='Config6',
@@ -276,7 +276,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=5,
                               base=pr.UInt,
-                              mode='WO') )
+                              mode='RW') )
             )
 
         # CMD = 1, Addr = 7  : Bit  5:0 = VREF[5:0]
@@ -288,7 +288,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='VRefLow',
                  description='Config7',
@@ -296,7 +296,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO') )
+                              mode='RW') )
                 )
 
         # CMD = 1, Addr = 8  : Bit  0   = TPS_tcomp
@@ -309,7 +309,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=0,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
             #
             pr.RemoteVariable(name='TpsMux',
                               description='Config8',
@@ -317,7 +317,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=1,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='RoMonost',
                               description='Config8',
@@ -325,7 +325,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=5,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
             ))
 
         # CMD = 1, Addr = 9
@@ -336,7 +336,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Balcony_clk',
                               description='Config9',
@@ -344,7 +344,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
             ) )
 
         # CMD = 1, Addr = 10 : Bit  0   = PP_OCB_S2D
@@ -358,7 +358,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=0,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Ocb',
                               description='Config10',
@@ -366,7 +366,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=1,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Monost',
                               description='Config10',
@@ -374,7 +374,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='mTest',
                               description='Config10',
@@ -382,7 +382,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')
+                              mode='RW')
             ) )
 
         # CMD = 1, Addr = 11 : Bit  2:0 = Preamp[2:0]
@@ -395,7 +395,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='S2D_1_b',
                               description='Config11',
@@ -403,7 +403,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=3,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Vld1_b',
                               description='Config11',
@@ -411,7 +411,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ) )
 
         # CMD = 1, Addr = 12 : Bit  0   = S2D_tcomp
@@ -425,7 +425,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='loop_mode_sel',
                               description='Config12',
@@ -433,7 +433,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 13 : Bit  1:0 = tc[1:0]
@@ -446,7 +446,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='S2d',
                               description='Config13',
@@ -454,7 +454,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=2,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='S2dDacBias',
                               description='Config13',
@@ -462,7 +462,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=5,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 14 : Bit  1:0 = tps_tcDAC[1:0]
@@ -474,7 +474,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Tps_DAC',
                               description='Config14',
@@ -482,7 +482,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=2,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 15 : Bit  1:0 = S2D0_tcDAC[1:0]
@@ -495,7 +495,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=2,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='PLL_RO_divider',
                               description='Config15',
@@ -503,7 +503,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=5,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 16 : Bit  0   = test_BE
@@ -518,7 +518,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=0,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DigRO_disable',
                               description='Config16',
@@ -526,7 +526,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=1,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DelExec',
                               description='Config16',
@@ -534,7 +534,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=2,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DelCCKReg',
                               description='Config16',
@@ -542,7 +542,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=3,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='RO_rst_en',
                               description='Config16',
@@ -550,7 +550,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=4,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='SlvdsBit',
                               description='Config16',
@@ -558,7 +558,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=5,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='FE_Autogain',
                               description='Config16',
@@ -566,7 +566,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=6,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='FE_Lowgain',
                  description='Config16',
@@ -574,7 +574,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')
+                              mode='RW')
             ))
 
         # CMD = 1, Addr = 17 : Row start  address[8:0]
@@ -588,7 +588,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=9,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             # sheet specifies 9 bits not 8
             pr.RemoteVariable(name='RowStopAddr',
@@ -597,7 +597,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=9,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             # sheet specifies 9 bits not 8
             pr.RemoteVariable(name='ColStartAddr',
@@ -606,7 +606,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=7,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             # sheet specifies 8 bits not 7 and marked unavailable
             pr.RemoteVariable(name='ColStopAddr',
@@ -615,7 +615,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=7,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         #  CMD = 1, Addr = 21 : Chip ID Read
@@ -637,7 +637,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DCycle_en',
                  description='Config22',
@@ -645,7 +645,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=6,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DCycle_bypass',
                               description='Config22',
@@ -653,7 +653,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')))
+                              mode='RW')))
 
         # CMD = 1, Addr = 23
         self.add((
@@ -663,7 +663,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='OSRsel',
                               description='',
@@ -671,7 +671,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=2,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='SecondOrder',
                               description='',
@@ -679,7 +679,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=3,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='DHg',
                               description='',
@@ -687,7 +687,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=4,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='RefGenC',
                               description='',
@@ -695,7 +695,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=5,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='dbus_del_sel',
                               description='',
@@ -703,7 +703,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')
+                              mode='RW')
             ))
 
         # CMD = 1, Addr = 24
@@ -714,7 +714,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='SDrst_b',
                               description='',
@@ -722,7 +722,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 25
@@ -733,7 +733,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Ref_gen_d',
                               description='',
@@ -741,7 +741,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=2,
                               bitOffset=6,
                               base=pr.UInt,
-                              mode='WO')))
+                              mode='RW')))
 
         # CMD = 1, Addr = 26
         self.add((
@@ -751,7 +751,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='Pixel_CB',
                               description='',
@@ -759,7 +759,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=3,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='InjEn_ePixM',
                               description='',
@@ -767,7 +767,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=6,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='ClkInj_ePixM',
                               description='',
@@ -775,7 +775,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')))
+                              mode='RW')))
 
         # CMD = 1, Addr = 27
         self.add((
@@ -785,7 +785,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
             #
             pr.RemoteVariable(name='DigRO_disable_4b',
                               description='',
@@ -793,7 +793,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 28
@@ -804,7 +804,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='RefinCompN',
                               description='',
@@ -812,7 +812,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=3,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 29
@@ -823,7 +823,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='ro_mode_i',
                               description='',
@@ -831,7 +831,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=3,
                               bitOffset=3,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 30
@@ -842,7 +842,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='SDrst1_b',
                               description='',
@@ -850,7 +850,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 31
@@ -861,7 +861,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='SDrst2_b',
                               description='',
@@ -869,7 +869,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 1, Addr = 32
@@ -880,7 +880,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='SDrst3_b',
                               description='',
@@ -888,7 +888,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')))
+                              mode='RW')))
 
         # CMD = 1, Addr = 33
         self.add(
@@ -898,7 +898,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'))
+                              mode='RW'))
 
         # CMD = 1, Addr = 34
         self.add(
@@ -908,7 +908,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=6,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'))
+                              mode='RW'))
 
         # CMD = 1, Addr = 35
         self.add((
@@ -918,7 +918,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='FE_CLK_cnt_en',
                               description='',
@@ -926,7 +926,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=4,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='FE_ACQ2GR_en',
                               description='',
@@ -934,7 +934,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=5,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='FE_sync2GR_en',
                               description='',
@@ -942,7 +942,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=6,
                               base=pr.Bool,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='FE_ACQ2InjEn',
                               description='',
@@ -950,7 +950,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=1,
                               bitOffset=7,
                               base=pr.Bool,
-                              mode='WO')
+                              mode='RW')
             ))
 
         # CMD = 1, Addr = 36
@@ -961,7 +961,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='pipoclk_delay_row1',
                               description='',
@@ -969,7 +969,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')))
+                              mode='RW')))
 
         # CMD = 1, Addr = 36
         self.add((
@@ -979,7 +979,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=0,
                               base=pr.UInt,
-                              mode='WO'),
+                              mode='RW'),
 
             pr.RemoteVariable(name='pipoclk_delay_row3',
                               description='',
@@ -987,7 +987,7 @@ class EpixMv2Asic(pr.Device):
                               bitSize=4,
                               bitOffset=4,
                               base=pr.UInt,
-                              mode='WO')
+                              mode='RW')
                 ))
 
         # CMD = 6, Addr = 17 : Row counter[8:0]
@@ -1122,7 +1122,7 @@ class EpixMv2Asic(pr.Device):
     def fnSetPixelBitmap(self, dev, cmd, arg):
         """SetPixelBitmap command function"""
         addrSize = 4
-        # set r0mode in order to have saci cmd to work properly on legacy firmware
+        # set r0mode in order to have saci cmd to RWrk properly on legacy firmware
         # self.root.Epix10ka.EpixFpgaRegisters.AsicR0Mode.set(True)
         if self._size == 0:
             self._size = 0xfffff
@@ -1172,7 +1172,7 @@ class EpixMv2Asic(pr.Device):
         addrSize = 4
         if self._size == 0:
             self._size = 0xfffff
-        # set r0mode in order to have saci cmd to work properly on legacy firmware
+        # set r0mode in order to have saci cmd to RWrk properly on legacy firmware
         # self.root.Epix10ka.EpixFpgaRegisters.AsicR0Mode.set(True)
 
         if (self.enable.get()):
@@ -1211,7 +1211,7 @@ class EpixMv2Asic(pr.Device):
 
     def fnClearMatrix(self, dev, cmd, arg):
         """ClearMatrix command function"""
-        # set r0mode in order to have saci cmd to work properly on legacy firmware
+        # set r0mode in order to have saci cmd to RWrk properly on legacy firmware
         # self.root.Epix10ka.EpixFpgaRegisters.AsicR0Mode.set(True)
 
         if (self.enable.get()):

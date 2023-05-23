@@ -214,7 +214,8 @@ architecture rtl of Application is
    constant SACISELVEC1_INDEX_C     : natural  := SACISELVEC0_INDEX_C + 1;
    constant SACISELVEC2_INDEX_C     : natural  := SACISELVEC1_INDEX_C + 1;
    constant SACISELVEC3_INDEX_C     : natural  := SACISELVEC2_INDEX_C + 1;
-   constant LDOSHTDNL0_INDEX_C      : natural := SACISELVEC3_INDEX_C  + 1;
+   constant SACIRSP_INDEX_C         : natural := SACISELVEC3_INDEX_C  + 1;
+   constant LDOSHTDNL0_INDEX_C      : natural := SACIRSP_INDEX_C      + 1;
    constant LDOSHTDNL1_INDEX_C      : natural := LDOSHTDNL0_INDEX_C   + 1;
    constant GITCLNRLOLL_INDEX_C     : natural := LDOSHTDNL1_INDEX_C   + 1;
    constant BIASDACDIN_INDEX_C      : natural := GITCLNRLOLL_INDEX_C  + 1;
@@ -340,6 +341,7 @@ begin
          saciSelVec(1)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC1_INDEX_C, TTLOUT_WIDTH_C) else
          saciSelVec(2)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC2_INDEX_C, TTLOUT_WIDTH_C) else
          saciSelVec(3)        when boardConfig.epixhrDbgSel1 = toSlv(SACISELVEC3_INDEX_C, TTLOUT_WIDTH_C) else
+         saciRsp              when boardConfig.epixhrDbgSel1 = toSlv(SACIRSP_INDEX_C,     TTLOUT_WIDTH_C) else
          ldoShtDnLSig(0)      when boardConfig.epixhrDbgSel1 = toSlv(LDOSHTDNL0_INDEX_C,  TTLOUT_WIDTH_C) else
          ldoShtDnLSig(1)      when boardConfig.epixhrDbgSel1 = toSlv(LDOSHTDNL1_INDEX_C,  TTLOUT_WIDTH_C) else
          jitclnrLolL          when boardConfig.epixhrDbgSel1 = toSlv(GITCLNRLOLL_INDEX_C, TTLOUT_WIDTH_C) else
