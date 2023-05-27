@@ -409,9 +409,9 @@ begin
       generic map (
          TPD_G                  => TPD_G,
          SIMULATION_G           => SIMULATION_G,
-         EN_DEVICE_DNA_G        => false,
          BUILD_INFO_G           => BUILD_INFO_G,
          NUM_OF_PSCOPE_G        => NUM_OF_PSCOPE_G,
+         NUM_DS2411_G           => 3,
          NUM_OF_SLOW_ADCS_G     => NUM_OF_SLOW_ADCS_G,
          NUM_LANES_G            => NUM_OF_ASICS_G,
          AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr

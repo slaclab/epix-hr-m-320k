@@ -65,8 +65,8 @@ class Root(pr.Root):
         self.adcMonStream  = [None for i in range(4)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
-        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(5)]
-        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(5)]
+        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(numOfAsics)]
+        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
         # Check if not VCS simulation
         if (not self.sim):
 
@@ -82,17 +82,17 @@ class Root(pr.Root):
             
             self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
-            #self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
+            self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
             for vc in range(4):
                 self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
                 self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
             # # Create (Xilinx Virtual Cable) XVC on localhost
-            #self.xvc = rogue.protocols.xilinx.Xvc(2542)
-            #self.addProtocol(self.xvc)
+            self.xvc = rogue.protocols.xilinx.Xvc(2542)
+            self.addProtocol(self.xvc)
 
             # # Connect xvcStream to XVC module
-            #self.xvcStream == self.xvc
+            self.xvcStream == self.xvc
 
             # # Create SRPv3
             self.srp = rogue.protocols.srp.SrpV3()
