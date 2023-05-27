@@ -43,7 +43,9 @@ class App(pr.Device):
 
                     {0:'AsicDM(1)'}]
 
-
+        snEnum = { 0: 'CarrierIDLow', 1: 'CarrierIDHigh', 2: 'AnalogIDLow', 3: 'AnalogIDHigh',
+                   4: 'DigIDLow', 5: 'DigIDHigh'}
+        
         for asicIdx in range(num_of_asics):
             self.add(
                 fpga.EpixMv2Asic(
@@ -69,7 +71,8 @@ class App(pr.Device):
                 expand=False,
                 enabled=True,
                 asicStreams=4,
-                debugChEnum=debugChEnum
+                debugChEnum=debugChEnum,
+                snEnum=snEnum
             )
         )
 
