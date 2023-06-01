@@ -45,5 +45,3 @@ Root:
         DebugSel0: AsicDM(0)
         DebugSel1: AsicDM(1)
         StartupReq: True
-        StartupAck: False
-        StartupFail: False

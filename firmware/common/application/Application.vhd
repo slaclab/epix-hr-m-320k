@@ -226,7 +226,20 @@ architecture rtl of Application is
    constant HSDACSCLK_INDEX_C       : natural := HSCSB_INDEX_C        + 1;
    constant HSDACDIN_INDEX_C        : natural := HSDACSCLK_INDEX_C    + 1;
    constant HSLDACB_INDEX_C         : natural := HSDACDIN_INDEX_C     + 1;
-
+   constant SLOWADCDOUT0_INDEX_C    : natural := HSLDACB_INDEX_C      + 1;
+   constant SLOWADCDRDYL0_INDEX_C   : natural := SLOWADCDOUT0_INDEX_C  + 1;
+   constant SLOWADCSYNCL0_INDEX_C   : natural := SLOWADCDRDYL0_INDEX_C + 1;
+   constant SLOWADCSCLK0_INDEX_C    : natural := SLOWADCSYNCL0_INDEX_C + 1;
+   constant SLOWADCCSL0_INDEX_C     : natural := SLOWADCSCLK0_INDEX_C  + 1;
+   constant SLOWADCDIN0_INDEX_C     : natural := SLOWADCCSL0_INDEX_C   + 1;
+   constant SLOWADCREFCLK0_INDEX_C  : natural := SLOWADCDIN0_INDEX_C   + 1;
+   constant SLOWADCDOUT1_INDEX_C    : natural := SLOWADCREFCLK0_INDEX_C+ 1;
+   constant SLOWADCDRDYL1_INDEX_C   : natural := SLOWADCDOUT1_INDEX_C  + 1;
+   constant SLOWADCSYNCL1_INDEX_C   : natural := SLOWADCDRDYL1_INDEX_C + 1;
+   constant SLOWADCSCLK1_INDEX_C    : natural := SLOWADCSYNCL1_INDEX_C + 1;
+   constant SLOWADCCSL1_INDEX_C     : natural := SLOWADCSCLK1_INDEX_C  + 1;
+   constant SLOWADCDIN1_INDEX_C     : natural := SLOWADCCSL1_INDEX_C   + 1;
+   constant SLOWADCREFCLK1_INDEX_C  : natural := SLOWADCDIN1_INDEX_C   + 1;
 
    -- AXI-Lite Signals
    signal axilWriteMasters       : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
@@ -285,6 +298,9 @@ architecture rtl of Application is
    signal slowAdcDinSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcSyncLSig        : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
    signal slowAdcRefClkSig       : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+   signal slowAdcSclkSig         : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+   signal slowAdcCsLSig          : slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+
    signal ldoShtDnLSig           : slv(1 downto 0);
    signal saciClkSig             : sl;
    signal saciCmdSig             : sl;
@@ -310,9 +326,13 @@ begin
    asicSro       <= asicSroSig;
    asicClkEn     <= asicClkEnSig;
    asicR0        <= asicR0Sig;
+
    slowAdcDin    <= slowAdcDinSig;    
    slowAdcSyncL  <= slowAdcSyncLSig;  
-   slowAdcRefClk <= slowAdcRefClkSig; 
+   slowAdcRefClk <= slowAdcRefClkSig;
+   slowAdcSclk   <= slowAdcSclkSig;
+   slowAdcCsL    <= slowAdcCsLSig;
+
    ldoShtDnL     <= ldoShtDnLSig; 
    fpgaTtlOut    <= fpgaTtlOutSig;
    
@@ -353,10 +373,22 @@ begin
          hsDacSclkSig         when boardConfig.epixhrDbgSel1 = toSlv(HSDACSCLK_INDEX_C,   TTLOUT_WIDTH_C) else
          hsDacDinSig          when boardConfig.epixhrDbgSel1 = toSlv(HSDACDIN_INDEX_C,    TTLOUT_WIDTH_C) else
          hsLdacbSig           when boardConfig.epixhrDbgSel1 = toSlv(HSLDACB_INDEX_C,     TTLOUT_WIDTH_C) else
+
+         slowAdcDout(0)       when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDOUT0_INDEX_C,    TTLOUT_WIDTH_C) else
+         slowAdcDrdyL(0)      when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDRDYL0_INDEX_C,   TTLOUT_WIDTH_C) else
+         slowAdcSyncLSig(0)   when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCSYNCL0_INDEX_C,   TTLOUT_WIDTH_C) else
+         slowAdcSclkSig(0)    when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCSCLK0_INDEX_C,    TTLOUT_WIDTH_C) else
+         slowAdcCsLSig(0)     when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCCSL0_INDEX_C,     TTLOUT_WIDTH_C) else
+         slowAdcDinSig(0)     when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDIN0_INDEX_C,     TTLOUT_WIDTH_C) else
+         slowAdcRefClkSig(0)  when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCREFCLK0_INDEX_C,  TTLOUT_WIDTH_C) else
+         slowAdcDout(1)       when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDOUT1_INDEX_C,    TTLOUT_WIDTH_C) else
+         slowAdcDrdyL(1)      when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDRDYL1_INDEX_C,   TTLOUT_WIDTH_C) else
+         slowAdcSyncLSig(1)   when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCSYNCL1_INDEX_C,   TTLOUT_WIDTH_C) else
+         slowAdcSclkSig(1)    when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCSCLK1_INDEX_C,    TTLOUT_WIDTH_C) else
+         slowAdcCsLSig(1)     when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCCSL1_INDEX_C,     TTLOUT_WIDTH_C) else
+         slowAdcDinSig(1)     when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDIN1_INDEX_C,     TTLOUT_WIDTH_C) else
+         slowAdcRefClkSig(1)  when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCREFCLK1_INDEX_C,  TTLOUT_WIDTH_C) else
          '0';
-
-
-
 
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
       generic map (
@@ -698,8 +730,8 @@ begin
          --  Top Level Ports
          -------------------
          -- Slow ADC Ports
-         slowAdcCsL      => slowAdcCsL,
-         slowAdcSclk     => slowAdcSclk,
+         slowAdcCsL      => slowAdcCsLSig,
+         slowAdcSclk     => slowAdcSclkSig,
          slowAdcDin      => slowAdcDinSig,
          slowAdcSyncL    => slowAdcSyncLSig,
          slowAdcDout     => slowAdcDout,

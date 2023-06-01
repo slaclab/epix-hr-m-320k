@@ -232,12 +232,13 @@ class Root(pr.Root):
         # configure PLL
         print("Loading PLL configuration")
         self.App.enable.set(False)
-        self.Core.Si5345Pll.enable.set(True)
-        self.Core.Si5345Pll.LoadCsvFile(self.filenamePLL)
-        print("Loaded. Waiting for lock...")
-        time.sleep(6) 
-        self.App.enable.set(True)
-        self.Core.Si5345Pll.enable.set(False)
+        if not self.sim :
+            self.Core.Si5345Pll.enable.set(True)
+            self.Core.Si5345Pll.LoadCsvFile(self.filenamePLL)
+            print("Loaded. Waiting for lock...")
+            time.sleep(6) 
+            self.App.enable.set(True)
+            self.Core.Si5345Pll.enable.set(False)
 
         # load config that sets prog supply
         print("Loading supply configuration")
@@ -277,12 +278,13 @@ class Root(pr.Root):
         time.sleep(delay) 
 
         ## load config for the asic
-        print("Loading ASICs and timing configuration")
-        for asicIndex in range(1 ,5, 1):
-            if arguments[asicIndex] != 0:
-                self.root.LoadConfig(self.filenameASIC.format(asicIndex))
-                print("Loading {}".format(self.filenameASIC.format(asicIndex)))
-                time.sleep(5*delay) 
+        if not self.sim :
+            print("Loading ASICs and timing configuration")
+            for asicIndex in range(1 ,5, 1):
+                if arguments[asicIndex] != 0:
+                    self.root.LoadConfig(self.filenameASIC.format(asicIndex))
+                    print("Loading {}".format(self.filenameASIC.format(asicIndex)))
+                    time.sleep(5*delay) 
 
         print("Initialization routine completed.")
 

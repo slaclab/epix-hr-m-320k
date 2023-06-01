@@ -39,11 +39,16 @@ class App(pr.Device):
                         13:'AsicSaciSelL(3)', 14: 'AsicRsp', 15:'LdoShutDnl0', 16:'LdoShutDnl1',
                         17: 'pllLolL', 18:'biasDacDin', 19: 'biasDacSclk',
                         20: 'biasDacCsb', 21: 'biasDacClrb', 22: 'hsDacCsb',
-                        23: 'hsDacSclk', 24: 'hsDacDin', 25:'hsLdacb'},
+                        23: 'hsDacSclk', 24: 'hsDacDin', 25:'hsLdacb', 26: 'slowAdcDout(0)',
+                        27: 'slowAdcDrdyL(0)', 28: 'slowAdcSyncL(0)', 29: 'slowAdcSclk(0)',
+                        30: 'slowAdcCsL(0)', 31: 'slowAdcDin(0)' , 32: 'slowAdcRefClk(0)',
+                        33: 'slowAdcDout(1)',
+                        34: 'slowAdcDrdyL(1)', 35: 'slowAdcSyncL(1)', 36: 'slowAdcSclk(1)',
+                        37: 'slowAdcCsL(1)', 38: 'slowAdcDin(1)' , 39: 'slowAdcRefClk(1)'},
 
                     {0:'AsicDM(1)'}]
 
-        snEnum = { 0: 'CarrierIDLow', 1: 'CarrierIDHigh', 2: 'AnalogIDLow', 3: 'AnalogIDHigh',
+        snEnum = { 0: 'CarrierIDLow', 1: 'CarrierIDHigh', 2: 'PowerAndCommIDLow', 3: 'PowerAndCommIDHigh',
                    4: 'DigIDLow', 5: 'DigIDHigh'}
         
         for asicIdx in range(num_of_asics):
