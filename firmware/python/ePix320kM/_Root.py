@@ -150,19 +150,19 @@ class Root(pr.Root):
 
         @self.command()
         def DisplayViewer0():
-            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0"], shell=False)
 
         @self.command()
         def DisplayViewer1():
-            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1"], shell=False)
 
         @self.command()
         def DisplayViewer2():
-            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2"], shell=False)
 
         @self.command()
         def DisplayViewer3():
-            subprocess.Popen(["python", "runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3"], shell=False)
 
         #################################################################
 
@@ -189,13 +189,12 @@ class Root(pr.Root):
                                  function=self.fnInitAsic
         ))
 
-        #################################################################
-
     def start(self, **kwargs):
         super().start(**kwargs)
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
+
 
 
     def fnInitAsic(self, dev,cmd,arg):
