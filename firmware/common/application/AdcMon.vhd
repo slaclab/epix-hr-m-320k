@@ -321,8 +321,8 @@ begin
       U_AdcCntrl : entity epix_hr_core.SlowAdcCntrlAxi
          generic map (
          SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
-         ADC_CLK_PERIOD_G  => 200.0E-9,  -- 5MHz
-         SPI_SCLK_PERIOD_G => 2.0E-6)    -- 500kHz
+         ADC_CLK_PERIOD_G  => 125.0E-9,  -- 8MHz
+         SPI_SCLK_PERIOD_G => 500.0E-9)    -- 2MHz
          port map (
          -- Master system clock
          sysClk           => axilClk,

@@ -340,7 +340,8 @@ begin
          SIMULATION_G   => SIMULATION_G,
          NUM_OF_LANES_G => NUM_OF_ASICS_G,
          NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
+         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem"
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)

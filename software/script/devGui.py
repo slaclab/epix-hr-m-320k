@@ -16,10 +16,13 @@ import argparse
 
 import pyrogue as pr
 import pyrogue.pydm
+import os
 
 import ePix320kM as devBoard
 
 #################################################################
+
+top_level=f'{os.getcwd()}/'# point to the software folder
 
 if __name__ == "__main__":
 
@@ -76,6 +79,7 @@ if __name__ == "__main__":
     #################################################################
 
     with devBoard.Root(
+        top_level  = top_level,
         dev        = args.dev,
         pollEn     = args.pollEn,
         initRead   = args.initRead,

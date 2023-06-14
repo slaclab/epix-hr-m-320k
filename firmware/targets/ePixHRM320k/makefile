@@ -12,7 +12,7 @@ export PRJ_PART = XCKU15P-FFVA1156-2-E
 export TOP_DIR = $(abspath $(PWD)/../..)
 
 # Using XVC Debug bridge
-export USE_XVC_DEBUG = 0
+export USE_XVC_DEBUG = 1 
 
 # Setup for releases.yaml
 export RELEASE = ePixHRM320k

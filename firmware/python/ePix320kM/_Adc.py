@@ -55,4 +55,5 @@ class Adc(pr.Device):
         self.add(adi.Ad9249ConfigGroup(
             name   = 'FastADCsConfig',
             offset = 8*0x0001_0000,
+            enabled= False
         ))

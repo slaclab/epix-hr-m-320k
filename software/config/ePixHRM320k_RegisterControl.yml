@@ -8,24 +8,24 @@ Root:
       RegisterControlDualClock:
         enable: True
         GlblRstPolarityN: True
-        ClkSyncEn: False
+        ClkSyncEn: True
         RoLogicRstN: True
         SyncPolarity: False
-        SyncDelay: 0
-        SyncWidth: 0
+        SyncDelay: 40000
+        SyncWidth: 100
         SR0Polarity: False
-        SR0Delay1: 1000
-        SR0Width1: 16000
+        SR0Delay1: 500
+        SR0Width1: 38000
         ePixAdcSHPeriod: 160
         ePixAdcSHOffset: 80
         AcqPolarity: False
-        AcqDelay1: 5000
-        AcqWidth1: 5000
+        AcqDelay1: 200
+        AcqWidth1: 100
         AcqDelay2: 0
         AcqWidth2: 0
         R0Polarity: False
         R0Delay: 100
-        R0Width: 24800
+        R0Width: 300
         PPbePolarity: False
         PPbeDelay: 0
         PPbeWidth: 0
@@ -45,5 +45,3 @@ Root:
         DebugSel0: AsicDM(0)
         DebugSel1: AsicDM(1)
         StartupReq: True
-        StartupAck: False
-        StartupFail: False
