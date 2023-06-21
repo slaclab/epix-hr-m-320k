@@ -225,10 +225,10 @@ class App(pr.Device):
         #################################################################
 
     def stop_capture(self):
-        self.root.RunControl.runState.set(0)
+        self.root.runControl.runState.set(0)
 
     def start_capture(self):
-        self.root.RunControl.runState.set(1)
+        self.root.runControl.runState.set(1)
 
     """
     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ADC RAMP: START <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -256,7 +256,7 @@ class App(pr.Device):
         dac_step = arg[5]
 
         # stuff to generally enable and set
-        self.Mv2Asic2.enable.set(True) # changing mTest state
+        self.Mv2Asic[2].enable.set(True) # changing mTest state
 
         """
         DAC RAMP STUFF
@@ -302,12 +302,12 @@ class App(pr.Device):
 
     def F_EN_mTest(self, EN_mTest, debug):
         if debug:
-            print('\tmTest = {}'.format(self.Mv2Asic2.mTest.get()))
+            print('\tmTest = {}'.format(self.Mv2Asic[2].mTest.get()))
         # end-if
         # what connects ADC to DacChannel
-        self.Mv2Asic2.mTest.set(EN_mTest)
+        self.Mv2Asic[2].mTest.set(EN_mTest)
         if debug:
-            print('\tmTest = {}\n'.format(self.Mv2Asic2.mTest.get()))
+            print('\tmTest = {}\n'.format(self.Mv2Asic[2].mTest.get()))
         # end-if
 
     def F_EN_DAC_FOR_RAMP(self, EN_DAC):
@@ -342,7 +342,7 @@ class App(pr.Device):
         """
         One time set reg
         """
-        self.Mv2Asic2.test.set(1) # connecting charge injection
+        self.Mv2Asic[2].test.set(1) # connecting charge injection
 
         column_list = [0, 63, 127, 191, 255, 319, 383]
 
@@ -357,31 +357,31 @@ class App(pr.Device):
                 print('lower bound {}'.format(column_list[column]))
                 print('upper bound {}'.format(column_list[column + 1]))
 
-            self.Mv2Asic2.InjEn_ePixM.set(1)
-            self.Mv2Asic2.Pulser.set(int(0))
-            self.root.RunControl.runState.set(0x0)
+            self.Mv2Asic[2].InjEn_ePixM.set(1)
+            self.Mv2Asic[2].Pulser.set(int(0))
+            self.root.runControl.runState.set(0x0)
 
             for pulse_value in range(0, 1023, 2):
                 if debug:
-                    print('previous pulser val: {}'.format(self.Mv2Asic2.Pulser.get()))
+                    print('previous pulser val: {}'.format(self.Mv2Asic[2].Pulser.get()))
 
-                self.Mv2Asic2.Pulser.set(int(pulse_value))
+                self.Mv2Asic[2].Pulser.set(int(pulse_value))
 
                 if debug:
-                    print('set Pulser Value: {}'.format(self.Mv2Asic2.Pulser.get()))
+                    print('set Pulser Value: {}'.format(self.Mv2Asic[2].Pulser.get()))
 
                 # When running with sleep time @ 0.001 vs 0.002[sec] took 106 vs 107[sec]
                 # time dominated by loop bellow
                 for column in lane_selected:
-                    self.Mv2Asic2.InjEn_ePixM.set(int(column))
-                    self.Mv2Asic2.ClkInj_ePixM.set(1)
+                    self.Mv2Asic[2].InjEn_ePixM.set(int(column))
+                    self.Mv2Asic[2].ClkInj_ePixM.set(1)
                     # ff chain advances on falling edge of clock signal
-                    self.Mv2Asic2.ClkInj_ePixM.set(0)
+                    self.Mv2Asic[2].ClkInj_ePixM.set(0)
 
                 self.root.Trigger()
 
         #disabling charge INJECTION
-        self.Mv2Asic2.test.set(0) # connecting charge injection
+        self.Mv2Asic[2].test.set(0) # connecting charge injection
 
         return
 
@@ -396,7 +396,10 @@ class App(pr.Device):
         """
         One time set reg
         """
-        self.Mv2Asic2.test.set(1) # connecting charge injection
+        self.AsicTop.RegisterControlDualClock.SyncDelay.set(0)
+        self.Mv2Asic[2].FE_ACQ2GR_en.set(True)
+        self.Mv2Asic[2].FE_sync2GR_en.set(False)
+        self.Mv2Asic[2].test.set(1) # connecting charge injection
 
         # Hard coding the first adc column group
         lane_selected = np.zeros(384)
@@ -406,31 +409,31 @@ class App(pr.Device):
         if debug:
             print(lane_selected)
 
-        self.Mv2Asic2.InjEn_ePixM.set(1)
-        self.Mv2Asic2.Pulser.set(int(0))
-        self.root.RunControl.runState.set(0x0)
+        self.Mv2Asic[2].InjEn_ePixM.set(1)
+        self.Mv2Asic[2].Pulser.set(int(0))
+        self.root.runControl.runState.set(0x0)
 
-        for pulse_value in range(0, 1023, 2):
+        for pulse_value in range(1, 1023, 2):
             if debug:
-                print('previous pulser val: {}'.format(self.Mv2Asic2.Pulser.get()))
+                print('previous pulser val: {}'.format(self.Mv2Asic[2].Pulser.get()))
 
-            self.Mv2Asic2.Pulser.set(int(pulse_value))
+            self.Mv2Asic[2].Pulser.set(int(pulse_value))
 
             if debug:
-                print('set Pulser Value: {}'.format(self.Mv2Asic2.Pulser.get()))
+                print('set Pulser Value: {}'.format(self.Mv2Asic[2].Pulser.get()))
 
             # When running with sleep time @ 0.001 vs 0.002[sec] took 106 vs 107[sec]
             # time dominated by loop bellow
             for column in lane_selected:
-                self.Mv2Asic2.InjEn_ePixM.set(int(column))
-                self.Mv2Asic2.ClkInj_ePixM.set(1)
+                self.Mv2Asic[2].InjEn_ePixM.set(int(column))
+                self.Mv2Asic[2].ClkInj_ePixM.set(1)
                 # ff chain advances on falling edge of clock signal
-                self.Mv2Asic2.ClkInj_ePixM.set(0)
+                self.Mv2Asic[2].ClkInj_ePixM.set(0)
 
             self.root.Trigger()
 
         #disabling charge INJECTION
-        self.Mv2Asic2.test.set(0) # connecting charge injection
+        self.Mv2Asic[2].test.set(0) # connecting charge injection
 
         return
 
@@ -454,10 +457,10 @@ class App(pr.Device):
             debug = False
 
         # toggeling
-        reg_state = self.Mv2Asic2.FE_sync2GR_en.get()
+        reg_state = self.Mv2Asic[2].FE_sync2GR_en.get()
         print('\tFE_sync2GR_en = {}',format(reg_state))
-        self.Mv2Asic2.FE_sync2GR_en.set(not reg_state) # toggle
-        reg_state = self.Mv2Asic2.FE_sync2GR_en.get()
+        self.Mv2Asic[2].FE_sync2GR_en.set(not reg_state) # toggle
+        reg_state = self.Mv2Asic[2].FE_sync2GR_en.get()
         print('\tFE_sync2GR_en = {}',format(reg_state))
         print('\n')
 
@@ -485,7 +488,7 @@ class App(pr.Device):
 
         # ARE WE RUNNING FROM FIRMWARE OR SOFTWARE TRIG
         print('\tWARNING: Set up trigger before integration')
-        if self.root.RunControl.runState.get():
+        if self.root.runControl.runState.get():
             FIRMWARE_TRIGGERING = False
         else:
             if self.TriggerRegisters.enable.get():
@@ -514,7 +517,7 @@ class App(pr.Device):
             FRAME_TIME = self.TriggerRegisters.AutoTrigPeriod.get() * UNIT_TIME # [ns]
             FRAME_FREQ = 1e9/FRAME_TIME # [Hz]
         else:
-            FRAME_FREQ = self.root.RunControl.runRate.get() # [Hz]
+            FRAME_FREQ = self.root.runControl.runRate.get() # [Hz]
             FRAME_TIME = 1e9 / FRAME_FREQ # [ns]
 
         print(f'\tFrame Freq = {FRAME_FREQ:g}[Hz]')
@@ -634,17 +637,17 @@ class App(pr.Device):
         # end-if
 
         # set pipo-delays
-        self.Mv2Asic2.enable.set(True)
-        self.Mv2Asic2.pipoclk_delay_row0.set(0x7)
-        self.Mv2Asic2.pipoclk_delay_row1.set(0x7)
-        self.Mv2Asic2.pipoclk_delay_row2.set(0x5)
-        self.Mv2Asic2.pipoclk_delay_row3.set(0x3)
+        self.Mv2Asic[2].enable.set(True)
+        self.Mv2Asic[2].pipoclk_delay_row0.set(0x7)
+        self.Mv2Asic[2].pipoclk_delay_row1.set(0x7)
+        self.Mv2Asic[2].pipoclk_delay_row2.set(0x5)
+        self.Mv2Asic[2].pipoclk_delay_row3.set(0x3)
 
         # print SETTING
-        print('PIPO-row0 = {}'.format( self.Mv2Asic2.pipoclk_delay_row0.get() ))
-        print('PIPO-row1 = {}'.format( self.Mv2Asic2.pipoclk_delay_row1.get() ))
-        print('PIPO-row2 = {}'.format( self.Mv2Asic2.pipoclk_delay_row2.get() ))
-        print('PIPO-row3 = {}'.format( self.Mv2Asic2.pipoclk_delay_row3.get() ))
+        print('PIPO-row0 = {}'.format( self.Mv2Asic[2].pipoclk_delay_row0.get() ))
+        print('PIPO-row1 = {}'.format( self.Mv2Asic[2].pipoclk_delay_row1.get() ))
+        print('PIPO-row2 = {}'.format( self.Mv2Asic[2].pipoclk_delay_row2.get() ))
+        print('PIPO-row3 = {}'.format( self.Mv2Asic[2].pipoclk_delay_row3.get() ))
 
     def F_SET_RUN_RATE(self, dev, cmd, arg):
         # INPUT(S):
@@ -731,7 +734,7 @@ class App(pr.Device):
         # NOW SETTING VALUES
         self.TriggerRegisters.AutoTrigPeriod.set(TRG_PRD)
         # startup TriggerRegisters
-        self.root.RunControl.runState.set(0x0) # STOPPED software triggers
+        self.root.runControl.runState.set(0x0) # STOPPED software triggers
         self.TriggerRegisters.AutoDaqEn.set(True)
         self.TriggerRegisters.AutoRunEn.set(True)
         self.TriggerRegisters.DaqTriggerEnable.set(True)

@@ -95,8 +95,8 @@ Root:
       Precharge_DAC_ePixM: 0x20
       FE_CLK_dly: 0x4
       FE_CLK_cnt_en: True
-      FE_ACQ2GR_en: False
-      FE_sync2GR_en: True
+      FE_ACQ2GR_en: True
+      FE_sync2GR_en: False
       FE_ACQ2InjEn: False
       # To disable banks
       #DigRO_disable2: 0xe

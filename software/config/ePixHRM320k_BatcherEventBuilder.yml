@@ -7,14 +7,14 @@ Root:
       enable: True
       BatcherEventBuilder0:
         enable: True
-        Bypass: 0x0
+        Bypass: 0x1
         Timeout: 0x0
-        Blowoff: True
+        Blowoff: False
       BatcherEventBuilder1:
         enable: True
-        Bypass: 0x0
+        Bypass: 0x1
         Timeout: 0x0
-        Blowoff: True
+        Blowoff: False
       BatcherEventBuilder2:
         enable: True
         Bypass: 0x1
@@ -22,6 +22,6 @@ Root:
         Blowoff: False
       BatcherEventBuilder3:
         enable: True
-        Bypass: 0x0
+        Bypass: 0x1
         Timeout: 0x0
-        Blowoff: True
+        Blowoff: False

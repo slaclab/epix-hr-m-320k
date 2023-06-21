@@ -84,3 +84,7 @@ set_clock_groups -asynchronous \
     -group [get_clocks -of_objects [get_pins U_Core/GEN_PGP.U_axilClock/PllGen.U_Pll/CLKOUT0]] \
     -group [get_clocks gtPllClkP0 ] \
     -group [get_clocks gtPllClkP1 ]
+
+set_clock_groups -asynchronous \
+    -group [get_clocks timingEmuRxClk] \
+    -group [get_clocks timingRefClkDiv2]
