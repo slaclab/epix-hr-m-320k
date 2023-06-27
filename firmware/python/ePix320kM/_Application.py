@@ -24,6 +24,40 @@ import surf.protocols.batcher       as batcher
 import l2si_core as l2si
 import pprint
 
+
+class chargeInjection(pr.Process):
+    def __init__(self, sim=False, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add(pr.LocalVariable(
+            name        = 'FirstColumn',
+            description = 'First column index',
+            mode        = 'WO',
+            value       = 0
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'LastColumn',
+            description = 'Last column index',
+            mode        = 'WO',
+            value       = 383
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'ASIC',
+            description = 'Choose ASIC. -1 for all.',
+            mode        = 'WO',
+            value       = -1
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'PulserValue',
+            description = 'Current value of the pulser',
+            mode        = 'RO',
+            value       = 0
+        ))
+
+
 class App(pr.Device):
     def __init__(self, sim=False, **kwargs):
         super().__init__(**kwargs)
@@ -51,7 +85,12 @@ class App(pr.Device):
 
         snEnum = { 0: 'CarrierIDLow', 1: 'CarrierIDHigh', 2: 'PowerAndCommIDLow', 3: 'PowerAndCommIDHigh',
                    4: 'DigIDLow', 5: 'DigIDHigh'}
-        
+
+
+        self.add(chargeInjection(name='TestChargeInjection',
+                                 description="[lower, upper, 'debug']from power 0 to 2^10-1, in steps of 2",
+                                 function=self.fnChargeInjection))
+
         for asicIdx in range(num_of_asics):
             self.add(
                 fpga.EpixMv2Asic(
@@ -207,11 +246,6 @@ class App(pr.Device):
                                  value = [40, 10],
                                  function=self.fnSweepDelaysPrintEyes))
 
-        self.add(pr.LocalCommand(name='TestChargeInjection',
-                                 description="[lower, upper, 'debug']from power 0 to 2^10-1, in steps of 2",
-                                 value = [0, 63, 'debug'],
-                                 function=self.fnChargeInjection))
-
         self.add(pr.LocalCommand(name='TestChargeInjectionStep',
                                  description="Same as the charge injection function but will loop through the full asic",
                                  value = ['debug'],
@@ -332,6 +366,7 @@ class App(pr.Device):
     >>>>>>>>>>>>>>>>>>>>>>>>> CHARGE-INJECTION: START <<<<<<<<<<<<<<<<<<<<<<<<<<
     """
     def fnChargeInjection_stepped(self, dev, cmd, arg):
+        
         # we got a hiden comand
         if 'debug' in arg:
             # print(cmd)
@@ -385,57 +420,64 @@ class App(pr.Device):
 
         return
 
-    def fnChargeInjection(self, dev, cmd, arg):
-        # we got a hiden comand
-        if 'debug' in arg:
-            # print(cmd)
-            debug = True
-        else:
-            debug = False
+    def fnChargeInjection(self, dev):
+        with self.root.updateGroup(.25):
 
-        """
-        One time set reg
-        """
-        self.AsicTop.RegisterControlDualClock.SyncDelay.set(0)
-        self.Mv2Asic[2].FE_ACQ2GR_en.set(True)
-        self.Mv2Asic[2].FE_sync2GR_en.set(False)
-        self.Mv2Asic[2].test.set(1) # connecting charge injection
+            """
+            One time set reg
+            """
+            self.AsicTop.RegisterControlDualClock.SyncDelay.set(0)
+            if (self.TestChargeInjection.ASIC.get() == -1) :
+                startAsic = 0
+                endAsic = 4
+            else :
+                startAsic = self.TestChargeInjection.ASIC.get()
+                endAsic = self.TestChargeInjection.ASIC.get() + 1         
 
-        # Hard coding the first adc column group
-        lane_selected = np.zeros(384)
-        lane_selected[arg[0] : arg[1]] = 1
-        # lane_selected[0:63] = 1
+            for asicIndex in range(startAsic, endAsic, 1) :
+                self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
+                self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
+                self.Mv2Asic[asicIndex].test.set(1) # connecting charge injection
 
-        if debug:
+            # Hard coding the first adc column group
+            lane_selected = np.zeros(384)
+            lane_selected[self.TestChargeInjection.FirstColumn.get() : self.TestChargeInjection.LastColumn.get()] = 1
+            # lane_selected[0:63] = 1
+
             print(lane_selected)
 
-        self.Mv2Asic[2].InjEn_ePixM.set(1)
-        self.Mv2Asic[2].Pulser.set(int(0))
-        self.root.runControl.runState.set(0x0)
+            for asicIndex in range(startAsic, endAsic, 1) :
+                self.Mv2Asic[asicIndex].InjEn_ePixM.set(1)
+                self.Mv2Asic[asicIndex].Pulser.set(int(0))
 
-        for pulse_value in range(1, 1023, 2):
-            if debug:
-                print('previous pulser val: {}'.format(self.Mv2Asic[2].Pulser.get()))
+            self.root.runControl.runState.set(0x0)
 
-            self.Mv2Asic[2].Pulser.set(int(pulse_value))
+            for pulse_value in range(1, 1023, 2):
+                                
+                for asicIndex in range(startAsic, endAsic, 1) :
+                    self.Mv2Asic[asicIndex].Pulser.set(int(pulse_value))
 
-            if debug:
-                print('set Pulser Value: {}'.format(self.Mv2Asic[2].Pulser.get()))
+                self.TestChargeInjection.PulserValue.set(self.Mv2Asic[startAsic].Pulser.get())
 
-            # When running with sleep time @ 0.001 vs 0.002[sec] took 106 vs 107[sec]
-            # time dominated by loop bellow
-            for column in lane_selected:
-                self.Mv2Asic[2].InjEn_ePixM.set(int(column))
-                self.Mv2Asic[2].ClkInj_ePixM.set(1)
-                # ff chain advances on falling edge of clock signal
-                self.Mv2Asic[2].ClkInj_ePixM.set(0)
+                # When running with sleep time @ 0.001 vs 0.002[sec] took 106 vs 107[sec]
+                # time dominated by loop bellow
+                for column in lane_selected:
+                    if self.TestChargeInjection._runEn == False :
+                        return
+                    else :
+                        for asicIndex in range(startAsic, endAsic, 1) :
+                            self.Mv2Asic[asicIndex].InjEn_ePixM.set(int(column))
+                            self.Mv2Asic[asicIndex].ClkInj_ePixM.set(1)
+                            # ff chain advances on falling edge of clock signal
+                            self.Mv2Asic[asicIndex].ClkInj_ePixM.set(0)
 
-            self.root.Trigger()
+                self.root.Trigger()
 
-        #disabling charge INJECTION
-        self.Mv2Asic[2].test.set(0) # connecting charge injection
+            #disabling charge INJECTION
+            for asicIndex in range(startAsic, endAsic, 1) :
+                self.Mv2Asic[asicIndex].test.set(0) # connecting charge injection
 
-        return
+            return
 
     #<<<<<<<<<<<<<<<<<<<<<<<<<< CHARGE-INJECTION: END >>>>>>>>>>>>>>>>>>>>>>>>>#
     """
