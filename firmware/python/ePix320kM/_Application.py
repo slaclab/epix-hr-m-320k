@@ -325,110 +325,120 @@ class App(pr.Device):
                 self.Mv2Asic[asicIndex].test.set(0) # connecting charge injection
 
             return
-
     def fnSweepDelaysPrintEyes(self, dev):
         with self.root.updateGroup(.25):
-
-            sweep_max = 511
-            sweep_cnt = self.TuneManualSERDESEyeTraining.Taps.get()
-            time_per_sweep = float(self.TuneManualSERDESEyeTraining.TimePerSweep.get())/100.0
             if self.TuneManualSERDESEyeTraining.ASIC.get() == -1 :
                 startAsicIndex = 0
                 endAsicIndex   = 4
-                totalTaps = 4 * sweep_cnt * 2
+                self.totalTaps = 4 * self.TuneManualSERDESEyeTraining.Taps.get() * 2
             else : 
                 startAsicIndex = self.TuneManualSERDESEyeTraining.ASIC.get()
                 endAsicIndex   = self.TuneManualSERDESEyeTraining.ASIC.get()+1
-                totalTaps = sweep_cnt * 2
-
-            tapsDone = 0
-            lane_adj_eyes_all = []
+                self.totalTaps = self.TuneManualSERDESEyeTraining.Taps.get() * 2
+            self.tapsDone = 0
+                        
             for asicIndex in range(startAsicIndex, endAsicIndex) :
-                print("Sweeping ASIC {}. Disabling others.".format(asicIndex))
+                print("Sweeping ASIC {}".format(asicIndex))
+                self.fnSweepDelaysPrintEyesSingle(asicIndex)
 
-                for i in range(4) :
-                    if (i == asicIndex) :
-                        getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
-                    else :
-                        getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
+    def fnSweepDelaysPrintEyesSingle(self, asicIndex):
+    
 
-                all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
+        if (self.root.App.PowerControl.DigitalSupplyEn.get() == 0x0) :
+            raise Exception("Power on ASICs not enabled. Did you configure ASICs?")
 
-                self.SspMonGrp[asicIndex].enable.set(1)
-
-                self.stop_capture()
-                idle_lock_array = np.empty(24)
-                for i in range(24):
-                    idle_lock_array[i] = self.SspMonGrp[asicIndex].DlyConfig[i].get()
-
-                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+        sweep_max = 511
+        sweep_cnt = self.TuneManualSERDESEyeTraining.Taps.get()
+        time_per_sweep = float(self.TuneManualSERDESEyeTraining.TimePerSweep.get())/100.0
 
 
-                delay_space = (np.linspace(0,sweep_max,sweep_cnt))
-                #random_space = random.sample(delay_space)
+        lane_adj_eyes_all = []
 
-                idle_results = np.zeros((24,sweep_cnt))
-                for idx, delay in enumerate(delay_space):
-                    if self.TuneManualSERDESEyeTraining._runEn == False :
-                        return                    
-                    self.TuneManualSERDESEyeTraining.Progress.set(tapsDone/totalTaps) 
-                    self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(tapsDone, totalTaps)) 
-                    tapsDone = tapsDone + 1
-                    for lane in range(24):
-                        self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
+        print("Disabling batcher of unused ASICs".format(asicIndex))
 
-                    self.SspMonGrp[asicIndex].CntRst.set(1)
-                    self.start_capture()
-                    self.stop_capture()
-                    time.sleep(time_per_sweep)
-                    self.SspMonGrp[asicIndex].CntRst.set(1)
-                    time.sleep(time_per_sweep)
-                    self.stop_capture()
-
-                    for lane in range(24):
-                        idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
-
-                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x0)
-                time.sleep(1)
-                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
-
-                run_results = np.zeros((24,sweep_cnt))
-                for idx, delay in enumerate(delay_space):
-                    if self.TuneManualSERDESEyeTraining._runEn == False :
-                        return                       
-                    self.TuneManualSERDESEyeTraining.Progress.set(tapsDone/totalTaps) 
-                    self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(tapsDone, totalTaps)) 
-                    tapsDone = tapsDone + 1
-                    for lane in range(24):
-                        self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
-
-                    self.SspMonGrp[asicIndex].CntRst.set(1)
-                    self.start_capture()
-                    time.sleep(time_per_sweep)
-                    self.stop_capture()
-
-                    for lane in range(24):
-                        run_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
-
-                self.stop_capture()
-
-                print('Save to file')
-                np.savetxt('idle_results.csv', idle_results, delimiter=',')
-                np.savetxt('run_results.csv', run_results, delimiter=',')
-                np.savetxt('delay_space.csv', delay_space, delimiter=',')
-                np.savetxt('idle_lock_array.csv', idle_lock_array, delimiter=',')
-                np.savetxt('all_errors.csv', run_results + idle_results, delimiter=',')
-
-                all_errors = run_results + idle_results
-                lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, False)
-                self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
-                print("ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
-
-                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
-
-            # Enabling batchers again
-            for i in range(4) :
+        for i in range(4) :
+            if (i == asicIndex) :
                 getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
+            else :
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
+
+        all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
+
+        self.SspMonGrp[asicIndex].enable.set(1)
+
+        self.stop_capture()
+        idle_lock_array = np.empty(24)
+        for i in range(24):
+            idle_lock_array[i] = self.SspMonGrp[asicIndex].DlyConfig[i].get()
+
+        self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+
+
+        delay_space = (np.linspace(0,sweep_max,sweep_cnt))
+        #random_space = random.sample(delay_space)
+
+        idle_results = np.zeros((24,sweep_cnt))
+        for idx, delay in enumerate(delay_space):
+            if self.TuneManualSERDESEyeTraining._runEn == False :
+                return                    
+            self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
+            self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
+            self.tapsDone = self.tapsDone + 1
+            for lane in range(24):
+                self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
+
+            self.SspMonGrp[asicIndex].CntRst.set(1)
+            self.start_capture()
+            self.stop_capture()
+            time.sleep(time_per_sweep)
+            self.SspMonGrp[asicIndex].CntRst.set(1)
+            time.sleep(time_per_sweep)
+            self.stop_capture()
+
+            for lane in range(24):
+                idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
+
+        self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x0)
+        time.sleep(1)
+        self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+
+        run_results = np.zeros((24,sweep_cnt))
+        for idx, delay in enumerate(delay_space):
+            if self.TuneManualSERDESEyeTraining._runEn == False :
+                return                       
+            self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
+            self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
+            self.tapsDone = self.tapsDone + 1
+            for lane in range(24):
+                self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
+
+            self.SspMonGrp[asicIndex].CntRst.set(1)
+            self.start_capture()
+            time.sleep(time_per_sweep)
+            self.stop_capture()
+
+            for lane in range(24):
+                run_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
+
+        self.stop_capture()
+
+        print('Save to file')
+        np.savetxt('idle_results.csv', idle_results, delimiter=',')
+        np.savetxt('run_results.csv', run_results, delimiter=',')
+        np.savetxt('delay_space.csv', delay_space, delimiter=',')
+        np.savetxt('idle_lock_array.csv', idle_lock_array, delimiter=',')
+        np.savetxt('all_errors.csv', run_results + idle_results, delimiter=',')
+
+        all_errors = run_results + idle_results
+        lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, False)
+        self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
+        print("ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
+
+        self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+
+        # Enabling batchers again
+        for i in range(4) :
+            getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
 
 
     def F_FIND_EYES(self, delay_vec, lane_errors, TROUBLE_SHOOT_FIND_EYES):
