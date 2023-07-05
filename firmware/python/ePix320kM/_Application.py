@@ -57,6 +57,38 @@ class chargeInjection(pr.Process):
             value       = 0
         ))
 
+class SweepDelaysPrintEyes(pr.Process):
+    def __init__(self, sim=False, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add(pr.LocalVariable(
+            name        = 'Taps',
+            description = 'Number of taps to sweep upon',
+            mode        = 'WO',
+            value       = 511
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'TimePerSweep',
+            description = 'Time to wait during sweep ',
+            mode        = 'WO',
+            value       = 40
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'ASIC',
+            description = 'Choose ASIC (0-3). -1 for all.',
+            mode        = 'WO',
+            value       = -1
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'TapsDone',
+            description = 'Taps evaluated',
+            mode        = 'RO',
+            value       = ""
+        ))
+
 
 class App(pr.Device):
     def __init__(self, sim=False, **kwargs):
@@ -90,6 +122,10 @@ class App(pr.Device):
         self.add(chargeInjection(name='TestChargeInjection',
                                  description="[lower, upper, 'debug']from power 0 to 2^10-1, in steps of 2",
                                  function=self.fnChargeInjection))
+
+        self.add(SweepDelaysPrintEyes(name='TuneManualSERDESEyeTraining',
+                                 description='Manual serdes eye training',
+                                 function=self.fnSweepDelaysPrintEyes))
 
         for asicIdx in range(num_of_asics):
             self.add(
@@ -216,10 +252,7 @@ class App(pr.Device):
             self.RunState.set(True) 
 
 
-        self.add(pr.LocalCommand(name='TuneManual_SERDES_Eye_Training',
-                                 description='[N_step,t_sweep] from 0 to 511 number steps waiting t_sweep at each step formally Sweep-Print-Delay eyes still debating if worth using... leaning  heavily no!',
-                                 value = [511, 40, -1],
-                                 function=self.fnSweepDelaysPrintEyes))
+
 
 
 
@@ -293,95 +326,92 @@ class App(pr.Device):
 
             return
 
-    def fnSweepDelaysPrintEyes(self, dev, cmd, arg):
-        if 'debug' in arg:
-            debug = True
-            print('Debugging in function {}'.format(cmd))
+    def fnSweepDelaysPrintEyes(self, dev):
+        with self.root.updateGroup(.25):
 
-        else:
-            debug = False
+            sweep_max = 511
+            sweep_cnt = self.TuneManualSERDESEyeTraining.Taps.get()
+            time_per_sweep = float(self.TuneManualSERDESEyeTraining.TimePerSweep.get())/100.0
+            if self.TuneManualSERDESEyeTraining.ASIC.get() == -1 :
+                startAsicIndex = 0
+                endAsicIndex   = 4
+                totalTaps = 4 * sweep_cnt * 2
+            else : 
+                startAsicIndex = self.TuneManualSERDESEyeTraining.ASIC.get()
+                endAsicIndex   = self.TuneManualSERDESEyeTraining.ASIC.get()+1
+                totalTaps = sweep_cnt * 2
 
-        if arg[0] < 256:
-            print('Sweep Count must be greater than 256')
-            return 1
+            tapsDone = 0
+            lane_adj_eyes_all = []
+            for asicIndex in range(startAsicIndex, endAsicIndex) :
+                print("Sweeping ASIC {}. Disabling others.".format(asicIndex))
 
-        arguments = np.asarray(arg)
-        sweep_max = 511
-        sweep_cnt = arg[0]
-        time_per_sweep = float(arg[1])/100.0
-        if arg[2] == -1 :
-            startAsicIndex = 0
-            endAsicIndex   = 3
+                for i in range(4) :
+                    if (i == asicIndex) :
+                        getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
+                    else :
+                        getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
 
-        else : 
-            startAsicIndex = arg[2]
-            endAsicIndex   = arg[2]+1
-        for asicIndex in range(startAsicIndex, endAsicIndex) :
-            print("Sweeping ASIC {}. Disabling others.".format(asicIndex))
+                all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
 
-            for i in range(4) :
-                if (i == asicIndex) :
-                    getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
-                else :
-                    getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
+                self.SspMonGrp[asicIndex].enable.set(1)
 
-            all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
-
-            self.SspMonGrp[asicIndex].enable.set(1)
-
-            self.stop_capture()
-            idle_lock_array = np.empty(24)
-            for i in range(24):
-                idle_lock_array[i] = self.SspMonGrp[asicIndex].DlyConfig[i].get()
-
-            self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
-
-
-            delay_space = (np.linspace(0,sweep_max,sweep_cnt))
-            #random_space = random.sample(delay_space)
-
-            idle_results = np.zeros((24,sweep_cnt))
-            for idx, delay in enumerate(delay_space):
-                if debug:
-                    print('Idle State')
-                print(f'delay {idx}/{sweep_cnt}')
-                for lane in range(24):
-                    self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
-
-                self.SspMonGrp[asicIndex].CntRst.set(1)
-                self.start_capture()
                 self.stop_capture()
-                time.sleep(time_per_sweep)
-                self.SspMonGrp[asicIndex].CntRst.set(1)
-                time.sleep(time_per_sweep)
+                idle_lock_array = np.empty(24)
+                for i in range(24):
+                    idle_lock_array[i] = self.SspMonGrp[asicIndex].DlyConfig[i].get()
+
+                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+
+
+                delay_space = (np.linspace(0,sweep_max,sweep_cnt))
+                #random_space = random.sample(delay_space)
+
+                idle_results = np.zeros((24,sweep_cnt))
+                for idx, delay in enumerate(delay_space):
+                    if self.TuneManualSERDESEyeTraining._runEn == False :
+                        return                    
+                    self.TuneManualSERDESEyeTraining.Progress.set(tapsDone/totalTaps) 
+                    self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(tapsDone, totalTaps)) 
+                    tapsDone = tapsDone + 1
+                    for lane in range(24):
+                        self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
+
+                    self.SspMonGrp[asicIndex].CntRst.set(1)
+                    self.start_capture()
+                    self.stop_capture()
+                    time.sleep(time_per_sweep)
+                    self.SspMonGrp[asicIndex].CntRst.set(1)
+                    time.sleep(time_per_sweep)
+                    self.stop_capture()
+
+                    for lane in range(24):
+                        idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
+
+                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x0)
+                time.sleep(1)
+                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+
+                run_results = np.zeros((24,sweep_cnt))
+                for idx, delay in enumerate(delay_space):
+                    if self.TuneManualSERDESEyeTraining._runEn == False :
+                        return                       
+                    self.TuneManualSERDESEyeTraining.Progress.set(tapsDone/totalTaps) 
+                    self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(tapsDone, totalTaps)) 
+                    tapsDone = tapsDone + 1
+                    for lane in range(24):
+                        self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
+
+                    self.SspMonGrp[asicIndex].CntRst.set(1)
+                    self.start_capture()
+                    time.sleep(time_per_sweep)
+                    self.stop_capture()
+
+                    for lane in range(24):
+                        run_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
+
                 self.stop_capture()
 
-                for lane in range(24):
-                    idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
-
-            self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x0)
-            time.sleep(1)
-            self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
-
-            run_results = np.zeros((24,sweep_cnt))
-            for idx, delay in enumerate(delay_space):
-                if debug:
-                    print('Running State')
-                print(f'delay {idx}/{sweep_cnt}')
-                for lane in range(24):
-                    self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
-
-                self.SspMonGrp[asicIndex].CntRst.set(1)
-                self.start_capture()
-                time.sleep(time_per_sweep)
-                self.stop_capture()
-
-                for lane in range(24):
-                    run_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
-
-            self.stop_capture()
-
-            if debug:
                 print('Save to file')
                 np.savetxt('idle_results.csv', idle_results, delimiter=',')
                 np.savetxt('run_results.csv', run_results, delimiter=',')
@@ -389,12 +419,17 @@ class App(pr.Device):
                 np.savetxt('idle_lock_array.csv', idle_lock_array, delimiter=',')
                 np.savetxt('all_errors.csv', run_results + idle_results, delimiter=',')
 
-            all_errors = run_results + idle_results
-            print("Before F_FIND_EYES")
-            lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, debug)
-            self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
-            print(lane_adj_eyes)
-            self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+                all_errors = run_results + idle_results
+                lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, False)
+                self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
+                print("ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
+
+                self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
+
+            # Enabling batchers again
+            for i in range(4) :
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
+
 
     def F_FIND_EYES(self, delay_vec, lane_errors, TROUBLE_SHOOT_FIND_EYES):
         num_of_lanes,num_of_delay_steps = lane_errors.shape
