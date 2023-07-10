@@ -340,6 +340,7 @@ class App(pr.Device):
             for asicIndex in range(startAsicIndex, endAsicIndex) :
                 print("Sweeping ASIC {}".format(asicIndex))
                 self.fnSweepDelaysPrintEyesSingle(asicIndex)
+            
 
     def fnSweepDelaysPrintEyesSingle(self, asicIndex):
     
@@ -381,9 +382,7 @@ class App(pr.Device):
         for idx, delay in enumerate(delay_space):
             if self.TuneManualSERDESEyeTraining._runEn == False :
                 return                    
-            self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
-            self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
-            self.tapsDone = self.tapsDone + 1
+
             for lane in range(24):
                 self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
 
@@ -398,6 +397,10 @@ class App(pr.Device):
             for lane in range(24):
                 idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
 
+            self.tapsDone = self.tapsDone + 1
+            self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
+            self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
+
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x0)
         time.sleep(1)
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
@@ -406,9 +409,7 @@ class App(pr.Device):
         for idx, delay in enumerate(delay_space):
             if self.TuneManualSERDESEyeTraining._runEn == False :
                 return                       
-            self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
-            self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
-            self.tapsDone = self.tapsDone + 1
+
             for lane in range(24):
                 self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
 
@@ -419,6 +420,11 @@ class App(pr.Device):
 
             for lane in range(24):
                 run_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
+
+
+            self.tapsDone = self.tapsDone + 1
+            self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
+            self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
 
         self.stop_capture()
 
