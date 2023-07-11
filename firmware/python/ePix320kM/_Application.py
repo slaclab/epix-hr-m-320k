@@ -65,7 +65,7 @@ class SweepDelaysPrintEyes(pr.Process):
             name        = 'Taps',
             description = 'Number of taps to sweep upon',
             mode        = 'WO',
-            value       = 511
+            value       = 512
         ))
 
         self.add(pr.LocalVariable(
