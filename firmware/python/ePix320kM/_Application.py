@@ -281,6 +281,8 @@ class App(pr.Device):
                 endAsic = self.TestChargeInjection.ASIC.get() + 1         
 
             for asicIndex in range(startAsic, endAsic, 1) :
+                print("Enabling ASIC {}".format(asicIndex))
+                self.Mv2Asic[asicIndex].enable.set(True)
                 self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
                 self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
                 self.Mv2Asic[asicIndex].test.set(1) # connecting charge injection
@@ -304,12 +306,12 @@ class App(pr.Device):
                 for asicIndex in range(startAsic, endAsic, 1) :
                     self.Mv2Asic[asicIndex].Pulser.set(int(pulse_value))
 
-                self.TestChargeInjection.PulserValue.set(self.Mv2Asic[startAsic].Pulser.get())
+                self.TestChargeInjection.PulserValue.set(self.Mv2Asic[asicIndex].Pulser.get())
 
-                # When running with sleep time @ 0.001 vs 0.002[sec] took 106 vs 107[sec]
-                # time dominated by loop bellow
                 for column in lane_selected:
                     if self.TestChargeInjection._runEn == False :
+                        for asicIndex in range(startAsic, endAsic, 1) :
+                            self.Mv2Asic[asicIndex].test.set(0)                        
                         return
                     else :
                         for asicIndex in range(startAsic, endAsic, 1) :
@@ -322,9 +324,10 @@ class App(pr.Device):
 
             #disabling charge INJECTION
             for asicIndex in range(startAsic, endAsic, 1) :
-                self.Mv2Asic[asicIndex].test.set(0) # connecting charge injection
+                self.Mv2Asic[asicIndex].test.set(0)
 
-            return
+        return
+        
     def fnSweepDelaysPrintEyes(self, dev):
         with self.root.updateGroup(.25):
             if self.TuneManualSERDESEyeTraining.ASIC.get() == -1 :
@@ -339,10 +342,10 @@ class App(pr.Device):
                         
             for asicIndex in range(startAsicIndex, endAsicIndex) :
                 print("Sweeping ASIC {}".format(asicIndex))
-                self.fnSweepDelaysPrintEyesSingle(asicIndex)
+                self.fnSweepDelaysPrintEyes(asicIndex)
             
 
-    def fnSweepDelaysPrintEyesSingle(self, asicIndex):
+    def fnSweepDelaysPrintEye(self, asicIndex):
     
 
         if (self.root.App.PowerControl.DigitalSupplyEn.get() == 0x0) :
