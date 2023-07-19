@@ -86,8 +86,8 @@ set_property -dict {PACKAGE_PIN AM27} [get_ports {asicDataM[3][1]}]
 set_property -dict {PACKAGE_PIN AH26} [get_ports {asicDataP[3][0]}]
 set_property -dict {PACKAGE_PIN AJ26} [get_ports {asicDataM[3][0]}]
 
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataP[3][*]}]
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataM[3][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataP[3][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataM[3][*]}]
 
 ##########################
 ##	Bank 70
@@ -141,8 +141,8 @@ set_property -dict {PACKAGE_PIN AF28} [get_ports {asicDataM[2][1]}]
 set_property -dict {PACKAGE_PIN AE27} [get_ports {asicDataP[2][0]}]
 set_property -dict {PACKAGE_PIN AF27} [get_ports {asicDataM[2][0]}]
 
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataP[2][*]}]
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataM[2][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataP[2][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataM[2][*]}]
 
 
 ##########################
@@ -234,8 +234,8 @@ set_property -dict {PACKAGE_PIN B27} [get_ports {asicDataM[1][1]}]
 set_property -dict {PACKAGE_PIN F27} [get_ports {asicDataP[1][0]}]
 set_property -dict {PACKAGE_PIN E27} [get_ports {asicDataM[1][0]}]
 
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataP[1][*]}]
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataM[1][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataP[1][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataM[1][*]}]
 
 
 ##########################
@@ -290,8 +290,8 @@ set_property -dict {PACKAGE_PIN AG20} [get_ports {asicDataM[0][1]}]
 set_property -dict {PACKAGE_PIN AD21} [get_ports {asicDataP[0][0]}]
 set_property -dict {PACKAGE_PIN AE21} [get_ports {asicDataM[0][0]}]
 
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataP[0][*]}]
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataM[0][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataP[0][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataM[0][*]}]
 
 
 

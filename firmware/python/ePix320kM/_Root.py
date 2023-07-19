@@ -206,7 +206,7 @@ class Root(pr.Root):
             self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
             self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
             self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_DESER_250MHz.yml"
+            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
             self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
             self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"
         if arguments[0] == 2:
@@ -214,7 +214,7 @@ class Root(pr.Root):
             self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
             self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
             self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_DESER_250MHz.yml"
+            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
             self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
             self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"     
         if arguments[0] == 3:
@@ -222,7 +222,7 @@ class Root(pr.Root):
             self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
             self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
             self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_DESER_250MHz.yml"
+            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
             self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
             self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"                     
         if arguments[0] != 0:
@@ -253,6 +253,11 @@ class Root(pr.Root):
         print("Loading {}".format(self.filenamePowerSupply))
         time.sleep(delay) 
 
+        # load batcher
+        print("Loading lane delay configurations")
+        self.root.LoadConfig(self.filenameDESER)
+        print("Loading {}".format(self.filenameDESER))
+        time.sleep(delay)  
 
         # load config that sets waveforms
         print("Loading waveforms configuration")

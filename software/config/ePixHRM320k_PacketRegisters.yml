@@ -10,21 +10,21 @@ Root:
         asicDataReq: 3071
         DisableLane: 0x0
         #DisableLane: 0x0 # carrier 2
-        #DisableLane: 0x1002 # carrier 3
+        DisableLane: 0x0 # carrier 3
         EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters1:
         enable: True
         asicDataReq: 3071
         #DisableLane: 0x9 # carrier 2
-        #DisableLane: 0x100001 # carrier 3
-        DisableLane: 0x0
+        DisableLane: 0x100001 # carrier 3
+        #DisableLane: 0x0
         EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters2:
         enable: True
         asicDataReq: 3071
         #DisableLane: 0xc11110 # carrier 2
-        #DisableLane: 0xc90000 # carrier 3
-        DisableLane: 0xc0
+        DisableLane: 0xc90000 # carrier 3
+        #DisableLane: 0xc0
         EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters3:
         enable: True

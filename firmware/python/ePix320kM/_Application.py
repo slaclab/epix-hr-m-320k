@@ -340,9 +340,9 @@ class App(pr.Device):
                 self.totalTaps = self.TuneManualSERDESEyeTraining.Taps.get() * 2
             self.tapsDone = 0
                         
-            for asicIndex in range(startAsicIndex, endAsicIndex) :
+            for asicIndex in range(startAsicIndex, endAsicIndex, 1) :
                 print("Sweeping ASIC {}".format(asicIndex))
-                self.fnSweepDelaysPrintEyes(asicIndex)
+                self.fnSweepDelaysPrintEye(asicIndex)
             
 
     def fnSweepDelaysPrintEye(self, asicIndex):
@@ -358,12 +358,14 @@ class App(pr.Device):
 
         lane_adj_eyes_all = []
 
-        print("Disabling batcher of unused ASICs".format(asicIndex))
+        print(" Disabling batcher of unused ASICs".format(asicIndex))
 
         for i in range(4) :
             if (i == asicIndex) :
+                print("Enabling batcher {}".format(i))
                 getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
             else :
+                print("Disabling batcher {}".format(i))
                 getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
 
         all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
@@ -372,20 +374,22 @@ class App(pr.Device):
 
         self.stop_capture()
         idle_lock_array = np.empty(24)
+
+        # store automatic delay in idle_lock_array
         for i in range(24):
             idle_lock_array[i] = self.SspMonGrp[asicIndex].DlyConfig[i].get()
 
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
 
-
+        # generate a list of delays based on sweep_cnt start 0 end 511.
         delay_space = (np.linspace(0,sweep_max,sweep_cnt))
-        #random_space = random.sample(delay_space)
-
+        
         idle_results = np.zeros((24,sweep_cnt))
         for idx, delay in enumerate(delay_space):
             if self.TuneManualSERDESEyeTraining._runEn == False :
                 return                    
 
+            # try all delays
             for lane in range(24):
                 self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
 
@@ -397,6 +401,7 @@ class App(pr.Device):
             time.sleep(time_per_sweep)
             self.stop_capture()
 
+            # get Error det cnt for each lane @delay
             for lane in range(24):
                 idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
 
@@ -404,10 +409,14 @@ class App(pr.Device):
             self.TuneManualSERDESEyeTraining.Progress.set(self.tapsDone/self.totalTaps) 
             self.TuneManualSERDESEyeTraining.TapsDone.set("{}/{}".format(self.tapsDone, self.totalTaps)) 
 
+        # reset set delays
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x0)
         time.sleep(1)
+
+        # enable manual delay again
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
 
+        # get delay results when sending images
         run_results = np.zeros((24,sweep_cnt))
         for idx, delay in enumerate(delay_space):
             if self.TuneManualSERDESEyeTraining._runEn == False :
@@ -432,16 +441,16 @@ class App(pr.Device):
         self.stop_capture()
 
         print('Save to file')
-        np.savetxt('idle_results.csv', idle_results, delimiter=',')
-        np.savetxt('run_results.csv', run_results, delimiter=',')
-        np.savetxt('delay_space.csv', delay_space, delimiter=',')
-        np.savetxt('idle_lock_array.csv', idle_lock_array, delimiter=',')
-        np.savetxt('all_errors.csv', run_results + idle_results, delimiter=',')
+        np.savetxt('idle_results{}.csv'.format(asicIndex), idle_results, delimiter=',')
+        np.savetxt('run_results{}.csv'.format(asicIndex), run_results, delimiter=',')
+        np.savetxt('delay_space{}.csv'.format(asicIndex), delay_space, delimiter=',')
+        np.savetxt('idle_lock_array{}.csv'.format(asicIndex), idle_lock_array, delimiter=',')
+        np.savetxt('all_errors{}.csv'.format(asicIndex), run_results + idle_results, delimiter=',')
 
         all_errors = run_results + idle_results
         lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, False)
         self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
-        print("ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
+        print(" ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
 
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
 
