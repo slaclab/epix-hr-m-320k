@@ -27,7 +27,7 @@ import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
 from ePixViewer.software.deviceFiles import ePixHrMv2
 
-rogue.Version.minVersion('5.15.3')
+rogue.Version.minVersion('5.14.0')
 
 
 class Root(pr.Root):
@@ -135,8 +135,8 @@ class Root(pr.Root):
                                     cmd=self.Trigger,
                                     rates={1: '1 Hz', 2: '2 Hz', 4: '4 Hz', 8: '8 Hz', 10: '10 Hz', 30: '30 Hz', 60: '60 Hz', 120: '120 Hz'}))
         # Connect dataStream to data writer
-        for lane in range(numOfAsics):
-            self.dataStream[lane] >> self.dataWriter.getChannel(lane)
+        for asicIndex in range(numOfAsics):
+            self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
 
         # Check if not VCS simulation
         if (not self.sim):
