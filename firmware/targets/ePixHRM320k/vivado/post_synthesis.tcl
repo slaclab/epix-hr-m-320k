@@ -47,7 +47,10 @@ SetDebugCoreClk ${ilaName} {U_Core/GEN_PGP.U_axilClock/clkOut[0]}
 # #######################
 # ## Set the debug Probes
 #######################
-ConfigProbe ${ilaName} {U_Core/mAxilReadMaster[arvalid]}
+#ConfigProbe ${ilaName} {U_App/U_AsicTop/U_RegCtrl/G_DS2411[0].U_DS2411_N/iFdSerDin}
+#ConfigProbe ${ilaName} {U_App/U_AsicTop/U_RegCtrl/G_DS2411[1].U_DS2411_N/iFdSerDin}
+#ConfigProbe ${ilaName} {U_App/U_AsicTop/U_RegCtrl/G_DS2411[2].U_DS2411_N/iFdSerDin}
+
 ConfigProbe ${ilaName} {U_Core/mAxilReadMaster[rready]}
 ConfigProbe ${ilaName} {U_Core/mAxilReadMaster[araddr][*]}
 
