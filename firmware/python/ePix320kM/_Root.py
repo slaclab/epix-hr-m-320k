@@ -25,12 +25,40 @@ import subprocess
 
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
+
 from ePixViewer.software.deviceFiles import ePixHrMv2
 
 rogue.Version.minVersion('5.14.0')
 
+class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
+
+    def __init__(self, **kwargs):
+        ePixHrMv2.DataReceiverEpixHrMv2.__init__(self, **kwargs)
+        self.dataAcc = np.zeros((192,384,0), dtype='int32')
+        self.enable = False
+
+
+    def process(self,frame):
+        if (self.enable == False) :
+            return
+        ePixHrMv2.DataReceiverEpixHrMv2.process(self,frame)
+        self.dataAcc = np.dstack((self.dataAcc, np.intc(self.Data.get())))
+
+    def cleanData(self):
+        self.dataAcc = np.zeros((192,384,0), dtype='int32')
+
+    def getData(self):
+        return self.dataAcc      
+
+    def enableFullRateDataReceiver(self):
+        print()
+        self.enable = True 
+
+    def disableFullRateDataReceiver(self):
+        self.enable = False 
+
 #############################################
-# Debug console printout
+# Descramble class
 #############################################
 class DataDebug(rogue.interfaces.stream.Slave):
 
@@ -127,10 +155,10 @@ class DataDebug(rogue.interfaces.stream.Slave):
     def getData(self):
         return self.data      
 
-    def enableAcq(self):
+    def enableDataDebug(self):
         self.enable = True 
 
-    def disableAcq(self):
+    def disableDataDebug(self):
         self.enable = False 
 
 class Root(pr.Root):
@@ -171,7 +199,9 @@ class Root(pr.Root):
         self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(numOfAsics)]
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
         self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
+        self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
         self._dbg          = [DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(numOfAsics)]
+
         # Check if not VCS simulation
         if (not self.sim):
 
@@ -242,7 +272,9 @@ class Root(pr.Root):
         # Connect dataStream to data writer
         for asicIndex in range(numOfAsics):
             self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
-            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
+            self.add(fullRateDataReceiver(name = f"fullRateDataReceiver[{asicIndex}]"))
+            self.dataStream[asicIndex] >> self.streamUnbatchersDbg[asicIndex] >> self._dbg[asicIndex]
+            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
         # Check if not VCS simulation
         if (not self.sim):
