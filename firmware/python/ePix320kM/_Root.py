@@ -35,12 +35,9 @@ class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
     def __init__(self, **kwargs):
         ePixHrMv2.DataReceiverEpixHrMv2.__init__(self, **kwargs)
         self.dataAcc = np.zeros((192,384,0), dtype='int32')
-        self.enable = False
 
 
     def process(self,frame):
-        if (self.enable == False) :
-            return
         ePixHrMv2.DataReceiverEpixHrMv2.process(self,frame)
         self.dataAcc = np.dstack((self.dataAcc, np.intc(self.Data.get())))
 
@@ -50,12 +47,6 @@ class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
     def getData(self):
         return self.dataAcc      
 
-    def enableFullRateDataReceiver(self):
-        print()
-        self.enable = True 
-
-    def disableFullRateDataReceiver(self):
-        self.enable = False 
 
 #############################################
 # Descramble class
