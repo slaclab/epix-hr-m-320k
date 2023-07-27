@@ -189,6 +189,7 @@ class Root(pr.Root):
         self._cmd          = [None]
         self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(numOfAsics)]
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
+        self.writerUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
         self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
         self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
         self._dbg          = [DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(numOfAsics)]
@@ -262,7 +263,7 @@ class Root(pr.Root):
                                     rates={1: '1 Hz', 2: '2 Hz', 4: '4 Hz', 8: '8 Hz', 10: '10 Hz', 30: '30 Hz', 60: '60 Hz', 120: '120 Hz'}))
         # Connect dataStream to data writer
         for asicIndex in range(numOfAsics):
-            self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
+            self.dataStream[asicIndex] >> self.writerUnbatchers[asicIndex] >> self.dataWriter.getChannel(asicIndex)
             self.add(fullRateDataReceiver(name = f"fullRateDataReceiver[{asicIndex}]"))
             self.dataStream[asicIndex] >> self.streamUnbatchersDbg[asicIndex] >> self._dbg[asicIndex]
             self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
