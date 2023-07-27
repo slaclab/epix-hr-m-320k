@@ -29,6 +29,109 @@ from ePixViewer.software.deviceFiles import ePixHrMv2
 
 rogue.Version.minVersion('5.14.0')
 
+#############################################
+# Debug console printout
+#############################################
+class DataDebug(rogue.interfaces.stream.Slave):
+
+    def __init__(self, name):
+        rogue.interfaces.stream.Slave.__init__(self)
+
+        self.channelData = [[] for _ in range(8)]
+        self.name = name
+        self.data = np.zeros((192,384,0), dtype='uint16')
+        self.enable = False
+        self.framePixelRow = 192
+        self.framePixelColumn = 384
+        pixelsPerLanesRows = 48
+        pixelsPerLanesColumns = 64
+        evenRow = np.transpose([np.array([*range(0, pixelsPerLanesRows, 2)])])
+        oddRow = np.transpose([np.array([*range(1, pixelsPerLanesRows, 2)])])
+        duopleRow = np.concatenate((evenRow, oddRow), 0)
+
+        evenColumn = np.array([*range(0, pixelsPerLanesColumns, 2)])
+        oddColumn = np.array([*range(1, pixelsPerLanesColumns, 2)])
+        duopleColumn = np.concatenate((evenColumn, oddColumn), 0)
+
+        quadColumnMatrix = np.ones((pixelsPerLanesRows, 1)) * duopleColumn
+        quadRowMatrix =  duopleRow * np.ones((1, pixelsPerLanesColumns))
+        row_list= [*range(0, self.framePixelRow, pixelsPerLanesRows)]
+        column_list = [*range(0, self.framePixelColumn, pixelsPerLanesColumns)]
+        self.imgDescCol = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
+        self.imgDescRow = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
+        # 
+
+        def laneMap(colMatrix, rowMatrix, currLaneColumn, currLaneRow):
+            colMatRet = colMatrix + (currLaneColumn * pixelsPerLanesColumns)
+            rowMatRet = rowMatrix + (currLaneRow * pixelsPerLanesRows)
+            return colMatRet.astype(int), rowMatRet.astype(int)
+
+        for i in column_list:
+            column0 = i
+            columnF = pixelsPerLanesColumns + i
+            for j in row_list:
+                row0 = j
+                rowF = pixelsPerLanesRows + j
+                self.imgDescCol[row0: rowF, column0: columnF], self.imgDescRow[row0: rowF, column0: columnF] = laneMap(quadColumnMatrix, quadRowMatrix, column_list.index(i), row_list.index(j))
+    
+
+    def descramble(self, frame):
+        rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
+        current_frame_temp = np.zeros((192, 384), dtype=int)
+        """performs the EpixMv2 image descrambling """
+        if (len(rawData)==73752):
+             if (type(rawData != 'numpy.ndarray')):
+                img = np.frombuffer(rawData,dtype='uint16')
+             quadrant0 = np.frombuffer(rawData[24:73752],dtype='uint16')
+             adcImg = quadrant0.reshape(-1,24)
+             quadrant = [bytearray(),bytearray(),bytearray(),bytearray()]
+
+             for i in range(4):
+                quadrant[i] = np.concatenate((adcImg[:,0+i].reshape(-1,64),
+                                              adcImg[:,4+i].reshape(-1,64),
+                                              adcImg[:,8+i].reshape(-1,64),
+                                              adcImg[:,12+i].reshape(-1,64),
+                                              adcImg[:,16+i].reshape(-1,64), 
+                                              adcImg[:,20+i].reshape(-1,64)),1)
+
+             imgDesc = np.concatenate((quadrant[0], quadrant[1]),0)
+             imgDesc = np.concatenate((imgDesc, quadrant[2]),0)
+             imgDesc = np.concatenate((imgDesc, quadrant[3]),0)
+        else:
+            print("{}: descramble error".format(self.name))
+            print('rawData length {}'.format(len(rawData)))
+            imgDesc = np.zeros((192,384), dtype='uint16')
+
+        
+        current_frame_temp[self.imgDescRow, self.imgDescCol] = imgDesc
+        # returns final image
+        #return np.bitwise_and(current_frame_temp, self.PixelBitMask.get())
+        return current_frame_temp
+        
+    def _acceptFrame(self, frame):
+
+        if (self.enable == False) :
+            return
+        
+        channel = frame.getChannel()
+
+        frameSize = frame.getPayload()
+        ba = bytearray(frameSize)
+        frame.read(ba, 0)
+        self.data = np.dstack((self.data, self.descramble(frame)))
+        
+
+    def cleanData(self):
+        self.data = np.zeros((192,384,0), dtype='uint16')
+
+    def getData(self):
+        return self.data      
+
+    def enableAcq(self):
+        self.enable = True 
+
+    def disableAcq(self):
+        self.enable = False 
 
 class Root(pr.Root):
     def __init__(   self,
@@ -67,6 +170,8 @@ class Root(pr.Root):
         self._cmd          = [None]
         self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(numOfAsics)]
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
+        self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
+        self._dbg          = [DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(numOfAsics)]
         # Check if not VCS simulation
         if (not self.sim):
 
@@ -137,6 +242,7 @@ class Root(pr.Root):
         # Connect dataStream to data writer
         for asicIndex in range(numOfAsics):
             self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
+            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
 
         # Check if not VCS simulation
         if (not self.sim):
