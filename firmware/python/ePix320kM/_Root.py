@@ -33,16 +33,11 @@ rogue.Version.minVersion('5.14.0')
 class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
 
     def __init__(self, **kwargs):
-        ePixHrMv2.DataReceiverEpixHrMv2.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.dataAcc = np.zeros((192,384,0), dtype='int32')
 
-    def _finishInit(self) :
-        ePixHrMv2.DataReceiverEpixHrMv2._finishInit(self)
-        self.RxEnable.set(False)
-        print("Hello from overloaded _finishInit!!!!!!!!!!!!!!!")
-
     def process(self,frame):
-        ePixHrMv2.DataReceiverEpixHrMv2.process(self,frame)
+        super().process(frame)
         self.dataAcc = np.dstack((self.dataAcc, np.intc(self.Data.get())))
 
     def cleanData(self):
@@ -172,7 +167,7 @@ class Root(pr.Root):
 
         self.top_level = top_level
         
-        numOfAsics = 4
+        self.numOfAsics = 4
         
         if (self.sim):
             # Set the timeout
@@ -187,16 +182,16 @@ class Root(pr.Root):
         #################################################################
 
         # Create an empty list to be filled
-        self.dataStream    = [None for i in range(numOfAsics)]
+        self.dataStream    = [None for i in range(self.numOfAsics)]
         self.adcMonStream  = [None for i in range(4)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
-        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(numOfAsics)]
-        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
-        self.writerUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
-        self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
-        self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
-        self._dbg          = [DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(numOfAsics)]
+        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(self.numOfAsics)]
+        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self.writerUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self._dbg          = [DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
 
         # Check if not VCS simulation
         if (not self.sim):
@@ -206,7 +201,7 @@ class Root(pr.Root):
             self._initRead = initRead
 
             # # Map the DMA streams
-            for lane in range(numOfAsics):
+            for lane in range(self.numOfAsics):
                 self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
             
             self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
@@ -241,7 +236,7 @@ class Root(pr.Root):
             # 2 TCP ports per stream
             self.srp = rogue.interfaces.memory.TcpClient('localhost', 24000)
 
-            for lane in range(numOfAsics):
+            for lane in range(self.numOfAsics):
                 # 2 TCP ports per stream
                 self.dataStream[lane] = rogue.interfaces.stream.TcpClient('localhost', 24002 + 2 * lane)
 
@@ -266,7 +261,7 @@ class Root(pr.Root):
                                     cmd=self.Trigger,
                                     rates={1: '1 Hz', 2: '2 Hz', 4: '4 Hz', 8: '8 Hz', 10: '10 Hz', 30: '30 Hz', 60: '60 Hz', 120: '120 Hz'}))
         # Connect dataStream to data writer
-        for asicIndex in range(numOfAsics):
+        for asicIndex in range(self.numOfAsics):
             self.dataStream[asicIndex] >> self.writerUnbatchers[asicIndex] >> self.dataWriter.getChannel(asicIndex)
             self.add(fullRateDataReceiver(
                 name = f"fullRateDataReceiver[{asicIndex}]"
@@ -280,7 +275,7 @@ class Root(pr.Root):
                 self.adcMonStream[vc] >> self.dataWriter.getChannel(vc + 8)
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
 
-        for lane in range(numOfAsics):
+        for lane in range(self.numOfAsics):
             self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
             self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
 
@@ -330,7 +325,10 @@ class Root(pr.Root):
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
-
+        for asicIndex in range(self.numOfAsics):    
+            getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
+        for asicIndex in range(self.numOfAsics):    
+            getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
 
     def fnInitAsic(self, dev,cmd,arg):
