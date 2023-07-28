@@ -36,6 +36,10 @@ class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
         ePixHrMv2.DataReceiverEpixHrMv2.__init__(self, **kwargs)
         self.dataAcc = np.zeros((192,384,0), dtype='int32')
 
+    def _finishInit(self) :
+        ePixHrMv2.DataReceiverEpixHrMv2._finishInit(self)
+        self.RxEnable.set(False)
+        print("Hello from overloaded _finishInit!!!!!!!!!!!!!!!")
 
     def process(self,frame):
         ePixHrMv2.DataReceiverEpixHrMv2.process(self,frame)
@@ -264,7 +268,9 @@ class Root(pr.Root):
         # Connect dataStream to data writer
         for asicIndex in range(numOfAsics):
             self.dataStream[asicIndex] >> self.writerUnbatchers[asicIndex] >> self.dataWriter.getChannel(asicIndex)
-            self.add(fullRateDataReceiver(name = f"fullRateDataReceiver[{asicIndex}]"))
+            self.add(fullRateDataReceiver(
+                name = f"fullRateDataReceiver[{asicIndex}]"
+                ))
             self.dataStream[asicIndex] >> self.streamUnbatchersDbg[asicIndex] >> self._dbg[asicIndex]
             self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
