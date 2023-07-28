@@ -172,11 +172,11 @@ class Root(pr.Root):
         
         if (self.sim):
             # Set the timeout
-            kwargs['timeout'] = 5.0 # firmware simulation slow and timeout base on real time (not simulation time)
+            kwargs['timeout'] = 10.0 # firmware simulation slow and timeout base on real time (not simulation time)
 
         else:
             # Set the timeout
-            kwargs['timeout'] = 1.0 # 5.0 seconds default
+            kwargs['timeout'] = 10.0 # 5.0 seconds default
 
         super().__init__(**kwargs)
 
