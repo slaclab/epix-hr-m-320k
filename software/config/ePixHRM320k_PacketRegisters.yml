@@ -31,5 +31,5 @@ Root:
         asicDataReq: 3071
         #DisableLane: 0x1000 # carrier 2
         #DisableLane: 0x0 # carrier 3
-        DisableLane: 0x010000
+        DisableLane: 0x0
         EnumerateDisLane: 0xffffff
