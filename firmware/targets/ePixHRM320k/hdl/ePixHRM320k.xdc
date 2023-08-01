@@ -290,8 +290,8 @@ set_property -dict {PACKAGE_PIN AG20} [get_ports {asicDataM[0][1]}]
 set_property -dict {PACKAGE_PIN AD21} [get_ports {asicDataP[0][0]}]
 set_property -dict {PACKAGE_PIN AE21} [get_ports {asicDataM[0][0]}]
 
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataP[0][*]}]
-set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL0} [get_ports {asicDataM[0][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataP[0][*]}]
+set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZATION EQ_LEVEL1} [get_ports {asicDataM[0][*]}]
 
 
 
