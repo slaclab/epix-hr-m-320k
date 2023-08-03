@@ -330,7 +330,99 @@ class Root(pr.Root):
         for asicIndex in range(self.numOfAsics):    
             getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
+    def enableAllAsics(self, enable) :
+        for batcherIndex in range(self.numOfAsics) :
+            self.enableAsic(batcherIndex, enable)
 
+    def enableAsic(self, batcherIndex, enable) :
+        getattr(self.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(not enable)
+
+    def disableAndCleanAllFullRateDataRcv(self) :
+        for asicIndex in range(self.numOfAsics) :
+            self.fullRateDataReceiver[asicIndex].cleanData()
+            self.fullRateDataReceiver[asicIndex].RxEnable.set(False)
+
+    def enableFullRateDataRcv(self, index, enable) :
+        self.fullRateDataReceiver[index].RxEnable.set(enable)
+
+    def enableDataRcv(self, enable) :
+        for asicIndex in range(self.numOfAsics) :
+            getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(enable)
+
+    def hwTrigger(self, frames, rate) :
+        # precaution in case someone stops the acquire function in the middle
+        self.App.AsicTop.TriggerRegisters.StopTriggers() 
+        
+        self.App.AsicTop.TriggerRegisters.AcqCountReset()
+        self.App.AsicTop.TriggerRegisters.SetAutoTrigger(rate)
+        self.App.AsicTop.TriggerRegisters.numberTrigger.set(frames)
+        self.App.AsicTop.TriggerRegisters.StartAutoTrigger()
+        
+        # Wait for the file write to write the 10 waveforms
+        while (self.App.AsicTop.TriggerRegisters.AcqCount.get() != frames) :
+            print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()) , end='\r')
+            time.sleep(0.1)
+        print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()))
+        
+        # stops triggers
+        self.App.AsicTop.TriggerRegisters.StopTriggers()  
+        
+    def enableFullRateDataRcv(self, index, enable) :
+        self.fullRateDataReceiver[index].RxEnable.set(enable)
+
+    def getLaneLocks(self) :
+        for asicIndex in range(self.numOfAsics) : 
+            self.App.SspMonGrp[asicIndex].enable.set(True)
+            print("ASIC{}: {:#x}".format(asicIndex, self.App.SspMonGrp[asicIndex].Locked.get()))
+
+    #check current frames in receivers
+    def printDataReceiverStatus(self) :
+        for asicIndex in range(self.numOfAsics):
+            print("Checkpoint: DataReceiver {} has {} frames".format(asicIndex, getattr(self, f"DataReceiver{asicIndex}").FrameCount.get()))        
+
+    def acquireToFile(self, filename, frames, rate) :
+        if os.path.isfile(f'{filename}'):
+            os.remove(f'{filename}')    
+        print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, frames, rate))
+
+        # Setup and open the file writer
+        writer = self.dataWriter._writer
+        self.dataWriter.DataFile.set("test.dat")
+
+        self.dataWriter._open()
+
+        # Wait for the file write to open the file
+        while( writer.isOpen() is False):
+            time.sleep(0.1)
+
+        # Wait a little bit for the file to open up
+        time.sleep(1.0)    
+
+        #sets TriggerRegisters
+        self.hwTrigger(frames, rate)
+
+        writerFrameCount = writer.getFrameCount()
+        for i in range(20):
+            if (writerFrameCount == frames) :
+                break
+            time.sleep(1)
+            writerFrameCount = writer.getFrameCount()
+            print("Received {} frames...".format(writerFrameCount) , end='\r')
+
+            
+        print("\n waiting for file to close...")
+        
+        # Close the file writer
+        writer.close()
+        
+        # Wait for the file write to close the file
+        while( writer.isOpen() is True):
+            time.sleep(0.1)
+
+        # Print the status
+        print( f'Total triggers sent: {self.App.AsicTop.TriggerRegisters.AcqCount.get()}')
+        print("File closed. Acquisition complete. Frames acquired: {}".format(writer.getFrameCount()))
+        
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""       
         print("Rysync ASIC started")

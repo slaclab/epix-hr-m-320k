@@ -258,12 +258,37 @@ class App(pr.Device):
 
 
         #################################################################
-
     def stop_capture(self):
         self.root.runControl.runState.set(0)
 
     def start_capture(self):
         self.root.runControl.runState.set(1)
+
+    def prepareChargeInjection(self, asicIndex, firstCol, lastCol, pulserValue):
+
+        lane_selected = np.zeros(384)
+        lane_selected[firstCol : lastCol + 1] = 1
+        print(lane_selected)
+
+        print("Setting up charge injection for ASIC {}".format(asicIndex))
+        self.Mv2Asic[asicIndex].enable.set(True)
+        self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
+        self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
+        self.Mv2Asic[asicIndex].test.set(1) # connecting charge injection
+        self.Mv2Asic[asicIndex].Pulser.set(int(pulserValue))
+        for column in lane_selected:
+            self.Mv2Asic[asicIndex].InjEn_ePixM.set(int(column))
+            self.Mv2Asic[asicIndex].ClkInj_ePixM.set(1)
+            # ff chain advances on falling edge of clock signal
+            self.Mv2Asic[asicIndex].ClkInj_ePixM.set(0)
+
+    def chargeInjectionCleanup(self, asicIndex):
+        self.Mv2Asic[asicIndex].enable.set(True)
+        self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
+        self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
+        self.Mv2Asic[asicIndex].test.set(0) 
+        self.Mv2Asic[asicIndex].InjEn_ePixM.set(0)
+
 
 
     def fnChargeInjection(self, dev):
