@@ -268,9 +268,7 @@ class App(pr.Device):
 
         lane_selected = np.zeros(384)
         lane_selected[firstCol : lastCol + 1] = 1
-        print(lane_selected)
 
-        print("Setting up charge injection for ASIC {}".format(asicIndex))
         self.Mv2Asic[asicIndex].enable.set(True)
         self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
         self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
