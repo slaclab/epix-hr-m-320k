@@ -73,7 +73,7 @@ class DataDebug(rogue.interfaces.stream.Slave):
         self.lookupTableCol = np.zeros(imageSize, dtype=int)
         self.lookupTableRow = np.zeros(imageSize, dtype=int)
 
-       # based on descrambling pattern described here
+       # based on descrambling pattern described here figure out the location of the pixel based on its index in raw data
         # https://confluence.slac.stanford.edu/download/attachments/392826236/image-2023-8-8_10-33-33.png?version=1&modificationDate=1691516014000&api=v2
         descarambledImg = np.zeros((numOfBanks, bankHeight,bankWidth), dtype=int)
         for row in range(bankHeight) :
