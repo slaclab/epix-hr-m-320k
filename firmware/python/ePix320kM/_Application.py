@@ -315,8 +315,6 @@ class App(pr.Device):
             lane_selected[self.TestChargeInjection.FirstColumn.get() : self.TestChargeInjection.LastColumn.get() + 1] = 1
             # lane_selected[0:63] = 1
 
-            print(lane_selected)
-
             for asicIndex in range(startAsic, endAsic, 1) :
                 self.Mv2Asic[asicIndex].InjEn_ePixM.set(1)
                 self.Mv2Asic[asicIndex].Pulser.set(int(0))
