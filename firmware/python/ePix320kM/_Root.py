@@ -156,11 +156,8 @@ class DataDebug(rogue.interfaces.stream.Slave):
     def getData(self):
         return self.data      
 
-    def enableDataDebug(self):
-        self.enable = True 
-
-    def disableDataDebug(self):
-        self.enable = False 
+    def enableDataDebug(self, enable):
+        self.enable = enable 
 
 class Root(pr.Root):
     def __init__(   self,
@@ -359,6 +356,10 @@ class Root(pr.Root):
     def enableDataRcv(self, enable) :
         for asicIndex in range(self.numOfAsics) :
             getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(enable)
+
+    def enableDataDebug(self, enable) :
+        for asicIndex in range(self.numOfAsics) :
+            self._dbg[asicIndex].enableDataDebug(enable)
 
     def hwTrigger(self, frames, rate) :
         # precaution in case someone stops the acquire function in the middle
