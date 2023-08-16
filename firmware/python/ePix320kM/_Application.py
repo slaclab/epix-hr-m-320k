@@ -178,7 +178,7 @@ class App(pr.Device):
         self.add(ePixHrleapCommon.Dac(
             name = "Dac",
             offset = 0x0800_0000,
-            enabled = False,
+            enabled = True,
         ))
 
         self.add(
