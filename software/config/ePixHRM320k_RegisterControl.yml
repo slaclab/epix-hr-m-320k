@@ -19,13 +19,13 @@ Root:
         ePixAdcSHPeriod: 160
         ePixAdcSHOffset: 80
         AcqPolarity: False
-        AcqDelay1: 200
-        AcqWidth1: 100
+        AcqDelay1: 360
+        AcqWidth1: 160
         AcqDelay2: 0
         AcqWidth2: 0
         R0Polarity: False
-        R0Delay: 100
-        R0Width: 300
+        R0Delay: 200
+        R0Width: 420
         PPbePolarity: False
         PPbeDelay: 0
         PPbeWidth: 0
