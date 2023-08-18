@@ -14,7 +14,7 @@ Root:
         SyncDelay: 40000
         SyncWidth: 100
         SR0Polarity: False
-        SR0Delay1: 500
+        SR0Delay1: 630
         SR0Width1: 38000
         ePixAdcSHPeriod: 160
         ePixAdcSHOffset: 80
