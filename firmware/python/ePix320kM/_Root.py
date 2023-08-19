@@ -111,19 +111,13 @@ class DataDebug(rogue.interfaces.stream.Slave):
 
         # Work around ASIC/firmware bug: first and last row of each bank are exchanged
         # Create lookup table where each row points to itself
-        hardwareBugWorkAroundRowLUT = np.zeros((192))
+        hardwareBugWorkAroundRowLUT = np.zeros((self.framePixelRow))
         for index in range (self.framePixelRow) :
             hardwareBugWorkAroundRowLUT[index] = index
         # Then we need to exchange row 0 with 47, 48 with 95, 96 with 143, 144 with 191
-        hardwareBugWorkAroundRowLUT[0] = 47
-        hardwareBugWorkAroundRowLUT[47] = 0
-        hardwareBugWorkAroundRowLUT[48] = 95
-        hardwareBugWorkAroundRowLUT[95] = 48
-        hardwareBugWorkAroundRowLUT[96] = 143
-        hardwareBugWorkAroundRowLUT[143] = 96
-        hardwareBugWorkAroundRowLUT[144] = 191
-        hardwareBugWorkAroundRowLUT[191] = 144
-
+        for index in range (0, self.framePixelRow, pixelsPerLanesRows) :
+            hardwareBugWorkAroundRowLUT[index] = index + pixelsPerLanesRows - 1
+            hardwareBugWorkAroundRowLUT[index + pixelsPerLanesRows - 1] = index
 
         # reverse pixel original index to new row and column to generate lookup tables
         for row in range (self.framePixelRow) :
@@ -138,7 +132,7 @@ class DataDebug(rogue.interfaces.stream.Slave):
 
     def descramble(self, frame):
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
-        current_frame_temp = np.zeros((192, 384), dtype=int)
+        current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
         """performs the EpixMv2 image descrambling (simply applying lookup table) """
         if (len(rawData)==73752):
              imgDesc = np.frombuffer(rawData[24:73752],dtype='uint16').reshape(192, 384)
