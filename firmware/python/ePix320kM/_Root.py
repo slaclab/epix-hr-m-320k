@@ -515,13 +515,13 @@ class Root(pr.Root):
         time.sleep(delay) 
 
         # load config that sets packet registers
-        print("Loading packet registers")
+        print("Loading packet register configurations")
         self.root.LoadConfig(self.filenamePacketReg)
         print("Loading {}".format(self.filenamePacketReg))
         time.sleep(delay)         
 
         # load batcher
-        print("Loading packet registers")
+        print("Loading batcher configurations")
         self.root.LoadConfig(self.filenameBatcher)
         print("Loading {}".format(self.filenameBatcher))
         time.sleep(delay)  

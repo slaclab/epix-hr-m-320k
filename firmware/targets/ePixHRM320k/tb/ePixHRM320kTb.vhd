@@ -314,19 +314,10 @@ begin
     U_Model : entity work.ePixHRM320kModel
         port map (
             asicR0Clk       => Clk250P,
-            saciClk         => asicSaciClk,
-            saciCmd         => asicSaciCmd,
-            saciSel         => asicSaciSel,
-            saciResp        => open,
             asicDataP       => asicDataP(i),
             asicDataN       => asicDataM(i),
-            asicDm          => open,
             asicGr          => asicGlblRst,
-            asicR0          => asicR0,
-            asicAcq         => asicAcq,
-            asicSync        => asicSync,
-            asicSro         => asicSro,
-            asicClkSyncEn   => asicClkSyncEn
+            asicSro         => asicSro
         );
     end generate;
 
