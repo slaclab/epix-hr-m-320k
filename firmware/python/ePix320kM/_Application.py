@@ -16,7 +16,7 @@ import surf.protocols.ssp as ssp
 
 import ePix320kM as fpga
 import epix_hr_leap_common as ePixHrleapCommon
-
+from   asic_reg_mapping.EpixHrMv2 import _EpixHrMv2Asic
 import os
 import numpy as np
 import time
@@ -129,7 +129,7 @@ class App(pr.Device):
 
         for asicIdx in range(num_of_asics):
             self.add(
-                fpga.EpixMv2Asic(
+                _EpixHrMv2Asic.EpixHrMv2Asic(
                     name='Mv2Asic[{}]'.format(asicIdx),
                     offset=0x40_0000 * asicIdx,
                     expand=False,

@@ -19,3 +19,6 @@
 [submodule "firmware/python/ePixViewer"]
 	path = firmware/python/ePixViewer
 	url = git@github.com:slaclab/ePixViewer.git
+[submodule "firmware/python/AsicRegMapping"]
+	path = firmware/python/AsicRegMapping
+	url = https://github.com/slaclab/AsicRegMapping.git
