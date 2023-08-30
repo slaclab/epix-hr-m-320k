@@ -109,11 +109,21 @@ class DataDebug(rogue.interfaces.stream.Slave):
         descarambledImg = np.concatenate((descarambledImg, quadrant[2]),0)
         descarambledImg = np.concatenate((descarambledImg, quadrant[3]),0)  
 
-        # reverse pixxel original index to new row and column to generate lookup tables
+        # Work around ASIC/firmware bug: first and last row of each bank are exchanged
+        # Create lookup table where each row points to itself
+        hardwareBugWorkAroundRowLUT = np.zeros((self.framePixelRow))
+        for index in range (self.framePixelRow) :
+            hardwareBugWorkAroundRowLUT[index] = index
+        # Then we need to exchange row 0 with 47, 48 with 95, 96 with 143, 144 with 191
+        for index in range (0, self.framePixelRow, pixelsPerLanesRows) :
+            hardwareBugWorkAroundRowLUT[index] = index + pixelsPerLanesRows - 1
+            hardwareBugWorkAroundRowLUT[index + pixelsPerLanesRows - 1] = index
+
+        # reverse pixel original index to new row and column to generate lookup tables
         for row in range (self.framePixelRow) :
             for col in range (self.framePixelColumn):  
                 index = descarambledImg[row,col]
-                self.lookupTableRow[index] = row
+                self.lookupTableRow[index] = hardwareBugWorkAroundRowLUT[row]
                 self.lookupTableCol[index] = col
 
         # reshape column and row lookup table
@@ -122,7 +132,7 @@ class DataDebug(rogue.interfaces.stream.Slave):
 
     def descramble(self, frame):
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
-        current_frame_temp = np.zeros((192, 384), dtype=int)
+        current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
         """performs the EpixMv2 image descrambling (simply applying lookup table) """
         if (len(rawData)==73752):
              imgDesc = np.frombuffer(rawData[24:73752],dtype='uint16').reshape(192, 384)
@@ -194,7 +204,7 @@ class Root(pr.Root):
         self.adcMonStream  = [None for i in range(4)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
-        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(self.numOfAsics)]
+        self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
@@ -288,19 +298,19 @@ class Root(pr.Root):
 
         @self.command()
         def DisplayViewer0():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"]) ], shell=False)
 
         @self.command()
         def DisplayViewer1():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         @self.command()
         def DisplayViewer2():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         @self.command()
         def DisplayViewer3():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         #################################################################
 
@@ -490,11 +500,13 @@ class Root(pr.Root):
         print("Loading {}".format(self.filenamePowerSupply))
         time.sleep(delay) 
 
-        # load batcher
-        print("Loading lane delay configurations")
-        self.root.LoadConfig(self.filenameDESER)
-        print("Loading {}".format(self.filenameDESER))
-        time.sleep(delay)  
+        if (not self.sim):
+            # load deserializer
+            print("Loading lane delay configurations")
+            self.root.LoadConfig(self.filenameDESER)
+            print("Loading {}".format(self.filenameDESER))
+            time.sleep(delay)  
+        
 
         # load config that sets waveforms
         print("Loading waveforms configuration")
@@ -503,13 +515,13 @@ class Root(pr.Root):
         time.sleep(delay) 
 
         # load config that sets packet registers
-        print("Loading packet registers")
+        print("Loading packet register configurations")
         self.root.LoadConfig(self.filenamePacketReg)
         print("Loading {}".format(self.filenamePacketReg))
         time.sleep(delay)         
 
         # load batcher
-        print("Loading packet registers")
+        print("Loading batcher configurations")
         self.root.LoadConfig(self.filenameBatcher)
         print("Loading {}".format(self.filenameBatcher))
         time.sleep(delay)  
@@ -538,62 +550,3 @@ class Root(pr.Root):
         print("Initialization routine completed.")
 
         return
-        ## start deserializer config for the asic
-        if self.filenameDESER == "":
-            EN_DESERIALIZERS_0 = arg[1]
-
-        else:
-            print("Loading deserializer parameters")
-            EN_DESERIALIZERS_0 = False
-            self.DeserRegisters0.enable.set(True)
-            self.root.LoadConfig(self.filenameDESER)                    
-            self.root.readBlocks()
-            time.sleep(delay)                   
-            self.DeserRegisters0.Resync.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.Resync.set(False)
-            time.sleep(delay) 
-            #
-            self.DeserRegisters0.BERTRst.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.BERTRst.set(False)
-        
-
-        if EN_DESERIALIZERS_0 : 
-            print("Starting deserializer")
-            self.serializerSyncAttempsts = 0
-            while True:
-                #make sure idle
-                self.DeserRegisters0.enable.set(True)
-                self.DeserRegisters0.IdelayRst.set(0)
-                self.DeserRegisters0.IserdeseRst.set(0)
-                self.root.readBlocks()
-                time.sleep(2*delay) 
-                self.DeserRegisters0.InitAdcDelay()
-                time.sleep(delay)                   
-                self.DeserRegisters0.Resync.set(True)
-                time.sleep(delay) 
-                self.DeserRegisters0.Resync.set(False)
-                time.sleep(5*delay) 
-                if (self.DeserRegisters0.Locked0.get() and self.DeserRegisters0.Locked1.get() and self.DeserRegisters0.Locked2.get() and  self.DeserRegisters0.Locked3.get() and self.DeserRegisters0.Locked4.get() and  self.DeserRegisters0.Locked5.get()):
-                    break
-                #limits the number of attempts to get serializer synch.
-                self.serializerSyncAttempsts = self.serializerSyncAttempsts + 1
-                if self.serializerSyncAttempsts > 0:
-                    break
-
-            self.DeserRegisters0.BERTRst.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.BERTRst.set(False)
-
-            print("Starting deserializer - 2")
-            self.serializerSyncAttempsts = 0
-            while True:
-                #make sure idle
-                #self.DeserRegisters0.AdcDelayFineTune()
-                #limits the number of attempts to get serializer synch.
-                self.serializerSyncAttempsts = self.serializerSyncAttempsts + 1
-                if self.serializerSyncAttempsts > 0:
-                    break
-
-        print("Initialization routine completed.")

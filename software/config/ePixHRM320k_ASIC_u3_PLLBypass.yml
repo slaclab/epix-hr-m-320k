@@ -81,9 +81,9 @@ Root:
       InjEn_ePixM: False
       ClkInj_ePixM: False
       rowCK2matrix_delay: 0x4
-      RefinN: 0x3
+      RefinN: 0x6
       RefinCompN: 0x3
-      RefinP: 0x3
+      RefinP: 0x2
       ro_mode_i: 0x0
       SDclk1_b: 0x0
       SDrst1_b: 0x8
