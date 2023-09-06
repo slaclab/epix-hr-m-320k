@@ -371,22 +371,24 @@ class Root(pr.Root):
             self._dbg[asicIndex].enableDataDebug(enable)
 
     def hwTrigger(self, frames, rate) :
-        # precaution in case someone stops the acquire function in the middle
-        self.App.AsicTop.TriggerRegisters.StopTriggers() 
-        
-        self.App.AsicTop.TriggerRegisters.AcqCountReset()
-        self.App.AsicTop.TriggerRegisters.SetAutoTrigger(rate)
-        self.App.AsicTop.TriggerRegisters.numberTrigger.set(frames)
-        self.App.AsicTop.TriggerRegisters.StartAutoTrigger()
-        
-        # Wait for the file write to write the 10 waveforms
-        while (self.App.AsicTop.TriggerRegisters.AcqCount.get() != frames) :
-            print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()) , end='\r')
-            time.sleep(0.1)
-        print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()))
-        
-        # stops triggers
-        self.App.AsicTop.TriggerRegisters.StopTriggers()  
+        with self.root.updateGroup(.25):
+            # precaution in case someone stops the acquire function in the middle
+            self.App.AsicTop.TriggerRegisters.StopTriggers() 
+            
+            self.App.AsicTop.TriggerRegisters.AcqCountReset()
+            self.App.AsicTop.TriggerRegisters.SetAutoTrigger(rate)
+            self.App.AsicTop.TriggerRegisters.numberTrigger.set(frames)
+            self.App.AsicTop.TriggerRegisters.StartAutoTrigger()
+            
+            # Wait for the file write to write the 10 waveforms
+            #time.sleep(frames/rate)
+            while (self.App.AsicTop.TriggerRegisters.AcqCount.get() != frames) :
+                print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()) , end='\r')
+                time.sleep(0.1)
+            print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()))
+            
+            # stops triggers
+            self.App.AsicTop.TriggerRegisters.StopTriggers()  
         
     def enableFullRateDataRcv(self, index, enable) :
         self.fullRateDataReceiver[index].RxEnable.set(enable)
@@ -402,48 +404,42 @@ class Root(pr.Root):
             print("Checkpoint: DataReceiver {} has {} frames".format(asicIndex, getattr(self, f"DataReceiver{asicIndex}").FrameCount.get()))        
 
     def acquireToFile(self, filename, frames, rate) :
-        if os.path.isfile(f'{filename}'):
-            os.remove(f'{filename}')    
-        print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, frames, rate))
+        with self.root.updateGroup(.25):
+            dev = var = 0
+            if os.path.isfile(f'{filename}'):
+                os.remove(f'{filename}')    
+            print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, rate, frames))
 
-        # Setup and open the file writer
-        writer = self.dataWriter._writer
-        self.dataWriter.DataFile.set("test.dat")
+            # Setup and open the file writer
+            self.dataWriter.DataFile.set(filename)
 
-        self.dataWriter._open()
+            self.dataWriter.Open()
 
-        # Wait for the file write to open the file
-        while( writer.isOpen() is False):
-            time.sleep(0.1)
+            # Wait for the file write to open the file
+            while( self.dataWriter.IsOpen.get() is False):
+                time.sleep(0.1)
 
-        # Wait a little bit for the file to open up
-        time.sleep(1.0)    
+            # Wait a little bit for the file to open up
+            time.sleep(3.0)    
 
-        #sets TriggerRegisters
-        self.hwTrigger(frames, rate)
-
-        writerFrameCount = writer.getFrameCount()
-        for i in range(20):
-            if (writerFrameCount == frames) :
-                break
-            time.sleep(1)
-            writerFrameCount = writer.getFrameCount()
-            print("Received {} frames...".format(writerFrameCount) , end='\r')
-
+            #sets TriggerRegisters
+            self.hwTrigger(frames, rate)
+            print("acquiring...")
+            writerFrameCount = self.dataWriter._waitFrameCount(frames, 0)
+            for index in range (4) : 
+                print("Received on channel {} {} frames...".format(index, self.dataWriter.getChannel(index).getFrameCount()))
+            print("Waiting for file to close...")
             
-        print("\n waiting for file to close...")
-        
-        # Close the file writer
-        writer.close()
+            # Close the file writer
+            self.dataWriter.Close()
         
         # Wait for the file write to close the file
-        while( writer.isOpen() is True):
+        while( self.dataWriter.IsOpen.get() is True):
             time.sleep(0.1)
 
         # Print the status
-        print( f'Total triggers sent: {self.App.AsicTop.TriggerRegisters.AcqCount.get()}')
-        print("File closed. Acquisition complete. Frames acquired: {}".format(writer.getFrameCount()))
-        
+        print("Acquisition complete and file closed")
+
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""       
         print("Rysync ASIC started")
