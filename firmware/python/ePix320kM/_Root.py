@@ -34,17 +34,20 @@ class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dataAcc = np.zeros((192,384,0), dtype='int32')
+        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.currentFrameCount = 0
 
     def process(self,frame):
         super().process(frame)
-        self.dataAcc = np.dstack((self.dataAcc, np.intc(self.Data.get())))
+        self.dataAcc[:,:,self.currentFrameCount] = np.intc(self.Data.get())
+        self.currentFrameCount = self.currentFrameCount + 1
 
     def cleanData(self):
-        self.dataAcc = np.zeros((192,384,0), dtype='int32')
+        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.currentFrameCount = 0
 
     def getData(self):
-        return self.dataAcc      
+        return self.dataAcc[:,:,0:self.currentFrameCount]     
 
 
 #############################################
@@ -58,8 +61,10 @@ class DataDebug(rogue.interfaces.stream.Slave):
         self.channelData = [[] for _ in range(8)]
         self.name = name
         self.enable = False
-        self.data = np.zeros((192,384,0), dtype='uint16')
-
+        self.enableDP = False
+        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.currentFrameCount = 0
+        
         self.framePixelRow = 192
         self.framePixelColumn = 384
         pixelsPerLanesRows = 48
@@ -73,7 +78,7 @@ class DataDebug(rogue.interfaces.stream.Slave):
         self.lookupTableCol = np.zeros(imageSize, dtype=int)
         self.lookupTableRow = np.zeros(imageSize, dtype=int)
 
-       # based on descrambling pattern described here figure out the location of the pixel based on its index in raw data
+        # based on descrambling pattern described here figure out the location of the pixel based on its index in raw data
         # https://confluence.slac.stanford.edu/download/attachments/392826236/image-2023-8-9_16-6-42.png?version=1&modificationDate=1691622403000&api=v2
         descarambledImg = np.zeros((numOfBanks, bankHeight,bankWidth), dtype=int)
         for row in range(bankHeight) :
@@ -95,7 +100,6 @@ class DataDebug(rogue.interfaces.stream.Slave):
         #  1     5     9    13    17    21         <= Quadrant[1] 48 x 64 x 6
         #  0     4     8    12    16    20         <= Quadrant[0] 48 x 64 x 6
 
-
         quadrant = [bytearray(),bytearray(),bytearray(),bytearray()]
         for i in range(4):
             quadrant[i] = np.concatenate((descarambledImg[0+i],
@@ -110,14 +114,15 @@ class DataDebug(rogue.interfaces.stream.Slave):
         descarambledImg = np.concatenate((descarambledImg, quadrant[3]),0)  
 
         # Work around ASIC/firmware bug: first and last row of each bank are exchanged
-        # Create lookup table where each row points to itself
+        # Create lookup table where each row points to the next
         hardwareBugWorkAroundRowLUT = np.zeros((self.framePixelRow))
         for index in range (self.framePixelRow) :
-            hardwareBugWorkAroundRowLUT[index] = index
-        # Then we need to exchange row 0 with 47, 48 with 95, 96 with 143, 144 with 191
-        for index in range (0, self.framePixelRow, pixelsPerLanesRows) :
-            hardwareBugWorkAroundRowLUT[index] = index + pixelsPerLanesRows - 1
-            hardwareBugWorkAroundRowLUT[index + pixelsPerLanesRows - 1] = index
+            hardwareBugWorkAroundRowLUT[index] = index + 1
+        # handle bank/lane roll over cases
+        hardwareBugWorkAroundRowLUT[47] = 0 
+        hardwareBugWorkAroundRowLUT[95] = 48
+        hardwareBugWorkAroundRowLUT[143] = 96 
+        hardwareBugWorkAroundRowLUT[191] = 144
 
         # reverse pixel original index to new row and column to generate lookup tables
         for row in range (self.framePixelRow) :
@@ -129,6 +134,7 @@ class DataDebug(rogue.interfaces.stream.Slave):
         # reshape column and row lookup table
         self.lookupTableCol = np.reshape(self.lookupTableCol, (self.framePixelRow, self.framePixelColumn))
         self.lookupTableRow = np.reshape(self.lookupTableRow, (self.framePixelRow, self.framePixelColumn))
+
 
     def descramble(self, frame):
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
@@ -157,17 +163,23 @@ class DataDebug(rogue.interfaces.stream.Slave):
         frameSize = frame.getPayload()
         ba = bytearray(frameSize)
         frame.read(ba, 0)
-        self.data = np.dstack((self.data, self.descramble(frame)))
-        
+        self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
+        self.currentFrameCount = self.currentFrameCount + 1 
+        if (self.enableDP) :
+            print("Extracted and descrambled {} frames".format(self.currentFrameCount), end='\r')
 
     def cleanData(self):
-        self.data = np.zeros((192,384,0), dtype='uint16')
+        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.currentFrameCount = 0
 
     def getData(self):
-        return self.data      
+        return self.dataAcc[:,:,0:self.currentFrameCount]    
 
     def enableDataDebug(self, enable):
         self.enable = enable 
+
+    def enableDebugPrint(self, enable):
+        self.enableDP = enable 
 
 class Root(pr.Root):
     def __init__(   self,
@@ -208,6 +220,7 @@ class Root(pr.Root):
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self.writerUnbatcher   = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self._dbg          = [DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
 
         # Check if not VCS simulation
@@ -291,6 +304,15 @@ class Root(pr.Root):
             for vc in range(4):
                 self.adcMonStream[vc] >> self.dataWriter.getChannel(vc + 8)
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
+
+        # Read file stream. 
+        self.readerReceiver = DataDebug(name = "readerReceiver")
+        self.fread = rogue.utilities.fileio.StreamReader()
+        self.readUnbatcher = rogue.protocols.batcher.SplitterV1() 
+        self.readerReceiver << self.readUnbatcher << self.fread
+        self.readerReceiver.enableDataDebug(True)
+        self.readerReceiver.enableDebugPrint(True)
+
 
         for lane in range(self.numOfAsics):
             self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
@@ -419,13 +441,9 @@ class Root(pr.Root):
             while( self.dataWriter.IsOpen.get() is False):
                 time.sleep(0.1)
 
-            # Wait a little bit for the file to open up
-            time.sleep(3.0)    
-
             #sets TriggerRegisters
             self.hwTrigger(frames, rate)
-            print("acquiring...")
-            writerFrameCount = self.dataWriter._waitFrameCount(frames, 0)
+            writerFrameCount = self.dataWriter._waitFrameCount(frames, 5)
             for index in range (4) : 
                 print("Received on channel {} {} frames...".format(index, self.dataWriter.getChannel(index).getFrameCount()))
             print("Waiting for file to close...")
@@ -440,6 +458,13 @@ class Root(pr.Root):
         # Print the status
         print("Acquisition complete and file closed")
 
+    def readFromFile(self, filename) :
+
+        self.readerReceiver.cleanData()
+        self.fread.open(filename)
+        self.fread.closeWait()
+
+        
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""       
         print("Rysync ASIC started")

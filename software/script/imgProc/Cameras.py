@@ -328,53 +328,75 @@ class Camera():
         self.bitMask = np.uint16(0xFFFF)
 
     def _initEPIXHRMV2(self):
-        self._NumAsicsPerSide = 1
-        #self._NumAdcChPerAsic = 4
-        #self._NumColPerAdcCh = 96
-        #self._superRowSizeInBytes = self._superRowSize * 4
-        self.sensorWidth  = 384 # The sensor size in this dimension is doubled because each pixel has two information (ToT and ToA)
-        self.sensorHeight = 192 # The sensor size in this dimension is doubled because each pixel has two information (ToT and ToA)
-        self.pixelDepth = 16
-        self.bitMask = np.uint16(0x7FFF)
-        #
-        # Extra descramble constants
-        # 
-        adcLanesRows = 4
-        adcLanesColumns = 6
-        pixelsPerLanesRows = 48
-        pixelsPerLanesColumns = 64
         self.framePixelRow = 192
         self.framePixelColumn = 384
-        # per lane descramble
-        evenRow = np.transpose([np.array([*range(0, pixelsPerLanesRows, 2)])])
-        oddRow = np.transpose([np.array([*range(1, pixelsPerLanesRows, 2)])])
-        duopleRow = np.concatenate((evenRow, oddRow), 0)
+        pixelsPerLanesRows = 48
+        pixelsPerLanesColumns = 64
+        numOfBanks = 24
+        bankHeight = pixelsPerLanesRows
+        bankWidth = pixelsPerLanesColumns
 
-        evenColumn = np.array([*range(0, pixelsPerLanesColumns, 2)])
-        oddColumn = np.array([*range(1, pixelsPerLanesColumns, 2)])
-        duopleColumn = np.concatenate((evenColumn, oddColumn), 0)
+        imageSize = self.framePixelColumn * self.framePixelRow
 
-        quadColumnMatrix = np.ones((pixelsPerLanesRows, 1)) * duopleColumn
-        quadRowMatrix =  duopleRow * np.ones((1, pixelsPerLanesColumns))
-        row_list= [*range(0, self.framePixelRow, pixelsPerLanesRows)]
-        column_list = [*range(0, self.framePixelColumn, pixelsPerLanesColumns)]
-        self.imgDescCol = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
-        self.imgDescRow = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
+        self.lookupTableCol = np.zeros(imageSize, dtype=int)
+        self.lookupTableRow = np.zeros(imageSize, dtype=int)
+
+        # based on descrambling pattern described here figure out the location of the pixel based on its index in raw data
+        # https://confluence.slac.stanford.edu/download/attachments/392826236/image-2023-8-9_16-6-42.png?version=1&modificationDate=1691622403000&api=v2
+        descarambledImg = np.zeros((numOfBanks, bankHeight,bankWidth), dtype=int)
+        for row in range(bankHeight) :
+            for col in range (bankWidth) : 
+                for bank in range (numOfBanks) :
+                    #                                  (even cols w/ offset       +  row offset       + increment every two cols)   * fill one pixel / bank + bank increment
+                    descarambledImg[bank, row, col] = (((col+1) % 2) * 1536       +   32 * row        + int(col / 2))               * numOfBanks            + bank
         
-        # 
 
-        def laneMap(colMatrix, rowMatrix, currLaneColumn, currLaneRow):
-            colMatRet = colMatrix + (currLaneColumn * pixelsPerLanesColumns)
-            rowMatRet = rowMatrix + (currLaneRow * pixelsPerLanesRows)
-            return colMatRet.astype(int), rowMatRet.astype(int)
+        # reorder banks from
+        # 18    19    20    21    22    23
+        # 12    13    14    15    16    17
+        #  6     7     8     9    10    11
+        #  0     1     2     3     4     5
+        #
+        #                To
+        #  3     7    11    15    19    23         <= Quadrant[3] 48 x 64 x 6
+        #  2     6    10    14    18    22         <= Quadrant[2] 48 x 64 x 6
+        #  1     5     9    13    17    21         <= Quadrant[1] 48 x 64 x 6
+        #  0     4     8    12    16    20         <= Quadrant[0] 48 x 64 x 6
 
-        for i in column_list:
-            column0 = i
-            columnF = pixelsPerLanesColumns + i
-            for j in row_list:
-                row0 = j
-                rowF = pixelsPerLanesRows + j
-                self.imgDescCol[row0: rowF, column0: columnF], self.imgDescRow[row0: rowF, column0: columnF] = laneMap(quadColumnMatrix, quadRowMatrix, column_list.index(i), row_list.index(j))
+        quadrant = [bytearray(),bytearray(),bytearray(),bytearray()]
+        for i in range(4):
+            quadrant[i] = np.concatenate((descarambledImg[0+i],
+                                        descarambledImg[4+i],
+                                        descarambledImg[8+i],
+                                        descarambledImg[12+i],
+                                        descarambledImg[16+i],
+                                        descarambledImg[20+i]),1)
+            
+        descarambledImg = np.concatenate((quadrant[0], quadrant[1]),0)
+        descarambledImg = np.concatenate((descarambledImg, quadrant[2]),0)
+        descarambledImg = np.concatenate((descarambledImg, quadrant[3]),0)  
+
+        # Work around ASIC/firmware bug: first and last row of each bank are exchanged
+        # Create lookup table where each row points to the next
+        hardwareBugWorkAroundRowLUT = np.zeros((self.framePixelRow))
+        for index in range (self.framePixelRow) :
+            hardwareBugWorkAroundRowLUT[index] = index + 1
+        # handle bank/lane roll over cases
+        hardwareBugWorkAroundRowLUT[47] = 0 
+        hardwareBugWorkAroundRowLUT[95] = 48
+        hardwareBugWorkAroundRowLUT[143] = 96 
+        hardwareBugWorkAroundRowLUT[191] = 144
+
+        # reverse pixel original index to new row and column to generate lookup tables
+        for row in range (self.framePixelRow) :
+            for col in range (self.framePixelColumn):  
+                index = descarambledImg[row,col]
+                self.lookupTableRow[index] = hardwareBugWorkAroundRowLUT[row]
+                self.lookupTableCol[index] = col
+
+        # reshape column and row lookup table
+        self.lookupTableCol = np.reshape(self.lookupTableCol, (self.framePixelRow, self.framePixelColumn))
+        self.lookupTableRow = np.reshape(self.lookupTableRow, (self.framePixelRow, self.framePixelColumn))
 
     ##########################################################
     # define all camera specific build frame functions
@@ -1195,31 +1217,18 @@ class Camera():
         return imgDesc
 
     def _descrambleEpixHRMV2Image(self, rawData):
+        rawData = np.frombuffer(rawData,dtype='uint16')
         current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
-        """performs the EpixMv2 image descrambling """
-        if (PRINT_VERBOSE):print("Length raw data: %d" % (len(rawData)))
-        if (len(rawData)==147504):
-            #if (PRINT_VERBOSE): print('raw data 0:', rawData[0,0:10])
-            #if (PRINT_VERBOSE): print('raw data 1:', rawData[1,0:10])
-             if (type(rawData != 'numpy.ndarray')):
-                img = np.frombuffer(rawData,dtype='uint16')
-             if (PRINT_VERBOSE):print("shape", img.shape)
-             quadrant0 = np.frombuffer(img[24:73752],dtype='uint16')
-             adcImg = quadrant0.reshape(-1,24)
-             quadrant = [bytearray(),bytearray(),bytearray(),bytearray()]
-
-             for i in range(4):
-                quadrant[i] = np.concatenate((adcImg[:,0+i].reshape(-1,64), adcImg[:,4+i].reshape(-1,64), adcImg[:,8+i].reshape(-1,64), adcImg[:,12+i].reshape(-1,64), adcImg[:,16+i].reshape(-1,64), adcImg[:,20+i].reshape(-1,64)),1)
-
-             imgDesc = np.concatenate((quadrant[0], quadrant[1]),0)
-             imgDesc = np.concatenate((imgDesc, quadrant[2]),0)
-             imgDesc = np.concatenate((imgDesc, quadrant[3]),0)
+        """performs the EpixMv2 image descrambling (simply applying lookup table) """
+        if (len(rawData)==73752):
+            imgDesc = np.frombuffer(rawData[24:73752],dtype='uint16').reshape(192, 384)
         else:
             print("descramble error")
+            print('rawData length {}'.format(len(rawData)))
             imgDesc = np.zeros((192,384), dtype='uint16')
 
         
-        current_frame_temp[self.imgDescRow, self.imgDescCol] = imgDesc
+        current_frame_temp[self.lookupTableRow, self.lookupTableCol] = imgDesc
         # returns final image
         return current_frame_temp
 
