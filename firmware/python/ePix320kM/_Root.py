@@ -41,6 +41,9 @@ class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
         super().process(frame)
         self.dataAcc[:,:,self.currentFrameCount] = np.intc(self.Data.get())
         self.currentFrameCount = self.currentFrameCount + 1
+        if (self.currentFrameCount >= 100000) :
+            print("Max acquistion size of fullRateDataReceiver of 100000 reached. Looping over.")
+            self.currentFrameCount = 0
 
     def cleanData(self):
         self.dataAcc = np.zeros((192,384,100000), dtype='int32')
