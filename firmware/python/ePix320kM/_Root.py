@@ -34,19 +34,16 @@ class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
         self.currentFrameCount = 0
 
     def process(self,frame):
         super().process(frame)
+
         self.dataAcc[:,:,self.currentFrameCount] = np.intc(self.Data.get())
         self.currentFrameCount = self.currentFrameCount + 1
-        if (self.currentFrameCount >= 100000) :
-            print("Max acquistion size of fullRateDataReceiver of 100000 reached. Looping over.")
-            self.currentFrameCount = 0
-
     def cleanData(self):
-        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
         self.currentFrameCount = 0
 
     def getData(self):
@@ -178,7 +175,7 @@ class Root(pr.Root):
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
 
         # Read file stream. 
-        self.readerReceiver = fpgaBoard.DataDebug(name = "readerReceiver")
+        self.readerReceiver = fpgaBoard.DataDebug(name = "readerReceiver", size = 70000)
         self.fread = rogue.utilities.fileio.StreamReader()
         self.readUnbatcher = rogue.protocols.batcher.SplitterV1() 
         self.readerReceiver << self.readUnbatcher << self.fread
@@ -301,7 +298,8 @@ class Root(pr.Root):
         with self.root.updateGroup(.25):
             dev = var = 0
             if os.path.isfile(f'{filename}'):
-                os.remove(f'{filename}')    
+                print("File already exists. Please change file name and try again.")
+                return  
             print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, rate, frames))
 
             # Setup and open the file writer

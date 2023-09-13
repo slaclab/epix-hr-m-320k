@@ -16,16 +16,16 @@ import numpy as np
 #############################################
 class DataDebug(rogue.interfaces.stream.Slave):
 
-    def __init__(self, name):
+    def __init__(self, name, size=1000):
         rogue.interfaces.stream.Slave.__init__(self)
 
         self.channelData = [[] for _ in range(8)]
         self.name = name
         self.enable = False
         self.enableDP = False
-        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.dataAcc = np.zeros((192,384,size), dtype='int32')
         self.currentFrameCount = 0
-        
+        self.size = size
         self.framePixelRow = 192
         self.framePixelColumn = 384
         pixelsPerLanesRows = 48
@@ -124,13 +124,18 @@ class DataDebug(rogue.interfaces.stream.Slave):
         frameSize = frame.getPayload()
         ba = bytearray(frameSize)
         frame.read(ba, 0)
-        self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
+        if (self.currentFrameCount >= self.size) :
+            print("Max acquistion size of dataDebug of {} reached. Cleanup dataDebug. Discarding new data.".format(self.size))
+        else :
+            self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
+
         self.currentFrameCount = self.currentFrameCount + 1 
+   
         if (self.enableDP) :
             print("Extracted and descrambled {} frames".format(self.currentFrameCount), end='\r')
 
     def cleanData(self):
-        self.dataAcc = np.zeros((192,384,100000), dtype='int32')
+        self.dataAcc = np.zeros((192,384,self.size), dtype='int32')
         self.currentFrameCount = 0
 
     def getData(self):
