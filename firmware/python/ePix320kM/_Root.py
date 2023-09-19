@@ -92,7 +92,6 @@ class Root(pr.Root):
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-        self.writerUnbatcher   = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
 
         # Check if not VCS simulation
