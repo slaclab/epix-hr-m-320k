@@ -50,6 +50,7 @@ class Adc(pr.Device):
             self.add(epixHr.MonAdcRegisters(
                 name   = f'FastADCsDebug[{i}]',
                 offset = (6+i)*0x0001_0000,
+                enabled=False
             ))
 
         self.add(adi.Ad9249ConfigGroup(

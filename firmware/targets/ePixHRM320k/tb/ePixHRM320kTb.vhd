@@ -153,6 +153,9 @@ architecture testbench of ePixHRM320kTb is
     signal Clk250P : sl := '0';
     signal Clk250M : sl := '1';
 
+    signal asicDigRst : sl := '0';
+    signal asicClkSyncEn : sl := '0';
+
     constant GET_BUILD_INFO_C : BuildInfoRetType := toBuildInfo(BUILD_INFO_C);
     constant MOD_BUILD_INFO_C : BuildInfoRetType := (
        buildString => GET_BUILD_INFO_C.buildString,
@@ -306,6 +309,18 @@ begin
         vPIn => vPIn, 
         vNIn => vNIn
    );
+
+   G_EPIXHRM320KMODELS : for i in 0 to 3 generate
+    U_Model : entity work.ePixHRM320kModel
+        port map (
+            asicR0Clk       => Clk250P,
+            asicDataP       => asicDataP(i),
+            asicDataN       => asicDataM(i),
+            asicGr          => asicGlblRst,
+            asicSro         => asicSro
+        );
+    end generate;
+
 
    fpgaClkInP <= Clk250P;
    fpgaClkInM <= Clk250M;

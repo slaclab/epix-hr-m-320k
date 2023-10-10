@@ -16,7 +16,7 @@ import surf.protocols.ssp as ssp
 
 import ePix320kM as fpga
 import epix_hr_leap_common as ePixHrleapCommon
-
+from   asic_reg_mapping.EpixHrMv2 import _EpixHrMv2Asic
 import os
 import numpy as np
 import time
@@ -129,7 +129,7 @@ class App(pr.Device):
 
         for asicIdx in range(num_of_asics):
             self.add(
-                fpga.EpixMv2Asic(
+                _EpixHrMv2Asic.EpixHrMv2Asic(
                     name='Mv2Asic[{}]'.format(asicIdx),
                     offset=0x40_0000 * asicIdx,
                     expand=False,
@@ -178,7 +178,7 @@ class App(pr.Device):
         self.add(ePixHrleapCommon.Dac(
             name = "Dac",
             offset = 0x0800_0000,
-            enabled = False,
+            enabled = True,
         ))
 
         self.add(
@@ -258,12 +258,35 @@ class App(pr.Device):
 
 
         #################################################################
-
     def stop_capture(self):
         self.root.runControl.runState.set(0)
 
     def start_capture(self):
         self.root.runControl.runState.set(1)
+
+    def prepareChargeInjection(self, asicIndex, firstCol, lastCol, pulserValue):
+
+        lane_selected = np.zeros(384)
+        lane_selected[firstCol : lastCol + 1] = 1
+
+        self.Mv2Asic[asicIndex].enable.set(True)
+        self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
+        self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
+        self.Mv2Asic[asicIndex].test.set(1) # connecting charge injection
+        self.Mv2Asic[asicIndex].Pulser.set(int(pulserValue))
+        for column in lane_selected:
+            self.Mv2Asic[asicIndex].InjEn_ePixM.set(int(column))
+            self.Mv2Asic[asicIndex].ClkInj_ePixM.set(1)
+            # ff chain advances on falling edge of clock signal
+            self.Mv2Asic[asicIndex].ClkInj_ePixM.set(0)
+
+    def chargeInjectionCleanup(self, asicIndex):
+        self.Mv2Asic[asicIndex].enable.set(True)
+        self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
+        self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
+        self.Mv2Asic[asicIndex].test.set(0) 
+        self.Mv2Asic[asicIndex].InjEn_ePixM.set(0)
+
 
 
     def fnChargeInjection(self, dev):
@@ -291,8 +314,6 @@ class App(pr.Device):
             lane_selected = np.zeros(384)
             lane_selected[self.TestChargeInjection.FirstColumn.get() : self.TestChargeInjection.LastColumn.get() + 1] = 1
             # lane_selected[0:63] = 1
-
-            print(lane_selected)
 
             for asicIndex in range(startAsic, endAsic, 1) :
                 self.Mv2Asic[asicIndex].InjEn_ePixM.set(1)
@@ -565,120 +586,4 @@ class App(pr.Device):
         self.Adc.FastADCsConfig.enable.set(False)
         self.root.readBlocks()
         print("Fast ADC initialized")
-        
-'''
-    def fnSetWaveform(self, dev,cmd,arg):
-        """SetTestBitmap command function"""
-        self.filename = QtGui.QFileDialog.getOpenFileName(self.root.guiTop, 'Open File', '', 'csv file (*.csv);; Any (*.*)')
-        if os.path.splitext(self.filename)[1] == '.csv':
-            waveform = np.genfromtxt(self.filename, delimiter=',', dtype='uint16')
-            if waveform.shape == (1024,):
-                for x in range (0, 1024):
-                    self.Dac.waveformMem._rawWrite(offset = (x * 4),data =  int(waveform[x]))
-            else:
-                print('wrong csv file format')
-
-    def fnGetWaveform(self, dev,cmd,arg):
-        """GetTestBitmap command function"""
-        self.filename = QtGui.QFileDialog.getOpenFileName(self.root.guiTop, 'Open File', '', 'csv file (*.csv);; Any (*.*)')
-        if os.path.splitext(self.filename)[1] == '.csv':
-            readBack = np.zeros((1024),dtype='uint16')
-            for x in range (0, 1024):
-                readBack[x] = self.Dac.waveformMem._rawRead(offset = (x * 4))
-            np.savetxt(self.filename, readBack, fmt='%d', delimiter=',', newline='\n')
-
-    def fnAcqDataWithSaciClkRstScript(self, dev,cmd,arg):
-        """SetTestBitmap command function"""       
-        print("Acquiring data with clock reset between frames")            
-        delay = 1
-        numFrames = arg
-        if numFrames == 0:
-            numFrames = 100
-        print("A total of %d frames will be added to the current file" % (numFrames))
-
-        self.root.dataWriter.enable.set(True)
-        self.currentFilename = self.root.dataWriter.dataFile.get()
-        self.root.dataWriter.dataFile.set(self.currentFilename +"_refData"+".dat")
-
-        print("Saving reference data")
-        for frame in range(numFrames):
-            #resync channels
-            self.DeserRegisters0.Resync.set(True)
-            self.DeserRegisters2.Resync.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.Resync.set(False)
-            self.DeserRegisters2.Resync.set(False)
-
-            #enable to write frames          
-            self.root.dataWriter.open.set(True)
-
-            #acquire an image
-            self.root.Trigger()
-            time.sleep(delay) 
-            
-            #close file
-            self.root.dataWriter.open.set(False)
-
-            #no issued reset
-            #self.Hr10kTAsic0.DigRO_disable.set(True)
-            #self.Hr10kTAsic2.DigRO_disable.set(True)
-            #self.Hr10kTAsic0.DigRO_disable.set(False)
-            #self.Hr10kTAsic2.DigRO_disable.set(False)
-
-        self.root.dataWriter.dataFile.set(self.currentFilename +"_testData"+".dat")
-        print("Saving test data")
-        for frame in range(numFrames):
-            #resync channels
-            self.DeserRegisters0.Resync.set(True)
-            self.DeserRegisters2.Resync.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.Resync.set(False)
-            self.DeserRegisters2.Resync.set(False)
-
-            #enable to write frames          
-            self.root.dataWriter.open.set(True)
-
-            #acquire an image
-            self.root.Trigger()
-            time.sleep(delay) 
-            
-            #close file
-            self.root.dataWriter.open.set(False)
-
-            #issue reset
-            self.Hr10kTAsic0.DigRO_disable.set(True)
-            self.Hr10kTAsic2.DigRO_disable.set(True)
-            self.Hr10kTAsic0.DigRO_disable.set(False)
-            self.Hr10kTAsic2.DigRO_disable.set(False)
-        
-            
-
-
-    def fnScanSDrstSDClkScript(self, dev,cmd,arg):
-        """SetTestBitmap command function"""       
-        print("ASIC0 SDrst and SDclk scan started")
-        print(arg)
-        delay = 1
-        self.root.readBlocks()
-        #save filename
-        self.root.dataWriter.enable.set(True)
-        self.root.dataWriter.open.set(False)
-        self.currentFilename = self.root.dataWriter.dataFile.get()
-
-        # scan routine
-        for SDrstValue  in range(16):
-            for SDclkValue  in range(16):
-                self.Hr10kTAsic0.SDrst_b.set(SDrstValue)
-                self.Hr10kTAsic0.SDclk_b.set(SDclkValue)
-                time.sleep(delay/5)               
-                self.root.dataWriter.dataFile.set(self.currentFilename +"_SDrst_"+ str(SDrstValue)+"_SDclk_"+ str(SDclkValue)+".dat")
-                self.root.dataWriter.open.set(True)
-                # acquire data for 1 second
-                time.sleep(delay)               
-                self.root.dataWriter.open.set(False)       
-
-        print("Completed")
-'''
-
-
 

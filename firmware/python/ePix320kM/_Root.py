@@ -25,9 +25,32 @@ import subprocess
 
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
+
 from ePixViewer.software.deviceFiles import ePixHrMv2
 
-rogue.Version.minVersion('5.15.3')
+rogue.Version.minVersion('5.14.0')
+
+class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
+        self.currentFrameCount = 0
+
+    def process(self,frame):
+        if (self.currentFrameCount >= 1000) :
+            print("Max acquistion size of fullRateDataReceiver of 1000 reached. Cleanup dataDebug. Discarding new data.")
+        else :
+            super().process(frame)
+            self.dataAcc[:,:,self.currentFrameCount] = np.intc(self.Data.get())
+            self.currentFrameCount = self.currentFrameCount + 1
+
+    def cleanData(self):
+        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
+        self.currentFrameCount = 0
+
+    def getData(self):
+        return self.dataAcc[:,:,0:self.currentFrameCount]     
 
 
 class Root(pr.Root):
@@ -46,27 +69,31 @@ class Root(pr.Root):
 
         self.top_level = top_level
         
-        numOfAsics = 4
+        self.numOfAsics = 4
         
         if (self.sim):
             # Set the timeout
-            kwargs['timeout'] = 5.0 # firmware simulation slow and timeout base on real time (not simulation time)
+            kwargs['timeout'] = 10.0 # firmware simulation slow and timeout base on real time (not simulation time)
 
         else:
             # Set the timeout
-            kwargs['timeout'] = 1.0 # 5.0 seconds default
+            kwargs['timeout'] = 10.0 # 5.0 seconds default
 
         super().__init__(**kwargs)
 
         #################################################################
 
         # Create an empty list to be filled
-        self.dataStream    = [None for i in range(numOfAsics)]
+        self.dataStream    = [None for i in range(self.numOfAsics)]
         self.adcMonStream  = [None for i in range(4)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
-        self.rate          = [rogue.interfaces.stream.RateDrop(True,0.1) for i in range(numOfAsics)]
-        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(numOfAsics)]
+        self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
+        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
+
         # Check if not VCS simulation
         if (not self.sim):
 
@@ -75,7 +102,7 @@ class Root(pr.Root):
             self._initRead = initRead
 
             # # Map the DMA streams
-            for lane in range(numOfAsics):
+            for lane in range(self.numOfAsics):
                 self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
             
             self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
@@ -110,7 +137,7 @@ class Root(pr.Root):
             # 2 TCP ports per stream
             self.srp = rogue.interfaces.memory.TcpClient('localhost', 24000)
 
-            for lane in range(numOfAsics):
+            for lane in range(self.numOfAsics):
                 # 2 TCP ports per stream
                 self.dataStream[lane] = rogue.interfaces.stream.TcpClient('localhost', 24002 + 2 * lane)
 
@@ -135,8 +162,13 @@ class Root(pr.Root):
                                     cmd=self.Trigger,
                                     rates={1: '1 Hz', 2: '2 Hz', 4: '4 Hz', 8: '8 Hz', 10: '10 Hz', 30: '30 Hz', 60: '60 Hz', 120: '120 Hz'}))
         # Connect dataStream to data writer
-        for lane in range(numOfAsics):
-            self.dataStream[lane] >> self.dataWriter.getChannel(lane)
+        for asicIndex in range(self.numOfAsics):
+            self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
+            self.add(fullRateDataReceiver(
+                name = f"fullRateDataReceiver[{asicIndex}]"
+                ))
+            self.dataStream[asicIndex] >> self.streamUnbatchersDbg[asicIndex] >> self._dbg[asicIndex]
+            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
         # Check if not VCS simulation
         if (not self.sim):
@@ -144,25 +176,34 @@ class Root(pr.Root):
                 self.adcMonStream[vc] >> self.dataWriter.getChannel(vc + 8)
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
 
-        for lane in range(numOfAsics):
+        # Read file stream. 
+        self.readerReceiver = fpgaBoard.DataDebug(name = "readerReceiver", size = 70000)
+        self.fread = rogue.utilities.fileio.StreamReader()
+        self.readUnbatcher = rogue.protocols.batcher.SplitterV1() 
+        self.readerReceiver << self.readUnbatcher << self.fread
+        self.readerReceiver.enableDataDebug(True)
+        self.readerReceiver.enableDebugPrint(True)
+
+
+        for lane in range(self.numOfAsics):
             self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
             self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()
         def DisplayViewer0():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"]) ], shell=False)
 
         @self.command()
         def DisplayViewer1():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         @self.command()
         def DisplayViewer2():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         @self.command()
         def DisplayViewer3():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384"], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         #################################################################
 
@@ -194,9 +235,108 @@ class Root(pr.Root):
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
+        for asicIndex in range(self.numOfAsics):    
+            getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
+        for asicIndex in range(self.numOfAsics):    
+            getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
+    def enableAllAsics(self, enable) :
+        for batcherIndex in range(self.numOfAsics) :
+            self.enableAsic(batcherIndex, enable)
 
+    def enableAsic(self, batcherIndex, enable) :
+        getattr(self.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(not enable)
 
+    def disableAndCleanAllFullRateDataRcv(self) :
+        for asicIndex in range(self.numOfAsics) :
+            self.fullRateDataReceiver[asicIndex].cleanData()
+            self.fullRateDataReceiver[asicIndex].RxEnable.set(False)
+
+    def enableFullRateDataRcv(self, index, enable) :
+        self.fullRateDataReceiver[index].RxEnable.set(enable)
+
+    def enableDataRcv(self, enable) :
+        for asicIndex in range(self.numOfAsics) :
+            getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(enable)
+
+    def enableDataDebug(self, enable) :
+        for asicIndex in range(self.numOfAsics) :
+            self._dbg[asicIndex].enableDataDebug(enable)
+
+    def hwTrigger(self, frames, rate) :
+        with self.root.updateGroup(.25):
+            # precaution in case someone stops the acquire function in the middle
+            self.App.AsicTop.TriggerRegisters.StopTriggers() 
+            
+            self.App.AsicTop.TriggerRegisters.AcqCountReset()
+            self.App.AsicTop.TriggerRegisters.SetAutoTrigger(rate)
+            self.App.AsicTop.TriggerRegisters.numberTrigger.set(frames)
+            self.App.AsicTop.TriggerRegisters.StartAutoTrigger()
+            
+            # Wait for the file write to write the 10 waveforms
+            #time.sleep(frames/rate)
+            while (self.App.AsicTop.TriggerRegisters.AcqCount.get() != frames) :
+                print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()) , end='\r')
+                time.sleep(0.1)
+            print("Triggers sent: {}".format(self.App.AsicTop.TriggerRegisters.AcqCount.get()))
+            
+            # stops triggers
+            self.App.AsicTop.TriggerRegisters.StopTriggers()  
+        
+    def enableFullRateDataRcv(self, index, enable) :
+        self.fullRateDataReceiver[index].RxEnable.set(enable)
+
+    def getLaneLocks(self) :
+        for asicIndex in range(self.numOfAsics) : 
+            self.App.SspMonGrp[asicIndex].enable.set(True)
+            print("ASIC{}: {:#x}".format(asicIndex, self.App.SspMonGrp[asicIndex].Locked.get()))
+
+    #check current frames in receivers
+    def printDataReceiverStatus(self) :
+        for asicIndex in range(self.numOfAsics):
+            print("Checkpoint: DataReceiver {} has {} frames".format(asicIndex, getattr(self, f"DataReceiver{asicIndex}").FrameCount.get()))        
+
+    def acquireToFile(self, filename, frames, rate) :
+        with self.root.updateGroup(.25):
+            dev = var = 0
+            if os.path.isfile(f'{filename}'):
+                print("File already exists. Please change file name and try again.")
+                return  
+            print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, rate, frames))
+
+            # Setup and open the file writer
+            self.dataWriter.DataFile.set(filename)
+
+            self.dataWriter.Open()
+
+            # Wait for the file write to open the file
+            while( self.dataWriter.IsOpen.get() is False):
+                time.sleep(0.1)
+
+            #sets TriggerRegisters
+            self.hwTrigger(frames, rate)
+            writerFrameCount = self.dataWriter._waitFrameCount(frames, 5)
+            for index in range (4) : 
+                print("Received on channel {} {} frames...".format(index, self.dataWriter.getChannel(index).getFrameCount()))
+            print("Waiting for file to close...")
+            
+            # Close the file writer
+            self.dataWriter.Close()
+        
+        # Wait for the file write to close the file
+        while( self.dataWriter.IsOpen.get() is True):
+            time.sleep(0.1)
+
+        # Print the status
+        print("Acquisition complete and file closed")
+
+    def readFromFile(self, filename) :
+
+        self.readerReceiver.cleanData()
+        self.fread.open(filename)
+        self.fread.closeWait()
+
+        
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""       
         print("Rysync ASIC started")
@@ -253,11 +393,13 @@ class Root(pr.Root):
         print("Loading {}".format(self.filenamePowerSupply))
         time.sleep(delay) 
 
-        # load batcher
-        print("Loading lane delay configurations")
-        self.root.LoadConfig(self.filenameDESER)
-        print("Loading {}".format(self.filenameDESER))
-        time.sleep(delay)  
+        if (not self.sim):
+            # load deserializer
+            print("Loading lane delay configurations")
+            self.root.LoadConfig(self.filenameDESER)
+            print("Loading {}".format(self.filenameDESER))
+            time.sleep(delay)  
+        
 
         # load config that sets waveforms
         print("Loading waveforms configuration")
@@ -266,13 +408,13 @@ class Root(pr.Root):
         time.sleep(delay) 
 
         # load config that sets packet registers
-        print("Loading packet registers")
+        print("Loading packet register configurations")
         self.root.LoadConfig(self.filenamePacketReg)
         print("Loading {}".format(self.filenamePacketReg))
         time.sleep(delay)         
 
         # load batcher
-        print("Loading packet registers")
+        print("Loading batcher configurations")
         self.root.LoadConfig(self.filenameBatcher)
         print("Loading {}".format(self.filenameBatcher))
         time.sleep(delay)  
@@ -301,62 +443,3 @@ class Root(pr.Root):
         print("Initialization routine completed.")
 
         return
-        ## start deserializer config for the asic
-        if self.filenameDESER == "":
-            EN_DESERIALIZERS_0 = arg[1]
-
-        else:
-            print("Loading deserializer parameters")
-            EN_DESERIALIZERS_0 = False
-            self.DeserRegisters0.enable.set(True)
-            self.root.LoadConfig(self.filenameDESER)                    
-            self.root.readBlocks()
-            time.sleep(delay)                   
-            self.DeserRegisters0.Resync.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.Resync.set(False)
-            time.sleep(delay) 
-            #
-            self.DeserRegisters0.BERTRst.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.BERTRst.set(False)
-        
-
-        if EN_DESERIALIZERS_0 : 
-            print("Starting deserializer")
-            self.serializerSyncAttempsts = 0
-            while True:
-                #make sure idle
-                self.DeserRegisters0.enable.set(True)
-                self.DeserRegisters0.IdelayRst.set(0)
-                self.DeserRegisters0.IserdeseRst.set(0)
-                self.root.readBlocks()
-                time.sleep(2*delay) 
-                self.DeserRegisters0.InitAdcDelay()
-                time.sleep(delay)                   
-                self.DeserRegisters0.Resync.set(True)
-                time.sleep(delay) 
-                self.DeserRegisters0.Resync.set(False)
-                time.sleep(5*delay) 
-                if (self.DeserRegisters0.Locked0.get() and self.DeserRegisters0.Locked1.get() and self.DeserRegisters0.Locked2.get() and  self.DeserRegisters0.Locked3.get() and self.DeserRegisters0.Locked4.get() and  self.DeserRegisters0.Locked5.get()):
-                    break
-                #limits the number of attempts to get serializer synch.
-                self.serializerSyncAttempsts = self.serializerSyncAttempsts + 1
-                if self.serializerSyncAttempsts > 0:
-                    break
-
-            self.DeserRegisters0.BERTRst.set(True)
-            time.sleep(delay) 
-            self.DeserRegisters0.BERTRst.set(False)
-
-            print("Starting deserializer - 2")
-            self.serializerSyncAttempsts = 0
-            while True:
-                #make sure idle
-                #self.DeserRegisters0.AdcDelayFineTune()
-                #limits the number of attempts to get serializer synch.
-                self.serializerSyncAttempsts = self.serializerSyncAttempsts + 1
-                if self.serializerSyncAttempsts > 0:
-                    break
-
-        print("Initialization routine completed.")
