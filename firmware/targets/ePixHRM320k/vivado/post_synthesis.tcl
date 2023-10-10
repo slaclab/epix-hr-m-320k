@@ -93,10 +93,6 @@ ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][
 ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][13]}
 ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][14]}
 ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][15]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/rxDecErr[0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/rxDecErr[1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/rxDispErr[0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/rxDispErr[1]}
 
 
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/rd_en}
@@ -204,6 +200,7 @@ ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/rxDispErr[1]}
 # ##########################
 WriteDebugProbes ${ila0Name}
 
+return
 ##############################################################################
 
 
