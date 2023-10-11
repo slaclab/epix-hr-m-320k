@@ -15,7 +15,7 @@ RogueConfig:
   - ../software/config
 
 RogueScripts:
-  - ../software/scripts/devGui.py
+  - ../software/script/devGui.py
 
 Targets:
 ################################################################################  
