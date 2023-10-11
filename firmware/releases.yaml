@@ -4,18 +4,18 @@ GitBase: ..
 TopRoguePackage: ePix320kM
 
 RoguePackages:
-  - submodules/axi-pcie-core/python
+  - submodules/l2si-core/python
   - submodules/epix-hr-core/python
   - submodules/epix-hr-leap-common/python
+  - submodules/lcls-timing-core/python
   - submodules/surf/python
   - python
-  - ../software/python
 
 RogueConfig:
   - ../software/config
 
 RogueScripts:
-#  - ../software/scripts/devGui
+  - ../software/scripts/devGui.py
 
 Targets:
 ################################################################################  
