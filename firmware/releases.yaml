@@ -1,0 +1,33 @@
+
+GitBase: ..
+
+TopRoguePackage: ePix320kM
+
+RoguePackages:
+  - submodules/axi-pcie-core/python
+  - submodules/epix-hr-core/python
+  - submodules/epix-hr-leap-common/python
+  - submodules/surf/python
+  - python
+  - ../software/python
+
+RogueConfig:
+  - ../software/config
+
+RogueScripts:
+#  - ../software/scripts/devGui
+
+Targets:
+################################################################################  
+  ePixHRM320k:
+    ImageDir: targets/ePixHRM320k/images
+    Extensions:
+      - mcs
+################################################################################        
+Releases:
+  ePixHRM320k:
+    Primary: True
+    Targets:
+      - ePixHRM320k
+    Types:
+      - Rogue
