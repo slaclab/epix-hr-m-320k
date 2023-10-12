@@ -22,3 +22,6 @@
 [submodule "firmware/python/AsicRegMapping"]
 	path = firmware/python/AsicRegMapping
 	url = git@github.com:slaclab/AsicRegMapping.git
+[submodule "firmware/submodules/axi-pcie-core"]
+	path = firmware/submodules/axi-pcie-core
+	url = git@github.com:slaclab/axi-pcie-core.git

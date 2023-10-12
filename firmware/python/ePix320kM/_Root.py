@@ -18,6 +18,8 @@ import rogue.hardware.axi
 import rogue.interfaces.stream
 import rogue.utilities.fileio
 
+import axipcie            as pcie
+
 import os
 import numpy as np
 import time
@@ -25,6 +27,8 @@ import subprocess
 
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
+
+import surf.protocols.pgp as pgp
 
 from ePixViewer.software.deviceFiles import ePixHrMv2
 
@@ -229,6 +233,31 @@ class Root(pr.Root):
                                  value=[0,0,0,0,0],
                                  function=self.fnInitAsic
         ))
+
+
+        # Create PCIE memory mapped interface
+        self.memMap = rogue.hardware.axi.AxiMemMap(dev)
+
+        # Add the PCIe core device to base
+        self.add(pcie.AxiPcieCore(
+            offset     = 0x00000000,
+            memBase     = self.memMap,
+            numDmaLanes = 4,
+            boardType   = None,
+            expand      = False,
+        ))
+
+        # Add PGP Core
+        for lane in range(8):
+                self.add(pgp.Pgp4AxiL(
+                    name    = f'Lane[{lane}]',
+                    offset  = (0x00800000 + lane*0x00010000),
+                    memBase = self.memMap,
+                    numVc   = 1,
+                    writeEn = True,
+                    expand  = False
+                ))              
+
 
     def start(self, **kwargs):
         super().start(**kwargs)
