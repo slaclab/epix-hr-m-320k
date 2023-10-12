@@ -64,13 +64,13 @@ class Root(pr.Root):
             pollEn    = True,  # Enable automatic polling registers
             initRead  = True,  # Read all registers at start of the system
             promProg  = False, # Flag to disable all devices not related to PROM programming
+            pciePgpEn = False, # Enable PCIE PGP card register space access
             **kwargs):
 
         #################################################################
 
         self.promProg = promProg
         self.sim      = (dev == 'sim')
-
         self.top_level = top_level
         
         self.numOfAsics = 4
@@ -234,29 +234,12 @@ class Root(pr.Root):
                                  function=self.fnInitAsic
         ))
 
+        if (not self.sim and pciePgpEn):
+            self.add(fpgaBoard.pciePgp(        
+                                    dev      = dev,
+                                    expand   = False,
+            ))
 
-        # Create PCIE memory mapped interface
-        self.memMap = rogue.hardware.axi.AxiMemMap(dev)
-
-        # Add the PCIe core device to base
-        self.add(pcie.AxiPcieCore(
-            offset     = 0x00000000,
-            memBase     = self.memMap,
-            numDmaLanes = 4,
-            boardType   = None,
-            expand      = False,
-        ))
-
-        # Add PGP Core
-        for lane in range(8):
-                self.add(pgp.Pgp4AxiL(
-                    name    = f'Lane[{lane}]',
-                    offset  = (0x00800000 + lane*0x00010000),
-                    memBase = self.memMap,
-                    numVc   = 1,
-                    writeEn = True,
-                    expand  = False
-                ))              
 
 
     def start(self, **kwargs):
