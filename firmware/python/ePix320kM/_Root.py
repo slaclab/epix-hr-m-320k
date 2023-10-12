@@ -29,6 +29,7 @@ import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
 
 import surf.protocols.pgp as pgp
+import pciePgpCard
 
 from ePixViewer.software.deviceFiles import ePixHrMv2
 
@@ -235,9 +236,10 @@ class Root(pr.Root):
         ))
 
         if (not self.sim and pciePgpEn):
-            self.add(fpgaBoard.pciePgp(        
+            self.add(pciePgpCard.pciePgp(        
                                     dev      = dev,
                                     expand   = False,
+                                    numDmaLanes = 8,
             ))
 
 
