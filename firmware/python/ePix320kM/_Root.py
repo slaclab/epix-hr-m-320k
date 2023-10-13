@@ -182,7 +182,7 @@ class Root(pr.Root):
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
 
         # Read file stream. 
-        self.readerReceiver = fpgaBoard.DataDebug(name = "readerReceiver", size = 70000)
+        self.readerReceiver = fpgaBoard.DataDebug(name = "readerReceiver", size = 10000)
         self.fread = rogue.utilities.fileio.StreamReader()
         self.readUnbatcher = rogue.protocols.batcher.SplitterV1() 
         self.readerReceiver << self.readUnbatcher << self.fread
