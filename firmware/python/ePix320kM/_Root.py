@@ -96,7 +96,6 @@ class Root(pr.Root):
         self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
         self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-        self.streamUnbatchersDbg    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
         self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
 
         # Check if not VCS simulation
@@ -172,8 +171,9 @@ class Root(pr.Root):
             self.add(fullRateDataReceiver(
                 name = f"fullRateDataReceiver[{asicIndex}]"
                 ))
-            self.dataStream[asicIndex] >> self.streamUnbatchersDbg[asicIndex] >> self._dbg[asicIndex]
-            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
+            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
+            self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
+            self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
         # Check if not VCS simulation
         if (not self.sim):
