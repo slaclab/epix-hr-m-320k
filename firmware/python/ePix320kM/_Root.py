@@ -182,12 +182,14 @@ class Root(pr.Root):
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
 
         # Read file stream. 
-        self.readerReceiver = fpgaBoard.DataDebug(name = "readerReceiver", size = 10000)
+        self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
+        self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
         self.fread = rogue.utilities.fileio.StreamReader()
-        self.readUnbatcher = rogue.protocols.batcher.SplitterV1() 
-        self.readerReceiver << self.readUnbatcher << self.fread
-        self.readerReceiver.enableDataDebug(True)
-        self.readerReceiver.enableDebugPrint(True)
+        self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+        for i in range(self.numOfAsics):
+            self.readerReceiver[i] << self.readUnbatcher[i] << self.filter[i] << self.fread
+            self.readerReceiver[i].enableDataDebug(True)
+            self.readerReceiver[i].enableDebugPrint(True)
 
 
         for lane in range(self.numOfAsics):
@@ -346,7 +348,9 @@ class Root(pr.Root):
 
     def readFromFile(self, filename) :
 
-        self.readerReceiver.cleanData()
+        for i in range(self.numOfAsics):
+            self.readerReceiver[i].cleanData()
+
         self.fread.open(filename)
         self.fread.closeWait()
 
