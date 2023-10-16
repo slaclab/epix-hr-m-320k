@@ -189,7 +189,7 @@ class Root(pr.Root):
         for i in range(self.numOfAsics):
             self.readerReceiver[i] << self.readUnbatcher[i] << self.filter[i] << self.fread
             self.readerReceiver[i].enableDataDebug(True)
-            #self.readerReceiver[i].enableDebugPrint(True)
+            self.readerReceiver[i].enableDebugPrint(True)
 
 
         for lane in range(self.numOfAsics):
