@@ -120,7 +120,7 @@ class DataDebug(rogue.interfaces.stream.Slave):
             return
         
         channel = frame.getChannel()
-        print(channel)
+        print("{} has channel {}".format(self.name, channel))
         
         frameSize = frame.getPayload()
         ba = bytearray(frameSize)
