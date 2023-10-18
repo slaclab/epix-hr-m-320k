@@ -30,10 +30,11 @@ library epix_hr_core;
 
 entity AdcMon is
    generic (
-      TPD_G                : time := 1 ns;
-      AXIL_BASE_ADDR_G     : slv(31 downto 0);
-      NUM_OF_SLOW_ADCS_G   : integer := 2;
-      NUM_OF_PSCOPE_G      : integer := 4       -- Related to the number of fast adcs
+      TPD_G                          : time := 1 ns;
+      AXIL_BASE_ADDR_G               : slv(31 downto 0);
+      NUM_OF_SLOW_ADCS_G             : integer := 2;
+      SLOW_ADC_VIRTUAL_DEVICE_CNT_G  : integer := 5;
+      NUM_OF_PSCOPE_G                : integer := 4       -- Related to the number of fast adcs
    );                                           -- NUM_OF_PSCOPE_G * 4 
    port (
       -- Clock and Reset
@@ -53,8 +54,8 @@ entity AdcMon is
       -- Streaming Interfaces (axilClk domain)
       oscopeMasters   : out   AxiStreamMasterArray( NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeSlaves    : in    AxiStreamSlaveArray( NUM_OF_PSCOPE_G - 1 downto 0);
-      slowAdcMasters  : out   AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-      slowAdcSlaves   : in    AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G -1 downto 0);
+      slowAdcMasters  : out   AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+      slowAdcSlaves   : in    AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
       -------------------
       --  Top Level Ports
       -------------------
@@ -316,39 +317,80 @@ begin
    --------------------
    --  Slow ADC Readout
    --------------------
-   GEN_SLOW_ADC :
-   for i in NUM_OF_SLOW_ADCS_G - 1 downto 0 generate
-      U_AdcCntrl : entity epix_hr_core.SlowAdcCntrlAxi
-         generic map (
-         SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
-         ADC_CLK_PERIOD_G  => 125.0E-9,  -- 8MHz
-         SPI_SCLK_PERIOD_G => 500.0E-9)    -- 2MHz
-         port map (
-         -- Master system clock
-         sysClk           => axilClk,
-         sysClkRst        => axilRst,
-         -- Trigger Control
-         adcStart         => slowAdcAcqStart(i),
-         -- AXI lite slave port for register access
-         axilClk          => axilClk,
-         axilRst          => axilRst,
-         sAxilWriteMaster => axilWriteMasters(MONADC_INDEX_C + i),
-         sAxilWriteSlave  => axilWriteSlaves(MONADC_INDEX_C + i),
-         sAxilReadMaster  => axilReadMasters(MONADC_INDEX_C + i),
-         sAxilReadSlave   => axilReadSlaves(MONADC_INDEX_C + i),
-         -- AXI stream output
-         axisClk          => axilClk,
-         axisRst          => axilRst,
-         mAxisMaster      => slowAdcMasters(i),
-         mAxisSlave       => slowAdcSlaves(i),
-         -- ADC Control Signals
-         adcRefClk        => slowAdcRefClk(i),
-         adcDrdy          => slowAdcDrdyL(i),
-         adcSclk          => slowAdcSclk(i),
-         adcDout          => slowAdcDout(i),
-         adcCsL           => slowAdcCsL(i),
-         adcDin           => slowAdcDin(i)
-      );
-   end generate GEN_SLOW_ADC;
+
+   SlowADC_U: entity work.SlowADCMon
+   generic map(
+      SIMULATION_G      => SIMULATION_G,
+      TPD_G             => TPD_G,
+      SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
+      ADC_CLK_PERIOD_G  => 200.0E-9,  -- 5MHz
+      SPI_SCLK_PERIOD_G => 2.0E-6,
+      DEVICE_COUNT      => 4
+   )
+   port map(
+      -- Master system clock
+      sysClk            => axilClk,
+      sysClkRst         => axilRst,
+
+      -- Trigger Control
+      adcStart          => slowAdcAcqStart(0),
+      
+      slowAdcMasters    => slowAdcMasters(3 downto 0),
+      slowAdcSlaves     => slowAdcSlaves(3 downto 0),
+
+      -- AXI lite slave port for register access
+      axilClk          => axilClk,
+      axilRst          => axilRst,
+      sAxilWriteMaster => axilWriteMasters(MONADC_INDEX_C),
+      sAxilWriteSlave  => axilWriteSlaves(MONADC_INDEX_C),
+      sAxilReadMaster  => axilReadMasters(MONADC_INDEX_C),
+      sAxilReadSlave   => axilReadSlaves(MONADC_INDEX_C),
+
+      -- ADC Control Signals
+      adcRefClk        => slowAdcRefClk(0),
+      adcDrdy          => slowAdcDrdyL(0),
+      adcSclk          => slowAdcSclk(0),
+      adcDout          => slowAdcDout(0),
+      adcCsL           => slowAdcCsL(0),
+      adcDin           => slowAdcDin(0)
+   );
+
+
+   SlowADC_U: entity work.SlowADCMon
+   generic map(
+      SIMULATION_G      => SIMULATION_G,
+      TPD_G             => TPD_G,
+      SYS_CLK_PERIOD_G  => AXIL_CLK_PERIOD_C,
+      ADC_CLK_PERIOD_G  => 200.0E-9,  -- 5MHz
+      SPI_SCLK_PERIOD_G => 2.0E-6,
+      DEVICE_COUNT      => 1
+   )
+   port map(
+      -- Master system clock
+      sysClk            => axilClk,
+      sysClkRst         => axilRst,
+
+      -- Trigger Control
+      adcStart          => slowAdcAcqStart(1),
+      
+      slowAdcMasters    => slowAdcMasters(4),
+      slowAdcSlaves     => slowAdcSlaves(4),
+
+      -- AXI lite slave port for register access
+      axilClk          => axilClk,
+      axilRst          => axilRst,
+      sAxilWriteMaster => axilWriteMasters(MONADC_INDEX_C + 1),
+      sAxilWriteSlave  => axilWriteSlaves(MONADC_INDEX_C + 1),
+      sAxilReadMaster  => axilReadMasters(MONADC_INDEX_C + 1),
+      sAxilReadSlave   => axilReadSlaves(MONADC_INDEX_C + 1),
+
+      -- ADC Control Signals
+      adcRefClk        => slowAdcRefClk(1),
+      adcDrdy          => slowAdcDrdyL(1),
+      adcSclk          => slowAdcSclk(1),
+      adcDout          => slowAdcDout(1),
+      adcCsL           => slowAdcCsL(1),
+      adcDin           => slowAdcDin(1)
+   );
 
 end mapping;

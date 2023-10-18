@@ -37,13 +37,14 @@ use work.AppPkg.all;
 
 entity Application is
    generic (
-      TPD_G                : time            := 1 ns;
-      BUILD_INFO_G         : BuildInfoType;
-      SIMULATION_G         : boolean         := false;
-      NUM_EVENT_CHANNELS_G : integer         := 2;
-      NUM_OF_ASICS_G       : integer         := 4;
-      NUM_OF_SLOW_ADCS_G   : integer         := 2;
-      NUM_OF_PSCOPE_G      : integer         := 4
+      TPD_G                          : time            := 1 ns;
+      BUILD_INFO_G                   : BuildInfoType;
+      SIMULATION_G                   : boolean         := false;
+      NUM_EVENT_CHANNELS_G           : integer         := 2;
+      NUM_OF_ASICS_G                 : integer         := 4;
+      NUM_OF_SLOW_ADCS_G             : integer         := 2;
+      NUM_OF_PSCOPE_G                : integer         := 4;
+      SLOW_ADC_VIRTUAL_DEVICE_CNT_G  : integer         := 5;
    );
    port (
       ----------------------
@@ -65,8 +66,8 @@ entity Application is
       remoteDmaPause     : in  slv(3 downto 0);
       oscopeMasters      : out AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
-      slowAdcMasters     : out AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-      slowAdcSlaves      : in  AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcMasters     : out AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+      slowAdcSlaves      : in  AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
 
       -- SSI commands
       ssiCmd             : in SsiCmdMasterType;
@@ -705,7 +706,8 @@ begin
          TPD_G                => TPD_G,
          AXIL_BASE_ADDR_G     => XBAR_CONFIG_C(ADC_INDEX_C).baseAddr,
          NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
+         SLOW_ADC_VIRTUAL_DEVICE_CNT_G => SLOW_ADC_VIRTUAL_DEVICE_CNT_G
       )
       port map (
          clk156          => clk156,

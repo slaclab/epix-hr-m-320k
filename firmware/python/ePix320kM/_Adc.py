@@ -28,14 +28,19 @@ class Adc(pr.Device):
                             ["Therm[4]", "Therm[5]", "ASIC_C0_V2_5A", "ASIC_C1_V2_5A", "ASIC_C2_V2_5A", "ASIC_C3_V2_5A", "ASIC_C4_V2_5A","DIG_PWR_RAW_DIVIDED", "Unused" ],
                             ["THERMISTOR_SENSE[0]", "THERMISTOR_SENSE[1]", "HUMIDITY", "MON_V_1V8", "MON_V_2V5", "7 Vout_6V_10A_IMON", "MON_V_VCC","RAW_VOLTAGE_MON", "Unused" ] ]
 
-        for i in range(2):
-            #ADC 1  Digital board
-            #ADC 2  Power Communication board
-            self.add(epixHr.SlowAdcRegisters(
-                name    = f'AnSlowAdc[{i}]' if i != 3 else f'DigSlowAdc',
-                offset  = i*0x0001_0000,
-                AdcChannelEnum = AdcChannelEnum[i],
-            ))
+        #ADC 1  Digital board
+        #ADC 2  Power Communication board
+        self.add(epixHr.SlowAdcRegisters(
+            name    = 'DigAnSlowAdc',
+            offset  = 0x0000_0000,
+            AdcChannelEnum = AdcChannelEnum[0],
+        ))
+
+        self.add(epixHr.SlowAdcRegisters(
+            name    = 'PCBAnSlowAdc',
+            offset  = 0x0001_0000,
+            AdcChannelEnum = AdcChannelEnum[1],
+        ))
 
         for i in range(4):
             self.add(epixHr.OscilloscopeRegisters(
