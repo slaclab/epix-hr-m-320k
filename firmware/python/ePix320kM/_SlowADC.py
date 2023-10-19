@@ -20,9 +20,9 @@ class SlowADC(pr.Device):
         self.add(pr.RemoteVariable(name='adcRdDone',     offset=0x00,     bitOffset=3,   bitSize=1,   mode='RO',    base=pr.Bool,))
         self.add(pr.RemoteVariable(name='adcDrdy',       offset=0x00,     bitOffset=4,   bitSize=1,   mode='RO',    base=pr.Bool,))
         self.add(pr.RemoteVariable(name='adcDeviceSel',  offset=0x00,     bitOffset=16,  bitSize=16,  mode='RO',    base=pr.UInt,))
-
-        self.add(pr.RemoteVariable(name='autoTrig',      offset=0x08,     bitOffset=0,   bitSize=32,  mode='RW',    base=pr.Int,))
-        self.add(pr.RemoteVariable(name='doutreg',       offset=0x10,     bitOffset=0,   bitSize=8,  mode='RW',    base=pr.UInt,))
+        self.add(pr.RemoteVariable(name='selectedCh',    offset=0x04,     bitOffset=0,   bitSize=32,  mode='RO',    base=pr.UInt,))
+        self.add(pr.RemoteVariable(name='autoTrig',      offset=0x08,     bitOffset=0,   bitSize=16,  mode='RW',    base=pr.UInt,))
+        self.add(pr.RemoteVariable(name='doutreg',       offset=0x10,     bitOffset=0,   bitSize=8,   mode='RW',    base=pr.UInt,))
 
         for deviceIndex in range(deviceCount):
            for registerIndex in range(8): 

@@ -123,8 +123,8 @@ architecture testbench of ePixHRM320kTb is
     signal adcMonClkM               : sl                     := '1';
     signal adcMonPdwn               : sl                     := '1';
     signal adcMonSpiCsb             : sl                     := '1';
-    signal slowAdcDout              : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
-    signal slowAdcDrdyL             : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
+    signal slowAdcDout              : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0) := (others => '1');
+    signal slowAdcDrdyL             : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0) := (others => '0');
     signal slowAdcSyncL             : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
     signal slowAdcSclk              : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);
     signal slowAdcCsL               : slv(NUM_OF_SLOW_ADCS_C - 1 downto 0);

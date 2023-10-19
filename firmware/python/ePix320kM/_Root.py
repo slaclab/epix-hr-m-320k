@@ -32,6 +32,8 @@ import surf.protocols.pgp as pgp
 import pciePgpCard
 
 from ePixViewer.software.deviceFiles import ePixHrMv2
+from ePixViewer.software import EnvDataReceiver
+from ePixViewer.software import ScopeDataReceiver
 
 rogue.Version.minVersion('5.14.0')
 
@@ -90,7 +92,7 @@ class Root(pr.Root):
 
         # Create an empty list to be filled
         self.dataStream    = [None for i in range(self.numOfAsics)]
-        self.adcMonStream  = [None for i in range(4)]
+        self.adcMonStream  = [None for i in range(5)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
         self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
@@ -114,8 +116,9 @@ class Root(pr.Root):
             self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
             self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
-            for vc in range(4):
+            for vc in range(5):
                 self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
+            for vc in range(4):                
                 self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
             # # Create (Xilinx Virtual Cable) XVC on localhost
@@ -148,6 +151,11 @@ class Root(pr.Root):
             # 2 TCP ports per stream
             self.ssiCmdStream = rogue.interfaces.stream.TcpClient('localhost', 24012)
 
+            for vc in range(5):
+                self.adcMonStream[vc] = rogue.interfaces.stream.TcpClient('localhost', 24016 + 2 * vc)
+            for vc in range(4):
+                self.oscopeStream[vc] = rogue.interfaces.stream.TcpClient('localhost', 24026 + 2 * vc)
+
         self._cmd = rogue.protocols.srp.Cmd()
 
         # Connect ssiCmd to ssiCmdStream
@@ -169,17 +177,92 @@ class Root(pr.Root):
         for asicIndex in range(self.numOfAsics):
             self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
             self.add(fullRateDataReceiver(
-                name = f"fullRateDataReceiver[{asicIndex}]"
+                name = f"fullRateDataReceiver[{asicIndex}]",
+                hidden = True
                 ))
             self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
             self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
             self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
+
+
+        # Check if not VCS simulation
+        envConf = [
+            [
+                {   'id': 0, 'name': 'Therm 0 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
+                {   'id': 1, 'name': 'Therm 1 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
+                {   'id': 2, 'name': 'Analog VIN (volts)',    'conv': lambda data: data, 'color': '#00FFFF'  },
+                {   'id': 3, 'name': 'ASIC C0 AVDD (Amps)',   'conv': lambda data: data, 'color': '#FFFF00'  },
+                {   'id': 4, 'name': 'ASIC C0 DVDD (Amps)',   'conv': lambda data: data, 'color': '#F0F0F0'  },
+                {   'id': 5, 'name': 'ASIC C1 AVDD (Amps)',   'conv': lambda data: data, 'color': '#F0500F'  },
+                {   'id': 6, 'name': 'ASIC C1 DVDD (Amps)',   'conv': lambda data: data, 'color': '#503010'  },
+                {   'id': 7, 'name': 'ASIC C2 AVDD (Amps)',   'conv': lambda data: data, 'color': '#777777'  }
+            ],
+            [
+                {   'id': 0, 'name': 'Therm 2 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
+                {   'id': 1, 'name': 'Therm 3 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
+                {   'id': 2, 'name': 'ASIC C2 DVDD (Amps)',   'conv': lambda data: data, 'color': '#00FFFF'  },
+                {   'id': 3, 'name': 'ASIC C3 DVDD (Amps)',   'conv': lambda data: data, 'color': '#FFFF00'  },
+                {   'id': 4, 'name': 'ASIC C3 AVDD (Amps)',   'conv': lambda data: data, 'color': '#F0F0F0'  },
+                {   'id': 5, 'name': 'ASIC C4 DVDD (Amps)',   'conv': lambda data: data, 'color': '#F0500F'  },
+                {   'id': 6, 'name': 'ASIC C4 AVDD (Amps)',   'conv': lambda data: data, 'color': '#503010'  },
+                {   'id': 7, 'name': 'Humidity (%)',          'conv': lambda data: 45.8*data-21.3, 'color': '#777777'  }
+            ],
+            [
+                {   'id': 0, 'name': 'Therm 4 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
+                {   'id': 1, 'name': 'Therm 5 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
+                {   'id': 2, 'name': 'ASIC C0 V2 5A (volts)', 'conv': lambda data: data, 'color': '#00FFFF'  },
+                {   'id': 3, 'name': 'ASIC C1 V2 5A (volts)', 'conv': lambda data: data, 'color': '#FFFF00'  },
+                {   'id': 4, 'name': 'ASIC C2 V2 5A (volts)', 'conv': lambda data: data, 'color': '#F0F0F0'  },
+                {   'id': 5, 'name': 'ASIC C3 V2 5A (volts)', 'conv': lambda data: data, 'color': '#F0500F'  },
+                {   'id': 6, 'name': 'ASIC C4 V2 5A (volts)', 'conv': lambda data: data, 'color': '#503010'  },
+                {   'id': 7, 'name': 'Digital VIN (volts)',   'conv': lambda data: data, 'color': '#777777'  }
+            ],
+            [
+                {   'id': 0, 'name': 'Therm dig. 0 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FFFFFF'  },
+                {   'id': 1, 'name': 'Therm dig. 1 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF' },
+                {   'id': 2, 'name': 'Humidity dig. (%)',     'conv': lambda data: data*45.8-21.3, 'color': '#00FFFF'  },
+                {   'id': 3, 'name': '1V8 (volts)',           'conv': lambda data: data, 'color': '#FFFF00'  },
+                {   'id': 4, 'name': '2V5 (volts)',           'conv': lambda data: data, 'color': '#F0F0F0'  },
+                {   'id': 5, 'name': 'Vout 6V 10A (Amps)',    'conv': lambda data: 10*data, 'color': '#F0500F'  },
+                {   'id': 6, 'name': 'Mon VCC (volts)',       'conv': lambda data: data, 'color': '#503010'  },
+                {   'id': 7, 'name': 'Raw voltage (volts)',   'conv': lambda data: 3* data, 'color': '#777777'  }
+            ],
+            [
+                {   'id': 0, 'name': 'Therm dig. 0 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FFFFFF'  },
+                {   'id': 1, 'name': 'Therm dig. 1 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF' },
+                {   'id': 2, 'name': 'Humidity dig. (%)',     'conv': lambda data: data*45.8-21.3, 'color': '#00FFFF'  },
+                {   'id': 3, 'name': '1V8 (volts)',           'conv': lambda data: data, 'color': '#FFFF00'  },
+                {   'id': 4, 'name': '2V5 (volts)',           'conv': lambda data: data, 'color': '#F0F0F0'  },
+                {   'id': 5, 'name': 'Vout 6V 10A (Amps)',    'conv': lambda data: 10*data, 'color': '#F0500F'  },
+                {   'id': 6, 'name': 'Mon VCC (volts)',       'conv': lambda data: data, 'color': '#503010'  },
+                {   'id': 7, 'name': 'Raw voltage (volts)',   'conv': lambda data: 3* data, 'color': '#777777'  }
+            ]
+        ]
+
+
+        # Check if not VCS simulation
+        for vc in range(5):
+            self.adcMonStream[vc] >> self.dataWriter.getChannel(vc+8)
+            
+            self.add(
+                EnvDataReceiver(
+                    config = envConf[vc], 
+                    clockT = 6.4e-9, 
+                    rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
+                    name = f"EnvData{vc}"
+                )
+            )
+            self.adcMonStream[vc] >> getattr(self, f"EnvData{vc}")
+
         # Check if not VCS simulation
         if (not self.sim):
             for vc in range(4):
-                self.adcMonStream[vc] >> self.dataWriter.getChannel(vc + 8)
-                self.oscopeStream[vc] >> self.dataWriter.getChannel(lane + 12)
+                self.oscopeStream[vc] >> self.dataWriter.getChannel(vc+13)
+
+                self.add(ScopeDataReceiver(name = f"ScopeData{vc}"))
+                self.oscopeStream[vc] >> getattr(self, f"ScopeData{vc}")
+                
 
         # Read file stream. 
         self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
@@ -255,6 +338,13 @@ class Root(pr.Root):
             getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
         for asicIndex in range(self.numOfAsics):    
             getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
+
+        for vc in range(5): 
+            getattr(self, f"EnvData{vc}").RxEnable.set(False)
+        if (not self.sim) : 
+            for vc in range(4):             
+                getattr(self, f"ScopeData{vc}").RxEnable.set(False)
+
 
     def enableAllAsics(self, enable) :
         for batcherIndex in range(self.numOfAsics) :
