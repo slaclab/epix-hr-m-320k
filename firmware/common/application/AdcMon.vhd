@@ -34,7 +34,8 @@ entity AdcMon is
       AXIL_BASE_ADDR_G               : slv(31 downto 0);
       NUM_OF_SLOW_ADCS_G             : integer := 2;
       SLOW_ADC_VIRTUAL_DEVICE_CNT_G  : integer := 5;
-      NUM_OF_PSCOPE_G                : integer := 4       -- Related to the number of fast adcs
+      NUM_OF_PSCOPE_G                : integer := 4;       -- Related to the number of fast adcs
+      SIMULATION_G                   : boolean := false
    );                                           -- NUM_OF_PSCOPE_G * 4 
    port (
       -- Clock and Reset
@@ -318,7 +319,7 @@ begin
    --  Slow ADC Readout
    --------------------
 
-   SlowADC_U: entity work.SlowADCMon
+   DigSlowADC_U: entity work.SlowADCMon
    generic map(
       SIMULATION_G      => SIMULATION_G,
       TPD_G             => TPD_G,
@@ -356,7 +357,7 @@ begin
    );
 
 
-   SlowADC_U: entity work.SlowADCMon
+   PCBSlowADC_U: entity work.SlowADCMon
    generic map(
       SIMULATION_G      => SIMULATION_G,
       TPD_G             => TPD_G,
@@ -373,8 +374,8 @@ begin
       -- Trigger Control
       adcStart          => slowAdcAcqStart(1),
       
-      slowAdcMasters    => slowAdcMasters(4),
-      slowAdcSlaves     => slowAdcSlaves(4),
+      slowAdcMasters(0)    => slowAdcMasters(4),
+      slowAdcSlaves(0)     => slowAdcSlaves(4),
 
       -- AXI lite slave port for register access
       axilClk          => axilClk,

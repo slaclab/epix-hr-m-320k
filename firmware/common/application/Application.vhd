@@ -44,7 +44,7 @@ entity Application is
       NUM_OF_ASICS_G                 : integer         := 4;
       NUM_OF_SLOW_ADCS_G             : integer         := 2;
       NUM_OF_PSCOPE_G                : integer         := 4;
-      SLOW_ADC_VIRTUAL_DEVICE_CNT_G  : integer         := 5;
+      SLOW_ADC_VIRTUAL_DEVICE_CNT_G  : integer         := 5
    );
    port (
       ----------------------
@@ -707,7 +707,8 @@ begin
          AXIL_BASE_ADDR_G     => XBAR_CONFIG_C(ADC_INDEX_C).baseAddr,
          NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
          NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
-         SLOW_ADC_VIRTUAL_DEVICE_CNT_G => SLOW_ADC_VIRTUAL_DEVICE_CNT_G
+         SLOW_ADC_VIRTUAL_DEVICE_CNT_G => SLOW_ADC_VIRTUAL_DEVICE_CNT_G,
+         SIMULATION_G         => SIMULATION_G
       )
       port map (
          clk156          => clk156,

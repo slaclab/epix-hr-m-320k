@@ -287,6 +287,8 @@ begin
 
       end case;
 
+      v.doutreg := std_logic_vector(to_unsigned(r.adcDeviceSel_r, 8));
+
       if (axilRst = '1') then
          v := REG_INIT_C;
       end if;
@@ -442,7 +444,6 @@ begin
           dbg_cmdcnter    => dbg
        );
 
-   adcDout <= std_logic_vector(to_unsigned(r.adcDeviceSel_r, 8));
    adcCsL  <=  adcCsLR;
 
 end RTL;

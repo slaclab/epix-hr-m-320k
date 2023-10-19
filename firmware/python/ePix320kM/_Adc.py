@@ -12,6 +12,7 @@ import pyrogue as pr
 
 import epix_hr_core                 as epixHr
 import surf.devices.analog_devices  as adi
+import ePix320kM as fpga
 
 class Adc(pr.Device):
     def __init__( self,**kwargs):
@@ -30,16 +31,16 @@ class Adc(pr.Device):
 
         #ADC 1  Digital board
         #ADC 2  Power Communication board
-        self.add(epixHr.SlowAdcRegisters(
-            name    = 'DigAnSlowAdc',
-            offset  = 0x0000_0000,
-            AdcChannelEnum = AdcChannelEnum[0],
+        self.add(fpga.SlowADC(
+            name='DigSlowADC',
+            offset= 0x00000_0000,
+            deviceCount=4,
         ))
 
-        self.add(epixHr.SlowAdcRegisters(
-            name    = 'PCBAnSlowAdc',
-            offset  = 0x0001_0000,
-            AdcChannelEnum = AdcChannelEnum[1],
+        self.add(fpga.SlowADC(
+            name='PCBSlowADC',
+            offset= 0x00001_0000,
+            deviceCount=1,
         ))
 
         for i in range(4):
