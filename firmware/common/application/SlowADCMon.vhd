@@ -211,60 +211,54 @@ begin
                 v.state           := WAIT_INITDONE_S;
             
             elsif v.autoTrig /= x"00000000" and ( 
-                (v.tick(31 downto 16) >= unsigned(v.autoTrig) and SIMULATION_G = FALSE) or
-                (v.tick(15 downto 0) >= unsigned(v.autoTrig) and SIMULATION_G = TRUE) ) then
-                v.delaycnter      := x"00";
-                v.state           := WAIT_INITDONE_S;
+               (v.tick(31 downto 16) >= unsigned(v.autoTrig) and SIMULATION_G = FALSE) or
+               (v.tick(15 downto 0) >= unsigned(v.autoTrig) and SIMULATION_G = TRUE) ) then
+               v.delaycnter      := x"00";
+               v.state           := WAIT_INITDONE_S;
             end if;
-
-        when WAIT_INITDONE_S =>
+  
+         when WAIT_INITDONE_S =>
             v.adcCoreStart_r  := '0';
             v.adcCoreRst_r    := '0';
             
             if r.delaycnter(7) = '1' then
-                v.adcCoreStart_r  := '1';
-                v.state           := WAIT_ADCISREADING_S;
+               v.adcCoreStart_r  := '1';
+               v.state           := WAIT_ADCISREADING_S;
             else
-                v.delaycnter      := r.delaycnter + 1;
+               v.delaycnter      := r.delaycnter + 1;
             end if;
-            
+              
 
         when WAIT_ADCISREADING_S =>
             if adcRdDoneSync = '0' then
                 v.state := ADCRD_S;
-                -- If tReady goes to 0, data is discarded. Added Fifo after so this case does not happen
+                -- Bug: if tReady goes to 0, data is lost. Added Fifo to minimize this case
                 if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
-                   v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
-                
-                
-                  ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(0), '1');
-                  v.txMaster(r.adcDeviceSel_r).tLast              := '0';
-                  v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
-                  v.txMaster(r.adcDeviceSel_r).tValid             := '1';
+                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
+                    ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(0), '1');
+                    v.txMaster(r.adcDeviceSel_r).tLast              := '0';
+                    v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
+                    v.txMaster(r.adcDeviceSel_r).tValid             := '1';
                 end if;
-            end if;
+            end if;   
 
         when ADCRD_S =>
             v.adcCoreStart_r  := '0';
             
-            -- This won't work when ready goes low.
             if newDataSync = '1' then
-                -- If tReady goes to 0, data is discarded. Added Fifo after so this case does not happen
+                -- Bug: if tReady goes to 0, data is lost. Added Fifo to minimize this case
                 if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
-                   v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
+                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
+                    v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "0000" & channelSync & channelDataSync;
+                    v.txMaster(r.adcDeviceSel_r).tValid             := '1';
                   
-                  
-                  v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "0000" & channelSync & channelDataSync;
-                  v.txMaster(r.adcDeviceSel_r).tValid             := '1';
-                  
-                  if adcRdDoneSync = '1' then                
-                     v.txMaster(r.adcDeviceSel_r).tLast              := '1';
-                  else
-                     v.txMaster(r.adcDeviceSel_r).tLast              := '0';
-                  end if;
+                    if adcRdDoneSync = '1' then                
+                        v.txMaster(r.adcDeviceSel_r).tLast              := '1';
+                    else
+                        v.txMaster(r.adcDeviceSel_r).tLast              := '0';
+                    end if;
                 end if;
-            end if;
-            
+            end if;            
 
             if adcRdDoneSync = '1' then
                 -- Register data:
@@ -305,7 +299,6 @@ begin
 
       sAxilWriteSlave   <= r.sAxilWriteSlave;
       sAxilReadSlave    <= r.sAxilReadSlave;
-      slowAdcMasters    <= r.txMaster;
 
    end process comb;
 
@@ -459,7 +452,6 @@ begin
       AxisDualClockFifo_U: entity surf.AxiStreamFifoV2
       generic map(
          FIFO_ADDR_WIDTH_G    => 4,
-         CASCADE_SIZE_G       => 1,
          SLAVE_AXI_CONFIG_G   => ssiAxiStreamConfig(4),
          MASTER_AXI_CONFIG_G  => ssiAxiStreamConfig(4)
       )
