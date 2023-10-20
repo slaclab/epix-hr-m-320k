@@ -206,11 +206,11 @@ begin
 
    U_App : entity work.Application
       generic map (
-         TPD_G                => TPD_G,
-         BUILD_INFO_G         => BUILD_INFO_G,
-         SIMULATION_G         => SIMULATION_G,
-         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
+         TPD_G                         => TPD_G,
+         BUILD_INFO_G                  => BUILD_INFO_G,
+         SIMULATION_G                  => SIMULATION_G,
+         NUM_OF_PSCOPE_G               => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G            => NUM_OF_SLOW_ADCS_G,
          SLOW_ADC_VIRTUAL_DEVICE_CNT_G => SLOW_ADC_VIRTUAL_DEVICE_CNT_G
       )
       port map (

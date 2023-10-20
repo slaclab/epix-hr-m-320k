@@ -244,22 +244,20 @@ class Root(pr.Root):
         # Check if not VCS simulation
         for vc in range(5):
             self.adcMonStream[vc] >> self.dataWriter.getChannel(vc+8)
-            
             self.add(
                 EnvDataReceiver(
                     config = envConf[vc], 
                     clockT = 6.4e-9, 
                     rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
-                    name = f"EnvData{vc}"
+                    name = f"EnvData[{vc}]"
                 )
             )
-            self.adcMonStream[vc] >> getattr(self, f"EnvData{vc}")
+            self.adcMonStream[vc] >> self.EnvData[vc]
 
         # Check if not VCS simulation
         if (not self.sim):
             for vc in range(4):
                 self.oscopeStream[vc] >> self.dataWriter.getChannel(vc+13)
-
                 self.add(ScopeDataReceiver(name = f"ScopeData{vc}"))
                 self.oscopeStream[vc] >> getattr(self, f"ScopeData{vc}")
                 
@@ -339,8 +337,8 @@ class Root(pr.Root):
         for asicIndex in range(self.numOfAsics):    
             getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
-        for vc in range(5): 
-            getattr(self, f"EnvData{vc}").RxEnable.set(False)
+        #for vc in range(5): 
+        #    self.EnvData[vc].RxEnable.set(False)
         if (not self.sim) : 
             for vc in range(4):             
                 getattr(self, f"ScopeData{vc}").RxEnable.set(False)
