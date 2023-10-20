@@ -123,7 +123,7 @@ architecture RTL of SlowADCMon is
 
       sAxilWriteSlave     => AXI_LITE_WRITE_SLAVE_INIT_C,
       sAxilReadSlave      => AXI_LITE_READ_SLAVE_INIT_C,
-      txMaster            => (others => axiStreamMasterInit(PGP4_AXIS_CONFIG_C))
+      txMaster            => (others => axiStreamMasterInit(ssiAxiStreamConfig(4)))
    );
 
    signal r   : RegType := REG_INIT_C;
@@ -231,10 +231,10 @@ begin
             if adcRdDoneSync = '0' then
                 v.state := ADCRD_S;
                 if (slowAdcSlaves(r.adcDeviceSel_r).tReady = '1') then
-                   v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(PGP4_AXIS_CONFIG_C);
+                   v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
                 end if;
                 
-                ssiSetUserSof(PGP4_AXIS_CONFIG_C, v.txMaster(0), '1');
+                ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(0), '1');
                 v.txMaster(r.adcDeviceSel_r).tLast              := '0';
                 v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
                 v.txMaster(r.adcDeviceSel_r).tValid             := '1';
@@ -246,7 +246,7 @@ begin
             
             if newDataSync = '1' then
                 if (slowAdcSlaves(r.adcDeviceSel_r).tReady = '1') then
-                   v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(PGP4_AXIS_CONFIG_C);
+                   v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
                 end if;
                 
                 v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "0000" & channelSync & channelDataSync;
