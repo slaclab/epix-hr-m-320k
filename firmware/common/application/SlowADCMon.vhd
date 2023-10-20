@@ -149,12 +149,14 @@ architecture RTL of SlowADCMon is
    signal newData         : sl;
    signal channel         : slv(3 downto 0);
    signal channelData     : slv(23 downto 0);
+
+   signal slowAdcSlavesSMOut   : AxiStreamSlaveArray(DEVICE_COUNT-1 downto 0);
 begin
 
    ---------------------------------------------------------------------------
    -----------   AXI LIte register readout logic  ----------------------------
    ---------------------------------------------------------------------------
-   comb : process (axilRst, sAxilReadMaster, sAxilWriteMaster, r, axilClk, adcRdDoneSync, adcDrdySync, dbg, adcStart, slowAdcSlaves, newDataSync, channelSync, channelDataSync, adcDataSync) is
+   comb : process (axilRst, sAxilReadMaster, sAxilWriteMaster, r, axilClk, adcRdDoneSync, adcDrdySync, dbg, adcStart, slowAdcSlavesSMOut, newDataSync, channelSync, channelDataSync, adcDataSync) is
       variable v        : RegType;
       variable regCon   : AxiLiteEndPointType;
    begin
@@ -230,32 +232,36 @@ begin
         when WAIT_ADCISREADING_S =>
             if adcRdDoneSync = '0' then
                 v.state := ADCRD_S;
-                if (slowAdcSlaves(r.adcDeviceSel_r).tReady = '1') then
+                -- If tReady goes to 0, data is discarded. Added Fifo after so this case does not happen
+                if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
+                
+                
+                  ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(0), '1');
+                  v.txMaster(r.adcDeviceSel_r).tLast              := '0';
+                  v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
+                  v.txMaster(r.adcDeviceSel_r).tValid             := '1';
                 end if;
-                
-                ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(0), '1');
-                v.txMaster(r.adcDeviceSel_r).tLast              := '0';
-                v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
-                v.txMaster(r.adcDeviceSel_r).tValid             := '1';
-                
             end if;
 
         when ADCRD_S =>
             v.adcCoreStart_r  := '0';
             
+            -- This won't work when ready goes low.
             if newDataSync = '1' then
-                if (slowAdcSlaves(r.adcDeviceSel_r).tReady = '1') then
+                -- If tReady goes to 0, data is discarded. Added Fifo after so this case does not happen
+                if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
-                end if;
-                
-                v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "0000" & channelSync & channelDataSync;
-                v.txMaster(r.adcDeviceSel_r).tValid             := '1';
-                
-                if adcRdDoneSync = '1' then                
-                    v.txMaster(r.adcDeviceSel_r).tLast              := '1';
-                else
-                    v.txMaster(r.adcDeviceSel_r).tLast              := '0';
+                  
+                  
+                  v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "0000" & channelSync & channelDataSync;
+                  v.txMaster(r.adcDeviceSel_r).tValid             := '1';
+                  
+                  if adcRdDoneSync = '1' then                
+                     v.txMaster(r.adcDeviceSel_r).tLast              := '1';
+                  else
+                     v.txMaster(r.adcDeviceSel_r).tLast              := '0';
+                  end if;
                 end if;
             end if;
             
@@ -447,5 +453,27 @@ begin
        );
 
    adcCsL  <=  adcCsLR;
+
+
+   AxisDualClockFifo_G : for i in 0 to DEVICE_COUNT-1 generate
+      AxisDualClockFifo_U: entity surf.AxiStreamFifoV2
+      generic map(
+         FIFO_ADDR_WIDTH_G    => 4,
+         CASCADE_SIZE_G       => 1,
+         SLAVE_AXI_CONFIG_G   => ssiAxiStreamConfig(4),
+         MASTER_AXI_CONFIG_G  => ssiAxiStreamConfig(4)
+      )
+      port map(
+         sAxisClk    => axilClk,
+         sAxisRst    => axilRst,
+         sAxisMaster => r.txMaster(i),
+         sAxisSlave  => slowAdcSlavesSMOut(i),
+         mAxisClk    => axilClk,
+         mAxisRst    => axilRst,
+         mAxisMaster => slowAdcMasters(i),
+         mAxisSlave  => slowAdcSlaves(i)
+      );
+   end generate;
+
 
 end RTL;

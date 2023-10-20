@@ -31,8 +31,7 @@ entity ePixHRM320k is
       SIMULATION_G                  : boolean         := false;
       NUM_OF_ASICS_G                : integer         := 4;
       NUM_OF_SLOW_ADCS_G            : integer         := 2;
-      NUM_OF_PSCOPE_G               : integer         := 4;
-      SLOW_ADC_VIRTUAL_DEVICE_CNT_G : integer         := 5
+      NUM_OF_PSCOPE_G               : integer         := 4
    );
    port (
       ----------------------------------------------
@@ -191,8 +190,8 @@ architecture topLevel of ePixHRM320k is
    signal remoteDmaPause  : slv(NUM_OF_ASICS_G - 1 downto 0);
    signal oscopeMasters   : AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
    signal oscopeSlaves    : AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
-   signal slowAdcMasters  : AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
-   signal slowAdcSlaves   : AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+   signal slowAdcMasters  : AxiStreamMasterArray(0 downto 0);
+   signal slowAdcSlaves   : AxiStreamSlaveArray(0 downto 0);
 
    -- AXI-Lite: Register Access
    signal axilReadMaster  : AxiLiteReadMasterType;
@@ -210,8 +209,7 @@ begin
          BUILD_INFO_G                  => BUILD_INFO_G,
          SIMULATION_G                  => SIMULATION_G,
          NUM_OF_PSCOPE_G               => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G            => NUM_OF_SLOW_ADCS_G,
-         SLOW_ADC_VIRTUAL_DEVICE_CNT_G => SLOW_ADC_VIRTUAL_DEVICE_CNT_G
+         NUM_OF_SLOW_ADCS_G            => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
@@ -342,7 +340,7 @@ begin
          SIMULATION_G   => SIMULATION_G,
          NUM_OF_LANES_G => NUM_OF_ASICS_G,
          NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => SLOW_ADC_VIRTUAL_DEVICE_CNT_G,
+         NUM_OF_SLOW_ADCS_G   => 1,
          MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem"
       )
       port map (

@@ -92,7 +92,6 @@ class Root(pr.Root):
 
         # Create an empty list to be filled
         self.dataStream    = [None for i in range(self.numOfAsics)]
-        self.adcMonStream  = [None for i in range(5)]
         self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
         self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
@@ -116,8 +115,7 @@ class Root(pr.Root):
             self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
             self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
-            for vc in range(5):
-                self.adcMonStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6 + vc, 1)
+            self.adcMonStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6, 1)
             for vc in range(4):                
                 self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
@@ -151,8 +149,7 @@ class Root(pr.Root):
             # 2 TCP ports per stream
             self.ssiCmdStream = rogue.interfaces.stream.TcpClient('localhost', 24012)
 
-            for vc in range(5):
-                self.adcMonStream[vc] = rogue.interfaces.stream.TcpClient('localhost', 24016 + 2 * vc)
+            self.adcMonStream = rogue.interfaces.stream.TcpClient('localhost', 24016)
             for vc in range(4):
                 self.oscopeStream[vc] = rogue.interfaces.stream.TcpClient('localhost', 24026 + 2 * vc)
 
@@ -241,9 +238,13 @@ class Root(pr.Root):
         ]
 
 
-        # Check if not VCS simulation
+        self.packetizer = rogue.protocols.packetizer.CoreV2(False, False, True); # No inbound and outbound crc, enSsi=True
+
+        # Connect VC stream to depacketizer
+        self.adcMonStream >> self.packetizer.transport()
+
         for vc in range(5):
-            self.adcMonStream[vc] >> self.dataWriter.getChannel(vc+8)
+            self.packetizer.application(vc) >> self.dataWriter.getChannel(vc+8)
             self.add(
                 EnvDataReceiver(
                     config = envConf[vc], 
@@ -252,7 +253,7 @@ class Root(pr.Root):
                     name = f"EnvData[{vc}]"
                 )
             )
-            self.adcMonStream[vc] >> self.EnvData[vc]
+            self.packetizer.application(vc) >> self.EnvData[vc]
 
         # Check if not VCS simulation
         if (not self.sim):

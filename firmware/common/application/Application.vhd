@@ -66,8 +66,8 @@ entity Application is
       remoteDmaPause     : in  slv(3 downto 0);
       oscopeMasters      : out AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
-      slowAdcMasters     : out AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
-      slowAdcSlaves      : in  AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+      slowAdcMasters     : out AxiStreamMasterArray(0 downto 0);
+      slowAdcSlaves      : in  AxiStreamSlaveArray(0 downto 0);
 
       -- SSI commands
       ssiCmd             : in SsiCmdMasterType;
@@ -315,6 +315,13 @@ architecture rtl of Application is
    signal biasDacSclkSig         : sl;
    signal biasDacCsbSig          : sl;
    signal biasDacClrbSig         : sl;
+
+
+   signal slowAdcMastersDemuxed  : AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+   signal slowAdcSlavesDemuxed   : AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+
+   signal slowAdcMasterMuxed       : AxiStreamMasterType;
+   signal slowAdcSlaveMuxed        : AxiStreamSlaveType;
 
 begin
 
@@ -727,8 +734,8 @@ begin
          -- Streaming Interfaces (axilClk domain)
          oscopeMasters   => oscopeMasters,
          oscopeSlaves    => oscopeSlaves,
-         slowAdcMasters  => slowAdcMasters,
-         slowAdcSlaves   => slowAdcSlaves,
+         slowAdcMasters  => slowAdcMastersDemuxed,
+         slowAdcSlaves   => slowAdcSlavesDemuxed,
          -------------------
          --  Top Level Ports
          -------------------
@@ -754,5 +761,47 @@ begin
          adcMonDataClkP  => adcMonDataClkP,
          adcMonDataClkM  => adcMonDataClkM
       );
+
+
+
+U_SlowADCStreamMux : entity surf.AxiStreamMux
+   generic map(
+      NUM_SLAVES_G         => 5,
+      MODE_G               => "INDEXED"
+   )
+   port map(
+      -- Clock and reset
+      axisClk         => axilClk,
+      axisRst         => axilRst,
+      -- Slaves
+      sAxisMasters    => slowAdcMastersDemuxed,
+      sAxisSlaves     =>  slowAdcSlavesDemuxed,
+
+      -- Master
+      mAxisMaster  => slowAdcMasterMuxed, 
+      mAxisSlave   => slowAdcSlaveMuxed
+      );
+
+
+   -- Packetize everything
+   U_U_SlowADCStreamPacketizer : entity surf.AxiStreamPacketizer2
+      generic map (
+         TPD_G                => TPD_G,
+         MEMORY_TYPE_G        => "distributed",
+         REG_EN_G             => false,
+         CRC_MODE_G           => "NONE",
+         MAX_PACKET_BYTES_G   => 256,
+         TDEST_BITS_G         => 0,
+         INPUT_PIPE_STAGES_G  => 0,
+         OUTPUT_PIPE_STAGES_G => 0)
+      port map (
+         axisClk     => axilClk,        
+         axisRst     => axilRst,        
+         sAxisMaster => slowAdcMasterMuxed,
+         sAxisSlave  => slowAdcSlaveMuxed,
+         mAxisMaster => slowAdcMasters(0),
+         mAxisSlave  => slowAdcSlaves(0)
+         );     
+
 
 end rtl; -- rtl
