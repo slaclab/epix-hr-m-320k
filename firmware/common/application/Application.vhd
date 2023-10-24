@@ -767,7 +767,12 @@ begin
 U_SlowADCStreamMux : entity surf.AxiStreamMux
    generic map(
       NUM_SLAVES_G         => 5,
-      MODE_G               => "INDEXED"
+      TDEST_ROUTES_G => (
+         0           => "00000000",
+         1           => "00000001",
+         2           => "00000010",
+         3           => "00000011",
+         4           => "00000100")
    )
    port map(
       -- Clock and reset
@@ -787,13 +792,8 @@ U_SlowADCStreamMux : entity surf.AxiStreamMux
    U_U_SlowADCStreamPacketizer : entity surf.AxiStreamPacketizer2
       generic map (
          TPD_G                => TPD_G,
-         MEMORY_TYPE_G        => "distributed",
-         REG_EN_G             => false,
          CRC_MODE_G           => "NONE",
-         MAX_PACKET_BYTES_G   => 256,
-         TDEST_BITS_G         => 0,
-         INPUT_PIPE_STAGES_G  => 0,
-         OUTPUT_PIPE_STAGES_G => 0)
+         MAX_PACKET_BYTES_G   => 256)
       port map (
          axisClk     => axilClk,        
          axisRst     => axilRst,        

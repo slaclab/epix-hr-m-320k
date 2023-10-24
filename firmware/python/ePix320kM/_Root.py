@@ -241,7 +241,7 @@ class Root(pr.Root):
         self.packetizer = rogue.protocols.packetizer.CoreV2(False, False, True); # No inbound and outbound crc, enSsi=True
 
         # Connect VC stream to depacketizer
-        # self.adcMonStream >> self.packetizer.transport()
+        self.adcMonStream >> self.packetizer.transport()
 
         for vc in range(5):
             self.packetizer.application(vc) >> self.dataWriter.getChannel(vc+8)
@@ -253,8 +253,7 @@ class Root(pr.Root):
                     name = f"EnvData[{vc}]"
                 )
             )
-            # self.packetizer.application(vc) >> self.EnvData[vc]
-        self.adcMonStream >> self.EnvData[0]
+        self.packetizer.application(vc) >> self.EnvData[vc]
 
         # Check if not VCS simulation
         if (not self.sim):
