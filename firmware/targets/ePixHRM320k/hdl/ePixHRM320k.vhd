@@ -339,8 +339,12 @@ begin
          BUILD_INFO_G   => BUILD_INFO_G,
          SIMULATION_G   => SIMULATION_G,
          NUM_OF_LANES_G => NUM_OF_ASICS_G,
-         NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => 1,
+         NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G, 
+         NUM_OF_SLOW_ADCS_G   => 1, -- Since we have 5 channels from ADCs, 
+                                    -- they were multiplexed and packetized
+                                    -- into one stream only. So this will be 1.
+                                    -- The streams will be depacketized and demuxed
+                                    -- in software
          MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem"
       )
       port map (

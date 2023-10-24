@@ -235,7 +235,7 @@ begin
                 -- Bug: if tReady goes to 0, data is lost. Added Fifo to minimize this case
                 if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
                     v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
-                    ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(0), '1');
+                    ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(r.adcDeviceSel_r), '1');
                     v.txMaster(r.adcDeviceSel_r).tLast              := '0';
                     v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
                     v.txMaster(r.adcDeviceSel_r).tValid             := '1';
@@ -453,7 +453,9 @@ begin
       generic map(
          FIFO_ADDR_WIDTH_G    => 4,
          SLAVE_AXI_CONFIG_G   => ssiAxiStreamConfig(4),
-         MASTER_AXI_CONFIG_G  => ssiAxiStreamConfig(4)
+         MASTER_AXI_CONFIG_G  => ssiAxiStreamConfig(4),
+         VALID_THOLD_G        => 0,
+         GEN_SYNC_FIFO_G      => true
       )
       port map(
          sAxisClk    => axilClk,
