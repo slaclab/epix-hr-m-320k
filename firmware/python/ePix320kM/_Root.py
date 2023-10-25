@@ -229,7 +229,7 @@ class Root(pr.Root):
             ],
             [
                 {   'id': 0, 'name': 'Humidity', 'conv': lambda data: data*45.8-21.3, 'color': '#FFFFFF', 'units' : '%'  },
-                {   'id': 1, 'name': 'Thermal', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF', 'units' : 'deg. C'},
+                {   'id': 1, 'name': 'Thermal', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C'},
                 {   'id': 2, 'name': '3V3',     'conv': lambda data: data*2, 'color': '#00FFFF', 'units' : 'volts'  },
                 {   'id': 3, 'name': '1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : 'volts'  },
                 {   'id': 4, 'name': 'An 2V',   'conv': lambda data: data, 'color': '#F0F0F0', 'units' : 'volts'  },
@@ -341,8 +341,8 @@ class Root(pr.Root):
         for asicIndex in range(self.numOfAsics):    
             getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
-        #for vc in range(5): 
-        #    self.EnvData[vc].RxEnable.set(False)
+        for vc in range(5): 
+            self.EnvData[vc].RxEnable.set(False)
         if (not self.sim) : 
             for vc in range(4):             
                 getattr(self, f"ScopeData{vc}").RxEnable.set(False)
