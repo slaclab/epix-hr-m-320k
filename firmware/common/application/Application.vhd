@@ -788,7 +788,7 @@ U_SlowADCStreamMux : entity surf.AxiStreamMux
       );
 
 
-   -- Packetize everything
+   -- Packetize everything. AxiStreamPacketizer2 needs 8 byte AXI stream 
    U_U_SlowADCStreamPacketizer : entity surf.AxiStreamPacketizer2
       generic map (
          TPD_G                => TPD_G,

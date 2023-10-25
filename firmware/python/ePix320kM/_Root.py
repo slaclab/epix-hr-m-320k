@@ -37,7 +37,7 @@ from ePixViewer.software import ScopeDataReceiver
 
 rogue.Version.minVersion('5.14.0')
 
-rogue.Logging.setFilter('pyrogue.protocols.packetizer.Controller', rogue.Logging.Debug)
+#rogue.Logging.setFilter('pyrogue.packetizer', rogue.Logging.Debug)
 
 class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
 
@@ -252,11 +252,11 @@ class Root(pr.Root):
                     config = envConf[vc], 
                     clockT = 6.4e-9, 
                     rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
-                    name = f"EnvData[{vc}]"
+                    name = f"EnvData[{vc}]",
+                    payloadElementSize = 8
                 )
             )
-            #self.packetizer.application(vc) >> self.EnvData[vc]
-        self.adcMonStream >> self.EnvData[0]
+            self.packetizer.application(vc) >> self.EnvData[vc]
 
         # Check if not VCS simulation
         if (not self.sim):

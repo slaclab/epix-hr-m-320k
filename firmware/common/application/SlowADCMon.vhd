@@ -123,7 +123,7 @@ architecture RTL of SlowADCMon is
 
       sAxilWriteSlave     => AXI_LITE_WRITE_SLAVE_INIT_C,
       sAxilReadSlave      => AXI_LITE_READ_SLAVE_INIT_C,
-      txMaster            => (others => axiStreamMasterInit(ssiAxiStreamConfig(4)))
+      txMaster            => (others => axiStreamMasterInit(PGP4_AXIS_CONFIG_C))
    );
 
    signal r   : RegType := REG_INIT_C;
@@ -234,8 +234,8 @@ begin
                 v.state := ADCRD_S;
                 -- Bug: if tReady goes to 0, data is lost. Added Fifo to minimize this case
                 if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
-                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
-                    ssiSetUserSof(ssiAxiStreamConfig(4), v.txMaster(r.adcDeviceSel_r), '1');
+                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(PGP4_AXIS_CONFIG_C);
+                    ssiSetUserSof(PGP4_AXIS_CONFIG_C, v.txMaster(r.adcDeviceSel_r), '1');
                     v.txMaster(r.adcDeviceSel_r).tLast              := '0';
                     v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
                     v.txMaster(r.adcDeviceSel_r).tValid             := '1';
@@ -248,7 +248,7 @@ begin
             if newDataSync = '1' then
                 -- Bug: if tReady goes to 0, data is lost. Added Fifo to minimize this case
                 if (slowAdcSlavesSMOut(r.adcDeviceSel_r).tReady = '1') then
-                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(ssiAxiStreamConfig(4));
+                    v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(PGP4_AXIS_CONFIG_C);
                     v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "0000" & channelSync & channelDataSync;
                     v.txMaster(r.adcDeviceSel_r).tValid             := '1';
                   
@@ -452,8 +452,8 @@ begin
       AxisDualClockFifo_U: entity surf.AxiStreamFifoV2
       generic map(
          FIFO_ADDR_WIDTH_G    => 4,
-         SLAVE_AXI_CONFIG_G   => ssiAxiStreamConfig(4),
-         MASTER_AXI_CONFIG_G  => ssiAxiStreamConfig(4),
+         SLAVE_AXI_CONFIG_G   => PGP4_AXIS_CONFIG_C,
+         MASTER_AXI_CONFIG_G  => PGP4_AXIS_CONFIG_C,
          VALID_THOLD_G        => 0,
          GEN_SYNC_FIFO_G      => true
       )

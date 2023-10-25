@@ -21,7 +21,7 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.SsiCmdMasterPkg.all;
-
+use surf.Pgp4Pkg.all;
 use work.CorePkg.all;
 
 entity ePixHRM320k is
@@ -345,7 +345,8 @@ begin
                                     -- into one stream only. So this will be 1.
                                     -- The streams will be depacketized and demuxed
                                     -- in software
-         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem"
+         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem",
+         SLOW_ADC_AXI_CFG_G => PGP4_AXIS_CONFIG_C
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
