@@ -228,14 +228,14 @@ class Root(pr.Root):
                 {   'id': 7, 'name': 'Raw voltage (volts)',   'conv': lambda data: 3* data, 'color': '#777777'  }
             ],
             [
-                {   'id': 0, 'name': 'Therm dig. 0 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FFFFFF'  },
-                {   'id': 1, 'name': 'Therm dig. 1 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF' },
-                {   'id': 2, 'name': 'Humidity dig. (%)',     'conv': lambda data: data*45.8-21.3, 'color': '#00FFFF'  },
-                {   'id': 3, 'name': '1V8 (volts)',           'conv': lambda data: data, 'color': '#FFFF00'  },
-                {   'id': 4, 'name': '2V5 (volts)',           'conv': lambda data: data, 'color': '#F0F0F0'  },
-                {   'id': 5, 'name': 'Vout 6V 10A (Amps)',    'conv': lambda data: 10*data, 'color': '#F0500F'  },
-                {   'id': 6, 'name': 'Mon VCC (volts)',       'conv': lambda data: data, 'color': '#503010'  },
-                {   'id': 7, 'name': 'Raw voltage (volts)',   'conv': lambda data: 3* data, 'color': '#777777'  }
+                {   'id': 0, 'name': 'Humidity', 'conv': lambda data: data*45.8-21.3, 'color': '#FFFFFF', 'units' : '%'  },
+                {   'id': 1, 'name': 'Thermal', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF', 'units' : 'deg. C'},
+                {   'id': 2, 'name': '3V3',     'conv': lambda data: data*2, 'color': '#00FFFF', 'units' : 'volts'  },
+                {   'id': 3, 'name': '1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : 'volts'  },
+                {   'id': 4, 'name': 'An 2V',   'conv': lambda data: data, 'color': '#F0F0F0', 'units' : 'volts'  },
+                {   'id': 5, 'name': 'Dig 2V',  'conv': lambda data: data, 'color': '#F0500F', 'units' : 'volts'  },
+                {   'id': 6, 'name': 'Dig 6V',  'conv': lambda data: data*24, 'color': '#503010', 'units' : 'volts'  },
+                {   'id': 7, 'name': 'An 6V',   'conv': lambda data: data*100, 'color': '#777777', 'units' : 'volts'  }
             ]
         ]
 
