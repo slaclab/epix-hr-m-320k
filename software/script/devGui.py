@@ -42,6 +42,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--pciePgpEn",
+        type     = str,
+        required = False,
+        default  = False,
+        help     = "Enable axi-pcie-core reading",
+    )
+
+    
+
+    parser.add_argument(
         "--pollEn",
         type     = argBool,
         required = False,
@@ -84,6 +94,7 @@ if __name__ == "__main__":
         pollEn     = args.pollEn,
         initRead   = args.initRead,
         serverPort = args.serverPort,
+        pciePgpEn  = args.pciePgpEn,
     ) as root:
 
         ######################
@@ -112,4 +123,5 @@ if __name__ == "__main__":
         else:
             raise ValueError("Invalid GUI type (%s)" % (args.guiType) )
 
+      
     #################################################################

@@ -21,17 +21,17 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.SsiCmdMasterPkg.all;
-
+use surf.Pgp4Pkg.all;
 use work.CorePkg.all;
 
 entity ePixHRM320k is
    generic (
-      BUILD_INFO_G         : BuildInfoType;
-      TPD_G                : time            := 1 ns;
-      SIMULATION_G         : boolean         := false;
-      NUM_OF_ASICS_G       : integer         := 4;
-      NUM_OF_SLOW_ADCS_G   : integer         := 2;
-      NUM_OF_PSCOPE_G      : integer         := 4
+      BUILD_INFO_G                  : BuildInfoType;
+      TPD_G                         : time            := 1 ns;
+      SIMULATION_G                  : boolean         := false;
+      NUM_OF_ASICS_G                : integer         := 4;
+      NUM_OF_SLOW_ADCS_G            : integer         := 2;
+      NUM_OF_PSCOPE_G               : integer         := 4
    );
    port (
       ----------------------------------------------
@@ -190,8 +190,8 @@ architecture topLevel of ePixHRM320k is
    signal remoteDmaPause  : slv(NUM_OF_ASICS_G - 1 downto 0);
    signal oscopeMasters   : AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
    signal oscopeSlaves    : AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
-   signal slowAdcMasters  : AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-   signal slowAdcSlaves   : AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+   signal slowAdcMasters  : AxiStreamMasterArray(0 downto 0);
+   signal slowAdcSlaves   : AxiStreamSlaveArray(0 downto 0);
 
    -- AXI-Lite: Register Access
    signal axilReadMaster  : AxiLiteReadMasterType;
@@ -205,11 +205,11 @@ begin
 
    U_App : entity work.Application
       generic map (
-         TPD_G                => TPD_G,
-         BUILD_INFO_G         => BUILD_INFO_G,
-         SIMULATION_G         => SIMULATION_G,
-         NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
+         TPD_G                         => TPD_G,
+         BUILD_INFO_G                  => BUILD_INFO_G,
+         SIMULATION_G                  => SIMULATION_G,
+         NUM_OF_PSCOPE_G               => NUM_OF_PSCOPE_G,
+         NUM_OF_SLOW_ADCS_G            => NUM_OF_SLOW_ADCS_G
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)
@@ -339,9 +339,14 @@ begin
          BUILD_INFO_G   => BUILD_INFO_G,
          SIMULATION_G   => SIMULATION_G,
          NUM_OF_LANES_G => NUM_OF_ASICS_G,
-         NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
-         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem"
+         NUM_OF_PSCOPE_G => NUM_OF_PSCOPE_G, 
+         NUM_OF_SLOW_ADCS_G   => 1, -- Since we have 5 channels from ADCs, 
+                                    -- they were multiplexed and packetized
+                                    -- into one stream only. So this will be 1.
+                                    -- The streams will be depacketized and demuxed
+                                    -- in software
+         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem",
+         SLOW_ADC_AXI_CFG_G => PGP4_AXIS_CONFIG_C
       )
       port map (
          -- AXI-Lite Register Interface (sysClk domain)

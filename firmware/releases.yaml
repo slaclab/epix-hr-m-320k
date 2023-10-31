@@ -5,6 +5,7 @@ TopRoguePackage: ePix320kM
 
 RoguePackages:
   - submodules/l2si-core/python
+  - submodules/axi-pcie-core/python
   - submodules/epix-hr-core/python
   - submodules/epix-hr-leap-common/python
   - submodules/lcls-timing-core/python

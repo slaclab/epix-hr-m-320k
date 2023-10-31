@@ -37,13 +37,14 @@ use work.AppPkg.all;
 
 entity Application is
    generic (
-      TPD_G                : time            := 1 ns;
-      BUILD_INFO_G         : BuildInfoType;
-      SIMULATION_G         : boolean         := false;
-      NUM_EVENT_CHANNELS_G : integer         := 2;
-      NUM_OF_ASICS_G       : integer         := 4;
-      NUM_OF_SLOW_ADCS_G   : integer         := 2;
-      NUM_OF_PSCOPE_G      : integer         := 4
+      TPD_G                          : time            := 1 ns;
+      BUILD_INFO_G                   : BuildInfoType;
+      SIMULATION_G                   : boolean         := false;
+      NUM_EVENT_CHANNELS_G           : integer         := 2;
+      NUM_OF_ASICS_G                 : integer         := 4;
+      NUM_OF_SLOW_ADCS_G             : integer         := 2;
+      NUM_OF_PSCOPE_G                : integer         := 4;
+      SLOW_ADC_VIRTUAL_DEVICE_CNT_G  : integer         := 5
    );
    port (
       ----------------------
@@ -65,8 +66,8 @@ entity Application is
       remoteDmaPause     : in  slv(3 downto 0);
       oscopeMasters      : out AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
-      slowAdcMasters     : out AxiStreamMasterArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
-      slowAdcSlaves      : in  AxiStreamSlaveArray(NUM_OF_SLOW_ADCS_G - 1 downto 0);
+      slowAdcMasters     : out AxiStreamMasterArray(0 downto 0);
+      slowAdcSlaves      : in  AxiStreamSlaveArray(0 downto 0);
 
       -- SSI commands
       ssiCmd             : in SsiCmdMasterType;
@@ -314,6 +315,13 @@ architecture rtl of Application is
    signal biasDacSclkSig         : sl;
    signal biasDacCsbSig          : sl;
    signal biasDacClrbSig         : sl;
+
+
+   signal slowAdcMastersDemuxed  : AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+   signal slowAdcSlavesDemuxed   : AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
+
+   signal slowAdcMasterMuxed       : AxiStreamMasterType;
+   signal slowAdcSlaveMuxed        : AxiStreamSlaveType;
 
 begin
 
@@ -705,7 +713,9 @@ begin
          TPD_G                => TPD_G,
          AXIL_BASE_ADDR_G     => XBAR_CONFIG_C(ADC_INDEX_C).baseAddr,
          NUM_OF_PSCOPE_G      => NUM_OF_PSCOPE_G,
-         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G
+         NUM_OF_SLOW_ADCS_G   => NUM_OF_SLOW_ADCS_G,
+         SLOW_ADC_VIRTUAL_DEVICE_CNT_G => SLOW_ADC_VIRTUAL_DEVICE_CNT_G,
+         SIMULATION_G         => SIMULATION_G
       )
       port map (
          clk156          => clk156,
@@ -724,8 +734,8 @@ begin
          -- Streaming Interfaces (axilClk domain)
          oscopeMasters   => oscopeMasters,
          oscopeSlaves    => oscopeSlaves,
-         slowAdcMasters  => slowAdcMasters,
-         slowAdcSlaves   => slowAdcSlaves,
+         slowAdcMasters  => slowAdcMastersDemuxed,
+         slowAdcSlaves   => slowAdcSlavesDemuxed,
          -------------------
          --  Top Level Ports
          -------------------
@@ -751,5 +761,47 @@ begin
          adcMonDataClkP  => adcMonDataClkP,
          adcMonDataClkM  => adcMonDataClkM
       );
+
+
+
+U_SlowADCStreamMux : entity surf.AxiStreamMux
+   generic map(
+      NUM_SLAVES_G         => 5,
+      TDEST_ROUTES_G => (
+         0           => "00000000",
+         1           => "00000001",
+         2           => "00000010",
+         3           => "00000011",
+         4           => "00000100")
+   )
+   port map(
+      -- Clock and reset
+      axisClk         => axilClk,
+      axisRst         => axilRst,
+      -- Slaves
+      sAxisMasters    => slowAdcMastersDemuxed,
+      sAxisSlaves     =>  slowAdcSlavesDemuxed,
+
+      -- Master
+      mAxisMaster  => slowAdcMasterMuxed, 
+      mAxisSlave   => slowAdcSlaveMuxed
+      );
+
+
+   -- Packetize everything. AxiStreamPacketizer2 needs 8 byte AXI stream 
+   U_U_SlowADCStreamPacketizer : entity surf.AxiStreamPacketizer2
+      generic map (
+         TPD_G                => TPD_G,
+         CRC_MODE_G           => "NONE",
+         MAX_PACKET_BYTES_G   => 256)
+      port map (
+         axisClk     => axilClk,        
+         axisRst     => axilRst,        
+         sAxisMaster => slowAdcMasterMuxed,
+         sAxisSlave  => slowAdcSlaveMuxed,
+         mAxisMaster => slowAdcMasters(0),
+         mAxisSlave  => slowAdcSlaves(0)
+         );     
+
 
 end rtl; -- rtl
