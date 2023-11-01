@@ -165,7 +165,7 @@ class App(pr.Device):
                 enabled=True
             )
         )
-    
+        '''
         self.add(
             fpga.Adc(
                 name='Adcs',
@@ -174,7 +174,7 @@ class App(pr.Device):
                 enabled=True
             )
         )
-
+        '''
         self.add(ePixHrleapCommon.Dac(
             name = "Dac",
             offset = 0x0800_0000,
