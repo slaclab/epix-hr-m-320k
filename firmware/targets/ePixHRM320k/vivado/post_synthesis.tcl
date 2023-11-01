@@ -42,57 +42,16 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # #################################
 # ## Set the clock for the ILA core
 # #################################
-SetDebugCoreClk ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/axilClk}
+SetDebugCoreClk ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/clk}
 
 # #######################
 # ## Set the debug Probes
 #######################
 
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[state][0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[state][1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[locked]} 
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rst]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstlen][0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstlen][1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstlen][2]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstlen][3]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][2]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][3]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][4]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][5]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[tgt][6]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstcnt][0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstcnt][1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstcnt][2]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[rstcnt][3]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][2]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][3]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][4]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][5]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/r[mask][6]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/resetErr}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/resetDone}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[done]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][0]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][1]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][2]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][3]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][4]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][5]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][6]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][7]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][8]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][9]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][10]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][11]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][12]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][13]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][14]}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/GEN_GT.U_GTH/U_AlignCheck/ack[rdData][15]}
+ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/sof}
+ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/eof}
+ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/fiducial}
+
 
 
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/rd_en}
