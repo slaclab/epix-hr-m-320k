@@ -31,9 +31,9 @@ import epix_hr_leap_common as leapCommon
 import surf.protocols.pgp as pgp
 import pciePgpCard
 
-from ePixViewer.software.deviceFiles import ePixHrMv2
-from ePixViewer.software import EnvDataReceiver
-from ePixViewer.software import ScopeDataReceiver
+from ePixViewer.asics import ePixHrMv2
+from ePixViewer import EnvDataReceiver
+from ePixViewer import ScopeDataReceiver
 
 rogue.Version.minVersion('5.14.0')
 
@@ -70,6 +70,7 @@ class Root(pr.Root):
             initRead  = True,  # Read all registers at start of the system
             promProg  = False, # Flag to disable all devices not related to PROM programming
             pciePgpEn = False, # Enable PCIE PGP card register space access
+            justCtrl  = False, # Enable if you only require Root for accessing AXI registers (no data)
             **kwargs):
 
         #################################################################
@@ -77,7 +78,7 @@ class Root(pr.Root):
         self.promProg = promProg
         self.sim      = (dev == 'sim')
         self.top_level = top_level
-        
+        self.justCtrl = justCtrl
         self.numOfAsics = 4
         
         if (self.sim):
@@ -93,14 +94,16 @@ class Root(pr.Root):
         #################################################################
 
         # Create an empty list to be filled
-        self.dataStream    = [None for i in range(self.numOfAsics)]
-        self.oscopeStream  = [None for i in range(4)]
         self._cmd          = [None]
-        self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
-        self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-        self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-        self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
 
+        if (self.justCtrl == False) :
+            self.dataStream    = [None for i in range(self.numOfAsics)]
+            self.oscopeStream  = [None for i in range(4)]
+            self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
+            self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+            self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
+            self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
+        
         # Check if not VCS simulation
         if (not self.sim):
 
@@ -109,15 +112,18 @@ class Root(pr.Root):
             self._initRead = initRead
 
             # # Map the DMA streams
-            for lane in range(self.numOfAsics):
-                self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
+            if (self.justCtrl == False) :
+                for lane in range(self.numOfAsics):
+                    self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
             
             self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
             
             self.ssiCmdStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 1, 1)
 
             self.xvcStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 2, 1)
-            self.adcMonStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6, 1)
+
+            if (self.justCtrl == False) :
+                self.adcMonStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6, 1)
             for vc in range(4):                
                 self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
@@ -144,16 +150,18 @@ class Root(pr.Root):
             # 2 TCP ports per stream
             self.srp = rogue.interfaces.memory.TcpClient('localhost', 24000)
 
-            for lane in range(self.numOfAsics):
-                # 2 TCP ports per stream
-                self.dataStream[lane] = rogue.interfaces.stream.TcpClient('localhost', 24002 + 2 * lane)
+            if (self.justCtrl == False) :
+                for lane in range(self.numOfAsics):
+                    # 2 TCP ports per stream
+                    self.dataStream[lane] = rogue.interfaces.stream.TcpClient('localhost', 24002 + 2 * lane)
+
+                self.adcMonStream = rogue.interfaces.stream.TcpClient('localhost', 24016)
+                for vc in range(4):
+                    self.oscopeStream[vc] = rogue.interfaces.stream.TcpClient('localhost', 24026 + 2 * vc)
+
 
             # 2 TCP ports per stream
             self.ssiCmdStream = rogue.interfaces.stream.TcpClient('localhost', 24012)
-
-            self.adcMonStream = rogue.interfaces.stream.TcpClient('localhost', 24016)
-            for vc in range(4):
-                self.oscopeStream[vc] = rogue.interfaces.stream.TcpClient('localhost', 24026 + 2 * vc)
 
         self._cmd = rogue.protocols.srp.Cmd()
 
@@ -173,129 +181,133 @@ class Root(pr.Root):
                                     cmd=self.Trigger,
                                     rates={1: '1 Hz', 2: '2 Hz', 4: '4 Hz', 8: '8 Hz', 10: '10 Hz', 30: '30 Hz', 60: '60 Hz', 120: '120 Hz'}))
         # Connect dataStream to data writer
-        for asicIndex in range(self.numOfAsics):
-            self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
-            self.add(fullRateDataReceiver(
-                name = f"fullRateDataReceiver[{asicIndex}]",
-                hidden = True
-                ))
-            self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
-            self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
-            self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
+
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics):
+                self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
+                self.add(fullRateDataReceiver(
+                    name = f"fullRateDataReceiver[{asicIndex}]",
+                    hidden = True
+                    ))
+                self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
+                self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
+                self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
 
 
-        # Check if not VCS simulation
-        envConf = [
-            [
-                {   'id': 0, 'name': 'Therm 0 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
-                {   'id': 1, 'name': 'Therm 1 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
-                {   'id': 2, 'name': 'Analog VIN (volts)',    'conv': lambda data: data, 'color': '#00FFFF'  },
-                {   'id': 3, 'name': 'ASIC C0 AVDD (Amps)',   'conv': lambda data: data, 'color': '#FFFF00'  },
-                {   'id': 4, 'name': 'ASIC C0 DVDD (Amps)',   'conv': lambda data: data, 'color': '#F0F0F0'  },
-                {   'id': 5, 'name': 'ASIC C1 AVDD (Amps)',   'conv': lambda data: data, 'color': '#F0500F'  },
-                {   'id': 6, 'name': 'ASIC C1 DVDD (Amps)',   'conv': lambda data: data, 'color': '#503010'  },
-                {   'id': 7, 'name': 'ASIC C2 AVDD (Amps)',   'conv': lambda data: data, 'color': '#777777'  }
-            ],
-            [
-                {   'id': 0, 'name': 'Therm 2 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
-                {   'id': 1, 'name': 'Therm 3 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
-                {   'id': 2, 'name': 'ASIC C2 DVDD (Amps)',   'conv': lambda data: data, 'color': '#00FFFF'  },
-                {   'id': 3, 'name': 'ASIC C3 DVDD (Amps)',   'conv': lambda data: data, 'color': '#FFFF00'  },
-                {   'id': 4, 'name': 'ASIC C3 AVDD (Amps)',   'conv': lambda data: data, 'color': '#F0F0F0'  },
-                {   'id': 5, 'name': 'ASIC C4 DVDD (Amps)',   'conv': lambda data: data, 'color': '#F0500F'  },
-                {   'id': 6, 'name': 'ASIC C4 AVDD (Amps)',   'conv': lambda data: data, 'color': '#503010'  },
-                {   'id': 7, 'name': 'Humidity (%)',          'conv': lambda data: 45.8*data-21.3, 'color': '#777777'  }
-            ],
-            [
-                {   'id': 0, 'name': 'Therm 4 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
-                {   'id': 1, 'name': 'Therm 5 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
-                {   'id': 2, 'name': 'ASIC C0 V2 5A (volts)', 'conv': lambda data: data, 'color': '#00FFFF'  },
-                {   'id': 3, 'name': 'ASIC C1 V2 5A (volts)', 'conv': lambda data: data, 'color': '#FFFF00'  },
-                {   'id': 4, 'name': 'ASIC C2 V2 5A (volts)', 'conv': lambda data: data, 'color': '#F0F0F0'  },
-                {   'id': 5, 'name': 'ASIC C3 V2 5A (volts)', 'conv': lambda data: data, 'color': '#F0500F'  },
-                {   'id': 6, 'name': 'ASIC C4 V2 5A (volts)', 'conv': lambda data: data, 'color': '#503010'  },
-                {   'id': 7, 'name': 'Digital VIN (volts)',   'conv': lambda data: data, 'color': '#777777'  }
-            ],
-            [
-                {   'id': 0, 'name': 'Therm dig. 0 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FFFFFF'  },
-                {   'id': 1, 'name': 'Therm dig. 1 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF' },
-                {   'id': 2, 'name': 'Humidity dig. (%)',     'conv': lambda data: data*45.8-21.3, 'color': '#00FFFF'  },
-                {   'id': 3, 'name': '1V8 (volts)',           'conv': lambda data: data, 'color': '#FFFF00'  },
-                {   'id': 4, 'name': '2V5 (volts)',           'conv': lambda data: data, 'color': '#F0F0F0'  },
-                {   'id': 5, 'name': 'Vout 6V 10A (Amps)',    'conv': lambda data: 10*data, 'color': '#F0500F'  },
-                {   'id': 6, 'name': 'Mon VCC (volts)',       'conv': lambda data: data, 'color': '#503010'  },
-                {   'id': 7, 'name': 'Raw voltage (volts)',   'conv': lambda data: 3* data, 'color': '#777777'  }
-            ],
-            [
-                {   'id': 0, 'name': 'Humidity', 'conv': lambda data: data*45.8-21.3, 'color': '#FFFFFF', 'units' : '%'  },
-                {   'id': 1, 'name': 'Thermal', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C'},
-                {   'id': 2, 'name': '3V3',     'conv': lambda data: data*2, 'color': '#00FFFF', 'units' : 'volts'  },
-                {   'id': 3, 'name': '1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : 'volts'  },
-                {   'id': 4, 'name': 'An 2V',   'conv': lambda data: data, 'color': '#F0F0F0', 'units' : 'volts'  },
-                {   'id': 5, 'name': 'Dig 2V',  'conv': lambda data: data, 'color': '#F0500F', 'units' : 'volts'  },
-                {   'id': 6, 'name': 'Dig 6V',  'conv': lambda data: data*24, 'color': '#503010', 'units' : 'volts'  },
-                {   'id': 7, 'name': 'An 6V',   'conv': lambda data: data*100, 'color': '#777777', 'units' : 'volts'  }
+            # Check if not VCS simulation
+            envConf = [
+                [
+                    {   'id': 0, 'name': 'Therm 0 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
+                    {   'id': 1, 'name': 'Therm 1 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
+                    {   'id': 2, 'name': 'Analog VIN (volts)',    'conv': lambda data: data, 'color': '#00FFFF'  },
+                    {   'id': 3, 'name': 'ASIC C0 AVDD (Amps)',   'conv': lambda data: data, 'color': '#FFFF00'  },
+                    {   'id': 4, 'name': 'ASIC C0 DVDD (Amps)',   'conv': lambda data: data, 'color': '#F0F0F0'  },
+                    {   'id': 5, 'name': 'ASIC C1 AVDD (Amps)',   'conv': lambda data: data, 'color': '#F0500F'  },
+                    {   'id': 6, 'name': 'ASIC C1 DVDD (Amps)',   'conv': lambda data: data, 'color': '#503010'  },
+                    {   'id': 7, 'name': 'ASIC C2 AVDD (Amps)',   'conv': lambda data: data, 'color': '#777777'  }
+                ],
+                [
+                    {   'id': 0, 'name': 'Therm 2 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
+                    {   'id': 1, 'name': 'Therm 3 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
+                    {   'id': 2, 'name': 'ASIC C2 DVDD (Amps)',   'conv': lambda data: data, 'color': '#00FFFF'  },
+                    {   'id': 3, 'name': 'ASIC C3 DVDD (Amps)',   'conv': lambda data: data, 'color': '#FFFF00'  },
+                    {   'id': 4, 'name': 'ASIC C3 AVDD (Amps)',   'conv': lambda data: data, 'color': '#F0F0F0'  },
+                    {   'id': 5, 'name': 'ASIC C4 DVDD (Amps)',   'conv': lambda data: data, 'color': '#F0500F'  },
+                    {   'id': 6, 'name': 'ASIC C4 AVDD (Amps)',   'conv': lambda data: data, 'color': '#503010'  },
+                    {   'id': 7, 'name': 'Humidity (%)',          'conv': lambda data: 45.8*data-21.3, 'color': '#777777'  }
+                ],
+                [
+                    {   'id': 0, 'name': 'Therm 4 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FFFFFF'  },
+                    {   'id': 1, 'name': 'Therm 5 (deg. C)',      'conv': lambda data: -68.305*data+93.308, 'color': '#FF00FF' },
+                    {   'id': 2, 'name': 'ASIC C0 V2 5A (volts)', 'conv': lambda data: data, 'color': '#00FFFF'  },
+                    {   'id': 3, 'name': 'ASIC C1 V2 5A (volts)', 'conv': lambda data: data, 'color': '#FFFF00'  },
+                    {   'id': 4, 'name': 'ASIC C2 V2 5A (volts)', 'conv': lambda data: data, 'color': '#F0F0F0'  },
+                    {   'id': 5, 'name': 'ASIC C3 V2 5A (volts)', 'conv': lambda data: data, 'color': '#F0500F'  },
+                    {   'id': 6, 'name': 'ASIC C4 V2 5A (volts)', 'conv': lambda data: data, 'color': '#503010'  },
+                    {   'id': 7, 'name': 'Digital VIN (volts)',   'conv': lambda data: data, 'color': '#777777'  }
+                ],
+                [
+                    {   'id': 0, 'name': 'Therm dig. 0 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FFFFFF'  },
+                    {   'id': 1, 'name': 'Therm dig. 1 (deg. C)', 'conv': lambda data: -68.305*(data)+93.308, 'color': '#FF00FF' },
+                    {   'id': 2, 'name': 'Humidity dig. (%)',     'conv': lambda data: data*45.8-21.3, 'color': '#00FFFF'  },
+                    {   'id': 3, 'name': '1V8 (volts)',           'conv': lambda data: data, 'color': '#FFFF00'  },
+                    {   'id': 4, 'name': '2V5 (volts)',           'conv': lambda data: data, 'color': '#F0F0F0'  },
+                    {   'id': 5, 'name': 'Vout 6V 10A (Amps)',    'conv': lambda data: 10*data, 'color': '#F0500F'  },
+                    {   'id': 6, 'name': 'Mon VCC (volts)',       'conv': lambda data: data, 'color': '#503010'  },
+                    {   'id': 7, 'name': 'Raw voltage (volts)',   'conv': lambda data: 3* data, 'color': '#777777'  }
+                ],
+                [
+                    {   'id': 0, 'name': 'Humidity', 'conv': lambda data: data*45.8-21.3, 'color': '#FFFFFF', 'units' : '%'  },
+                    {   'id': 1, 'name': 'Thermal', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C'},
+                    {   'id': 2, 'name': '3V3',     'conv': lambda data: data*2, 'color': '#00FFFF', 'units' : 'volts'  },
+                    {   'id': 3, 'name': '1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : 'volts'  },
+                    {   'id': 4, 'name': 'An 2V',   'conv': lambda data: data, 'color': '#F0F0F0', 'units' : 'volts'  },
+                    {   'id': 5, 'name': 'Dig 2V',  'conv': lambda data: data, 'color': '#F0500F', 'units' : 'volts'  },
+                    {   'id': 6, 'name': 'Dig 6V',  'conv': lambda data: data*24, 'color': '#503010', 'units' : 'volts'  },
+                    {   'id': 7, 'name': 'An 6V',   'conv': lambda data: data*100, 'color': '#777777', 'units' : 'volts'  }
+                ]
             ]
-        ]
 
 
-        self.packetizer = rogue.protocols.packetizer.CoreV2(False, False, True); # No inbound and outbound crc, enSsi=True
-        
-        # Connect VC stream to depacketizer
-        self.adcMonStream >> self.packetizer.transport()
+            self.packetizer = rogue.protocols.packetizer.CoreV2(False, False, True); # No inbound and outbound crc, enSsi=True
+            
+            # Connect VC stream to depacketizer
+            self.adcMonStream >> self.packetizer.transport()
 
-        for vc in range(5):
-            self.packetizer.application(vc) >> self.dataWriter.getChannel(vc+8)
-            self.add(
-                EnvDataReceiver(
-                    config = envConf[vc], 
-                    clockT = 6.4e-9, 
-                    rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
-                    name = f"EnvData[{vc}]",
-                    payloadElementSize = 8
+            for vc in range(5):
+                self.packetizer.application(vc) >> self.dataWriter.getChannel(vc+8)
+                self.add(
+                    EnvDataReceiver(
+                        config = envConf[vc], 
+                        clockT = 6.4e-9, 
+                        rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
+                        name = f"EnvData[{vc}]",
+                        payloadElementSize = 8
+                    )
                 )
-            )
-            self.packetizer.application(vc) >> self.EnvData[vc]
+                self.packetizer.application(vc) >> self.EnvData[vc]
 
-        # Check if not VCS simulation
-        if (not self.sim):
-            for vc in range(4):
-                self.oscopeStream[vc] >> self.dataWriter.getChannel(vc+13)
-                self.add(ScopeDataReceiver(name = f"ScopeData{vc}"))
-                self.oscopeStream[vc] >> getattr(self, f"ScopeData{vc}")
-                
+            # Check if not VCS simulation
+            if (not self.sim):
+                for vc in range(4):
+                    self.oscopeStream[vc] >> self.dataWriter.getChannel(vc+13)
+                    self.add(ScopeDataReceiver(name = f"ScopeData{vc}"))
+                    self.oscopeStream[vc] >> getattr(self, f"ScopeData{vc}")
+                    
 
-        # Read file stream. 
-        self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
-        self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
-        self.fread = rogue.utilities.fileio.StreamReader()
-        self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-        for i in range(self.numOfAsics):
-            self.readerReceiver[i] << self.readUnbatcher[i] << self.filter[i] << self.fread
-            self.readerReceiver[i].enableDataDebug(True)
-            self.readerReceiver[i].enableDebugPrint(True)
+            # Read file stream. 
+            self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
+            self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
+            self.fread = rogue.utilities.fileio.StreamReader()
+            self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
 
 
-        for lane in range(self.numOfAsics):
-            self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
-            self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
+            for i in range(self.numOfAsics):
+                self.readerReceiver[i] << self.readUnbatcher[i] << self.filter[i] << self.fread
+                self.readerReceiver[i].enableDataDebug(True)
+                self.readerReceiver[i].enableDebugPrint(True)
+
+
+            for lane in range(self.numOfAsics):
+                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
+                self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()
         def DisplayViewer0():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"]) ], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"]) ], shell=False)
 
         @self.command()
         def DisplayViewer1():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         @self.command()
         def DisplayViewer2():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         @self.command()
         def DisplayViewer3():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/software/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
 
         #################################################################
 
@@ -336,16 +348,18 @@ class Root(pr.Root):
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
-        for asicIndex in range(self.numOfAsics):    
-            getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
-        for asicIndex in range(self.numOfAsics):    
-            getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
-        for vc in range(5): 
-            self.EnvData[vc].RxEnable.set(False)
-        if (not self.sim) : 
-            for vc in range(4):             
-                getattr(self, f"ScopeData{vc}").RxEnable.set(False)
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics):    
+                getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
+            for asicIndex in range(self.numOfAsics):    
+                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
+
+            for vc in range(5): 
+                self.EnvData[vc].RxEnable.set(False)
+            if (not self.sim) : 
+                for vc in range(4):             
+                    getattr(self, f"ScopeData{vc}").RxEnable.set(False)
 
 
     def enableAllAsics(self, enable) :
@@ -356,20 +370,24 @@ class Root(pr.Root):
         getattr(self.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(not enable)
 
     def disableAndCleanAllFullRateDataRcv(self) :
-        for asicIndex in range(self.numOfAsics) :
-            self.fullRateDataReceiver[asicIndex].cleanData()
-            self.fullRateDataReceiver[asicIndex].RxEnable.set(False)
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics) :
+                self.fullRateDataReceiver[asicIndex].cleanData()
+                self.fullRateDataReceiver[asicIndex].RxEnable.set(False)
 
     def enableFullRateDataRcv(self, index, enable) :
-        self.fullRateDataReceiver[index].RxEnable.set(enable)
+        if (self.justCtrl == False) :
+            self.fullRateDataReceiver[index].RxEnable.set(enable)
 
     def enableDataRcv(self, enable) :
-        for asicIndex in range(self.numOfAsics) :
-            getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(enable)
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics) :
+                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(enable)
 
     def enableDataDebug(self, enable) :
-        for asicIndex in range(self.numOfAsics) :
-            self._dbg[asicIndex].enableDataDebug(enable)
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics) :
+                self._dbg[asicIndex].enableDataDebug(enable)
 
     def hwTrigger(self, frames, rate) :
         with self.root.updateGroup(.25):
@@ -392,7 +410,8 @@ class Root(pr.Root):
             self.App.AsicTop.TriggerRegisters.StopTriggers()  
         
     def enableFullRateDataRcv(self, index, enable) :
-        self.fullRateDataReceiver[index].RxEnable.set(enable)
+        if (self.justCtrl == False) :
+            self.fullRateDataReceiver[index].RxEnable.set(enable)
 
     def getLaneLocks(self) :
         for asicIndex in range(self.numOfAsics) : 
@@ -401,50 +420,53 @@ class Root(pr.Root):
 
     #check current frames in receivers
     def printDataReceiverStatus(self) :
-        for asicIndex in range(self.numOfAsics):
-            print("Checkpoint: DataReceiver {} has {} frames".format(asicIndex, getattr(self, f"DataReceiver{asicIndex}").FrameCount.get()))        
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics):
+                print("Checkpoint: DataReceiver {} has {} frames".format(asicIndex, getattr(self, f"DataReceiver{asicIndex}").FrameCount.get()))        
 
     def acquireToFile(self, filename, frames, rate) :
         with self.root.updateGroup(.25):
-            dev = var = 0
-            if os.path.isfile(f'{filename}'):
-                print("File already exists. Please change file name and try again.")
-                return  
-            print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, rate, frames))
+            if (self.justCtrl == False) :
+                dev = var = 0
+                if os.path.isfile(f'{filename}'):
+                    print("File already exists. Please change file name and try again.")
+                    return  
+                print("Acquisition started: filename: {}, rate: {}, #frames:{}".format(filename, rate, frames))
 
-            # Setup and open the file writer
-            self.dataWriter.DataFile.set(filename)
+                # Setup and open the file writer
+                self.dataWriter.DataFile.set(filename)
 
-            self.dataWriter.Open()
+                self.dataWriter.Open()
 
-            # Wait for the file write to open the file
-            while( self.dataWriter.IsOpen.get() is False):
-                time.sleep(0.1)
+                # Wait for the file write to open the file
+                while( self.dataWriter.IsOpen.get() is False):
+                    time.sleep(0.1)
 
-            #sets TriggerRegisters
-            self.hwTrigger(frames, rate)
-            writerFrameCount = self.dataWriter._waitFrameCount(frames, 5)
-            for index in range (4) : 
-                print("Received on channel {} {} frames...".format(index, self.dataWriter.getChannel(index).getFrameCount()))
-            print("Waiting for file to close...")
+                #sets TriggerRegisters
+                self.hwTrigger(frames, rate)
+                writerFrameCount = self.dataWriter._waitFrameCount(frames, 5)
+                for index in range (4) : 
+                    print("Received on channel {} {} frames...".format(index, self.dataWriter.getChannel(index).getFrameCount()))
+                print("Waiting for file to close...")
+                
+                # Close the file writer
+                self.dataWriter.Close()
             
-            # Close the file writer
-            self.dataWriter.Close()
-        
-        # Wait for the file write to close the file
-        while( self.dataWriter.IsOpen.get() is True):
-            time.sleep(0.1)
+                # Wait for the file write to close the file
+                while( self.dataWriter.IsOpen.get() is True):
+                    time.sleep(0.1)
 
-        # Print the status
-        print("Acquisition complete and file closed")
+                # Print the status
+                print("Acquisition complete and file closed")
 
     def readFromFile(self, filename) :
 
-        for i in range(self.numOfAsics):
-            self.readerReceiver[i].cleanData()
+        if (self.justCtrl == False) :
+            for i in range(self.numOfAsics):
+                self.readerReceiver[i].cleanData()
 
-        self.fread.open(filename)
-        self.fread.closeWait()
+            self.fread.open(filename)
+            self.fread.closeWait()
 
         
     def fnInitAsic(self, dev,cmd,arg):
