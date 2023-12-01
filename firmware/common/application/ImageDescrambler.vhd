@@ -190,7 +190,7 @@ begin
             end if;         
 
          when DATA_S =>
-            if mAxisSlave.tReady = '1' and r.txMaster.tValid = '1' then
+            if mAxisSlave.tReady = '1' then
                v.txMaster.tValid := '1';
                for i in 0 to 23 loop
                   v.txMaster.tData(16*i+15 downto  i*16) := descImgFlattened(i + 24*r.dataCycleCntr);
