@@ -290,7 +290,7 @@ class Root(pr.Root):
 
 
             for lane in range(self.numOfAsics):
-                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
+                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", descrambleEn = False))
                 self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()

@@ -219,6 +219,7 @@ begin
          r <= rin after TPD_G;
       end if;
    end process seq;
-      
+         
+   mAxisMaster <= r.txMaster;
 
 end RTL;

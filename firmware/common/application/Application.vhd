@@ -452,6 +452,7 @@ begin
          BUILD_INFO_G           => BUILD_INFO_G,
          NUM_OF_PSCOPE_G        => NUM_OF_PSCOPE_G,
          SN_CLK_PERIOD_G        => 6.4e-9,
+         DESCRAMBLE_G           => true,
          NUM_DS2411_G           => 3,
          NUM_OF_SLOW_ADCS_G     => NUM_OF_SLOW_ADCS_G,
          NUM_LANES_G            => NUM_OF_ASICS_G,
