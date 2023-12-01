@@ -50,17 +50,17 @@ architecture RTL of ImageDescrambler is
    constant AXI_STREAM_CONFIG_I_C : AxiStreamConfigType   := ssiAxiStreamConfig(2*24, TKEEP_COMP_C);
    constant framePixelRow : integer := 192;
    constant framePixelColumn : integer := 384;
-   constant pixelsPerLanesRows : integer := 48;
-   constant pixelsPerLanesColumns : integer := 64;
+   constant pixelsPerBankRows : integer := 48;
+   constant pixelsPerBankColumns : integer := 64;
    constant numOfBanks : integer := 24;
    constant numOfDataCycles : integer := 3072;
 
    type Slv16BankMatrix is array (natural range<>, natural range<>, natural range<>) of slv(15 downto 0);
    type Slv16ImgFlat    is array (natural range<>) of slv(15 downto 0);
-
+   type butLUTtype      is array (natural range<>) of integer;
    
-   signal descImgFlattened : Slv16ImgFlat (numOfBanks * pixelsPerLanesRows * pixelsPerLanesColumns - 1 downto 0);
-  
+   signal descImgFlattened : Slv16ImgFlat (numOfBanks * pixelsPerBankRows * pixelsPerBankColumns - 1 downto 0);
+   signal bugLUT : butLUTtype(pixelsPerBankRows-1 downto 0);
 
    type StateType is (WAIT_SOF_S, DESCRAMBLE_S, HDR_S, DATA_S);
    
@@ -72,7 +72,7 @@ architecture RTL of ImageDescrambler is
       colIndex       : integer;
       even           : sl;
       txMaster       : AxiStreamMasterType;
-      descImg        : Slv16BankMatrix (numOfBanks-1 downto 0, pixelsPerLanesRows-1 downto 0, pixelsPerLanesColumns-1 downto 0);
+      descImg        : Slv16BankMatrix (numOfBanks-1 downto 0, pixelsPerBankRows-1 downto 0, pixelsPerBankColumns-1 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -90,8 +90,19 @@ architecture RTL of ImageDescrambler is
    signal rin : RegType;
    
 
+   function initBugLUT return butLUTtype is
+      variable bugLUT : butLUTtype(pixelsPerBankRows-1 downto 0);
+      begin
+         for index in 0 to pixelsPerBankRows-1 loop
+            bugLUT(index) := index + 1;
+         end loop;
+         bugLUT(pixelsPerBankRows-1) := 0;
+         return bugLUT;
+      end function initBugLUT;
+
 begin
 
+   bugLUT <= initBugLUT;
    
    -- Format bank matrix as follows
    --  3     7    11    15    19    23         
@@ -105,11 +116,11 @@ begin
       counter := 0;
       for bankRows in 0 to 3 loop
          -- Generate all rows all adjacent banks
-         for rowsInBank in 0 to pixelsPerLanesRows-1 loop
+         for rowsInBank in 0 to pixelsPerBankRows-1 loop
             -- Generate one complete row from all adjacent banks at a time
             for bankCols in 0 to 5 loop
                -- Generate a row from one bank
-               for colsInBank in 0 to pixelsPerLanesColumns-1 loop
+               for colsInBank in 0 to pixelsPerBankColumns-1 loop
                   descImgFlattened(counter) <= r.descImg(bankCols*4 + bankRows, rowsInBank, colsInBank);
                   counter := counter + 1;
                end loop;
@@ -152,26 +163,27 @@ begin
                v.dataCycleCntr := r.dataCycleCntr + 1;
                
                for i in 0 to 23 loop
-                  v.descImg(i,r.rowIndex, r.colIndex) := sAxisMaster.tData(16*i+15 downto 16*i);
+                  -- use lookup table resolve bug
+                  v.descImg(i,bugLUT(r.rowIndex), r.colIndex) := sAxisMaster.tData(16*i+15 downto 16*i);
                end loop;
                   
                v.colIndex := r.colIndex + 2;
-               if (r.colIndex >= pixelsPerLanesColumns-2) then
+               if (r.colIndex >= pixelsPerBankColumns-2) then
                   if (r.even = '1') then
                      v.colIndex := 0;
                   else
                      v.colIndex := 1;
                   end if;
                   v.rowIndex := r.rowIndex + 1;
-                  if (r.rowIndex >= pixelsPerLanesRows - 1) then
+                  if (r.rowIndex >= pixelsPerBankRows - 1) then
                      v.rowIndex := 0;
                   end if;
                end if;
-               if (r.colIndex = pixelsPerLanesColumns-1) and (r.rowIndex = pixelsPerLanesRows - 1) then
+               if (r.colIndex = pixelsPerBankColumns-1) and (r.rowIndex = pixelsPerBankRows - 1) then
                   v.even := '1';
                   v.colIndex := 0;
                end if;               
-               if (r.colIndex = pixelsPerLanesColumns-2) and (r.rowIndex = pixelsPerLanesRows - 1) then
+               if (r.colIndex = pixelsPerBankColumns-2) and (r.rowIndex = pixelsPerBankRows - 1) then
                   v.state := HDR_S;
                   v.dataCycleCntr := 0;
                elsif ( sAxisMaster.tLast = '1' or ssiGetUserEofe(AXI_STREAM_CONFIG_I_C, sAxisMaster) = '1') then
