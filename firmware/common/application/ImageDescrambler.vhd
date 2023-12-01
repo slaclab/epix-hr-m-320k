@@ -58,8 +58,8 @@ architecture RTL of ImageDescrambler is
    type Slv16BankMatrix is array (natural range<>, natural range<>, natural range<>) of slv(15 downto 0);
    type Slv16ImgFlat    is array (natural range<>) of slv(15 downto 0);
 
-   signal descImg : Slv16BankMatrix (numOfBanks-1 downto 0, pixelsPerLanesRows-1 downto 0, pixelsPerLanesColumns downto 0);
-      signal descImgFlattened : Slv16ImgFlat (numOfBanks * pixelsPerLanesRows * pixelsPerLanesColumns - 1 downto 0);
+   
+   signal descImgFlattened : Slv16ImgFlat (numOfBanks * pixelsPerLanesRows * pixelsPerLanesColumns - 1 downto 0);
   
 
    type StateType is (WAIT_SOF_S, DESCRAMBLE_S, HDR_S, DATA_S);
@@ -72,6 +72,7 @@ architecture RTL of ImageDescrambler is
       colIndex       : integer;
       even           : sl;
       txMaster       : AxiStreamMasterType;
+      descImg        : Slv16BankMatrix (numOfBanks-1 downto 0, pixelsPerLanesRows-1 downto 0, pixelsPerLanesColumns-1 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -81,6 +82,7 @@ architecture RTL of ImageDescrambler is
       rowIndex       => 0,
       colIndex       => 1,
       even           => '0',
+      descImg        => (others => (others => (others => (others => '0')))),
       txMaster       => AXI_STREAM_MASTER_INIT_C
    );
    
@@ -97,26 +99,24 @@ begin
    --  1     5     9    13    17    21         
    --  0     4     8    12    16    20  
 
-   G_BANKS : for i in 0 to 23 generate
-      matrixMerge : process (descImg) is
-         variable counter : integer;
-      begin
-         counter := 0;
-         for bankRows in 0 to 3 loop
-            -- Generate all rows all adjacent banks
-            for rowsInBank in 0 to 47 loop
-               -- Generate one complete row from all adjacent banks at a time
-               for bankCols in 0 to 5 loop
-                  -- Generate a row from one bank
-                  for colsInBank in 0 to 63 loop
-                     descImgFlattened(counter) <= descImg(bankCols*4 + bankRows, rowsInBank, colsInBank);
-                     counter := counter + 1;
-                  end loop;
+   matrixMerge : process (r.descImg) is
+      variable counter : integer;
+   begin
+      counter := 0;
+      for bankRows in 0 to 3 loop
+         -- Generate all rows all adjacent banks
+         for rowsInBank in 0 to pixelsPerLanesRows-1 loop
+            -- Generate one complete row from all adjacent banks at a time
+            for bankCols in 0 to 5 loop
+               -- Generate a row from one bank
+               for colsInBank in 0 to pixelsPerLanesColumns-1 loop
+                  descImgFlattened(counter) <= r.descImg(bankCols*4 + bankRows, rowsInBank, colsInBank);
+                  counter := counter + 1;
                end loop;
             end loop;
          end loop;
-      end process;
-   end generate;
+      end loop;
+   end process;
 
    comb : process (sAxisMaster, r, mAxisSlave) is
       variable v        : RegType;
@@ -137,8 +137,9 @@ begin
       case r.state is
                 
          when WAIT_SOF_S =>
+            v := REG_INIT_C;
             sAxisSlave.tReady <= '1';
-            if (sAxisMaster.tUser(1) = '1' and sAxisMaster.tValid = '1') then
+            if (ssiGetUserSof(AXI_STREAM_CONFIG_I_C, sAxisMaster) = '1' and sAxisMaster.tValid = '1') then
                v.state := DESCRAMBLE_S;
                v.header := sAxisMaster.tData(95 downto 0);
             end if;
@@ -146,16 +147,12 @@ begin
          when DESCRAMBLE_S =>
          -- https://confluence.slac.stanford.edu/download/attachments/392826236/image-2023-8-9_16-6-42.png?version=1&modificationDate=1691622403000&api=v2
             sAxisSlave.tReady <= '1';
-            -- check for anomalies. TODO
-            --   New sof before eof
-            --   early eof 
-            --   last cycle no eof
             if sAxisMaster.tValid = '1' then
 
                v.dataCycleCntr := r.dataCycleCntr + 1;
                
                for i in 0 to 23 loop
-                  descImg(i,r.rowIndex, r.colIndex) <= sAxisMaster.tData(16*i+15 downto 16*i);
+                  v.descImg(i,r.rowIndex, r.colIndex) := sAxisMaster.tData(16*i+15 downto 16*i);
                end loop;
                   
                v.colIndex := r.colIndex + 2;
@@ -170,17 +167,21 @@ begin
                      v.rowIndex := 0;
                   end if;
                end if;
+               if (r.colIndex = pixelsPerLanesColumns-1) and (r.rowIndex = pixelsPerLanesRows - 1) then
+                  v.even := '1';
+                  v.colIndex := 0;
+               end if;               
                if (r.colIndex = pixelsPerLanesColumns-2) and (r.rowIndex = pixelsPerLanesRows - 1) then
+                  v.state := HDR_S;
+                  v.dataCycleCntr := 0;
+               elsif ( sAxisMaster.tLast = '1' or ssiGetUserEofe(AXI_STREAM_CONFIG_I_C, sAxisMaster) = '1') then
+               -- unanticipated finish. Send out full frame with what we received.
                   v.state := HDR_S;
                   v.dataCycleCntr := 0;
                end if;
             end if;
-             
             
          when HDR_S =>
-            ------------------------------------------------------------------
-            -- HEADER
-            ------------------------------------------------------------------    
             if mAxisSlave.tReady = '1' then
                v.txMaster.tValid := '1';
                v.state := DATA_S;
@@ -189,16 +190,19 @@ begin
             end if;         
 
          when DATA_S =>
-
-         if mAxisSlave.tReady = '1' and r.txMaster.tValid = '1' then
-            v.txMaster.tValid := '1';
-            for i in 0 to 23 loop
-               v.txMaster.tData(16*+15 downto  i*16) := descImgFlattened(i + 24*r.dataCycleCntr);
-            end loop;
-            v.dataCycleCntr := r.dataCycleCntr + 1;
-            ssiSetUserSof(AXI_STREAM_CONFIG_I_C, v.txMaster, '1');
-         end if; 
-         when others =>              
+            if mAxisSlave.tReady = '1' and r.txMaster.tValid = '1' then
+               v.txMaster.tValid := '1';
+               for i in 0 to 23 loop
+                  v.txMaster.tData(16*i+15 downto  i*16) := descImgFlattened(i + 24*r.dataCycleCntr);
+               end loop;
+               v.dataCycleCntr := r.dataCycleCntr + 1;
+               if (r.dataCycleCntr = 3071) then
+                  v.state := WAIT_SOF_S;
+                  v.txMaster.tLast := '1';
+                  ssiSetUserEofe(AXI_STREAM_CONFIG_I_C, v.txMaster, '1');
+               end if;
+            end if;   
+         when others => v.state := WAIT_SOF_S;              
       end case;
 
       if (axisRst = '1') then
