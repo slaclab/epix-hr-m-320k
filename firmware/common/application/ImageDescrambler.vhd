@@ -25,7 +25,7 @@ use surf.AxiStreamPkg.all;
 use surf.SsiPkg.all;
 
 
-entity ImageDescrambler is 
+entity ImageDescramblerVHDL is 
    generic (
       TPD_G           	   : time := 1 ns
    );
@@ -41,11 +41,11 @@ entity ImageDescrambler is
       mAxisSlave        : in  AxiStreamSlaveType
       
    );
-end ImageDescrambler;
+end ImageDescramblerVHDL;
 
 
 -- Define architecture
-architecture RTL of ImageDescrambler is
+architecture RTL of ImageDescramblerVHDL is
 
    -- makes the fifo input with 2B per stream
    constant AXI_STREAM_CONFIG_I_C : AxiStreamConfigType   := ssiAxiStreamConfig(2*24, TKEEP_COMP_C);
