@@ -2,7 +2,7 @@
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load Source Code
-loadSource    -path "$::DIR_PATH/rtl/AxiStreamePixHrMv2DescrambleDescrambleWrapper.vhd"
+loadSource    -path "$::DIR_PATH/rtl/AxiStreamDescrambleWrapper.vhd"
 
 # Load HLS zip
 if { [get_ips AxiStreamePixHrMv2Descramble_0] eq ""  } {

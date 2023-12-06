@@ -33,7 +33,7 @@ entity AxiStreameDescrambleWrapper is
       mAxisSlave  : in  AxiStreamSlaveType);
 end AxiStreameDescrambleWrapper;
 
-architecture rtl of AxiStreamePixHrMv2DescrambleWrapper is
+architecture rtl of AxiStreameDescrambleWrapper is
 
    component AxiStreamePixHrMv2Descramble_0
       port (
