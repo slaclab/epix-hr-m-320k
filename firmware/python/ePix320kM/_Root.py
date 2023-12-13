@@ -124,8 +124,8 @@ class Root(pr.Root):
 
             if (self.justCtrl == False) :
                 self.adcMonStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 6, 1)
-            for vc in range(4):                
-                self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
+                for vc in range(4):                
+                    self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
             # # Create (Xilinx Virtual Cable) XVC on localhost
             self.xvc = rogue.protocols.xilinx.Xvc(2542)
