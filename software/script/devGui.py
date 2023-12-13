@@ -87,7 +87,7 @@ if __name__ == "__main__":
         "--justCtrl",
         type     = argBool,
         required = False,
-        default  = True,
+        default  = False,
         help     = "Enable acessing AXI registers only",
     )
 
