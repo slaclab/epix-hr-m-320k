@@ -5,85 +5,13 @@ Root:
     enable: True  
     SspMonGrp[0]:
       enable: True
-      EnUsrDlyCfg: 0x1      
-      UsrDlyCfg[0]: 0x1f4
-      UsrDlyCfg[1]: 0x0
-      UsrDlyCfg[2]: 0x190
-      UsrDlyCfg[3]: 0x0
-      UsrDlyCfg[4]: 0x64
-      UsrDlyCfg[5]: 0xdb
-      UsrDlyCfg[6]: 0xdb
-      UsrDlyCfg[7]: 0x64
-      UsrDlyCfg[8]: 0x190
-      UsrDlyCfg[9]: 0x0
-      UsrDlyCfg[10]: 0x190
-      UsrDlyCfg[11]: 0xdb
-      UsrDlyCfg[12]: 0x1f4
-      UsrDlyCfg[13]: 0xdb
-      UsrDlyCfg[14]: 0xdb
-      UsrDlyCfg[15]: 0xdb
-      UsrDlyCfg[16]: 0x12c
-      UsrDlyCfg[17]: 0xdb
-      UsrDlyCfg[18]: 0xdb
-      UsrDlyCfg[19]: 0xdb
-      UsrDlyCfg[20]: 0x1f4
-      UsrDlyCfg[21]: 0xdb
-      UsrDlyCfg[22]: 0xdb
-      UsrDlyCfg[23]: 0xdb
+      EnUsrDlyCfg: 0x0      
     SspMonGrp[1]:
       enable: True
-      EnUsrDlyCfg: 0x1
-      UsrDlyCfg[0]: 0x0
-      UsrDlyCfg[1]: 0xff
-      UsrDlyCfg[2]: 0x50
-      UsrDlyCfg[3]: 0xff
-      UsrDlyCfg[4]: 0x57
-      UsrDlyCfg[5]: 0xe6
-      UsrDlyCfg[6]: 0x4
-      UsrDlyCfg[7]: 0xaa
-      UsrDlyCfg[8]: 0x1f4
-      UsrDlyCfg[9]: 0xfa
-      UsrDlyCfg[10]: 0x45
-      UsrDlyCfg[11]: 0xff
-      UsrDlyCfg[12]: 0x47
-      UsrDlyCfg[13]: 0xff
-      UsrDlyCfg[14]: 0x1f4
-      UsrDlyCfg[15]: 0x95
-      UsrDlyCfg[16]: 0x1f4
-      UsrDlyCfg[17]: 0x7c
-      UsrDlyCfg[18]: 0x1f4
-      UsrDlyCfg[19]: 0xc9
-      UsrDlyCfg[20]: 0x5
-      UsrDlyCfg[21]: 0xa0
-      UsrDlyCfg[22]: 0x13d
-      UsrDlyCfg[23]: 0x97
+      EnUsrDlyCfg: 0x0
     SspMonGrp[2]:
       enable: True
-      EnUsrDlyCfg: 0x1
-      UsrDlyCfg[0]: 0x9b
-      UsrDlyCfg[1]: 0x14b
-      UsrDlyCfg[2]: 0xc4
-      UsrDlyCfg[3]: 0x10b
-      UsrDlyCfg[4]: 0xc2
-      UsrDlyCfg[5]: 0x1f4
-      UsrDlyCfg[6]: 0x58
-      UsrDlyCfg[7]: 0xff
-      UsrDlyCfg[8]: 0x97
-      UsrDlyCfg[9]: 0x14e
-      UsrDlyCfg[10]: 0xe6
-      UsrDlyCfg[11]: 0x122
-      UsrDlyCfg[12]: 0xd0
-      UsrDlyCfg[13]: 0x5
-      UsrDlyCfg[14]: 0xa1
-      UsrDlyCfg[15]: 0xff
-      UsrDlyCfg[16]: 0xff
-      UsrDlyCfg[17]: 0x10a
-      UsrDlyCfg[18]: 0x79
-      UsrDlyCfg[19]: 0xff
-      UsrDlyCfg[20]: 0xae
-      UsrDlyCfg[21]: 0x136
-      UsrDlyCfg[22]: 0x1f4
-      UsrDlyCfg[23]: 0x1f4
+      EnUsrDlyCfg: 0x0
     SspMonGrp[3]:
       enable: True
       EnUsrDlyCfg: 0x0
