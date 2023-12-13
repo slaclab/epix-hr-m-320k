@@ -505,7 +505,7 @@ class Root(pr.Root):
         arguments = np.asarray(arg)
 
         print("Init ASIC script started")
-        delay = 1
+        delay = 0.1
 
 
         # configure PLL
@@ -523,33 +523,33 @@ class Root(pr.Root):
         print("Loading supply configuration")
         self.root.LoadConfig(self.filenamePowerSupply)
         print("Loading {}".format(self.filenamePowerSupply))
-        time.sleep(delay) 
+
 
         if (not self.sim):
             # load deserializer
             print("Loading lane delay configurations")
             self.root.LoadConfig(self.filenameDESER)
             print("Loading {}".format(self.filenameDESER))
-            time.sleep(delay)  
+
         
 
         # load config that sets waveforms
         print("Loading waveforms configuration")
         self.root.LoadConfig(self.filenameWaveForms)
         print("Loading {}".format(self.filenameWaveForms))
-        time.sleep(delay) 
+
 
         # load config that sets packet registers
         print("Loading packet register configurations")
         self.root.LoadConfig(self.filenamePacketReg)
         print("Loading {}".format(self.filenamePacketReg))
-        time.sleep(delay)         
+
 
         # load batcher
         print("Loading batcher configurations")
         self.root.LoadConfig(self.filenameBatcher)
         print("Loading {}".format(self.filenameBatcher))
-        time.sleep(delay)  
+
 
         ## takes the asics off of reset
         print("Taking asic off of reset")
@@ -558,10 +558,9 @@ class Root(pr.Root):
         self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
         time.sleep(delay) 
         self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
-        time.sleep(delay) 
         self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
         self.root.readBlocks()
-        time.sleep(delay) 
+
 
         ## load config for the asic
         if not self.sim :
@@ -570,7 +569,6 @@ class Root(pr.Root):
                 if arguments[asicIndex] != 0:
                     self.root.LoadConfig(self.filenameASIC.format(asicIndex))
                     print("Loading {}".format(self.filenameASIC.format(asicIndex)))
-                    time.sleep(5*delay) 
 
         print("Initialization routine completed.")
 
