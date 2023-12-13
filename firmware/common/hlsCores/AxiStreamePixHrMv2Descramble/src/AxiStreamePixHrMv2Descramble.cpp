@@ -14,26 +14,40 @@
 using namespace std;
 
 void AxiStreamePixHrMv2Descramble(mystream &ibStream, mystream &obStream) {
-   // Set the input and output ports as AXI4-Stream
-   #pragma HLS INTERFACE axis port=ibStream
-   #pragma HLS INTERFACE axis port=obStream
+	// Set the input and output ports as AXI4-Stream
+	#pragma HLS INTERFACE axis port=ibStream
+	#pragma HLS INTERFACE axis port=obStream
 
-   // Don't generate ap_ctrl ports in RTL
-   #pragma HLS INTERFACE ap_ctrl_none port=return
+	// Don't generate ap_ctrl ports in RTL
+	#pragma HLS INTERFACE ap_ctrl_none port=return
 
 
 
-   // Exemple for 2 ePixHR10k ASICs => 2 * 32 * 6 = 384
-   ap_uint<ASIC_DATA_WIDTH> input_line_buffer[NUM_ASICS * ASIC_COLUMNS_PER_STREAM * ASIC_NUM_OF_STREAMS];
-   #pragma HLS ARRAY_PARTITION variable=input_line_buffer dim=1 complete
-   static ap_uint<ASIC_DATA_WIDTH> previous_line_buffer[NUM_ASICS * ASIC_COLUMNS_PER_STREAM * ASIC_NUM_OF_STREAMS];
-   #pragma HLS ARRAY_PARTITION variable=previous_line_buffer dim=1 complete
-   ap_uint<ASIC_DATA_WIDTH> output_line_buffer[NUM_ASICS * ASIC_COLUMNS_PER_STREAM * ASIC_NUM_OF_STREAMS];
-   #pragma HLS ARRAY_PARTITION variable=output_line_buffer dim=1 complete
+   	// Exemple for 2 ePixHR10k ASICs => 2 * 32 * 6 = 384
+	static ap_uint<ASIC_DATA_WIDTH> imageFlattened(NUM_BANKS * ROWS_PER_BANK * COLS_PER_BANK);
+	#pragma HLS ARRAY_PARTITION variable=image dim=1 complete	
 
-   ap_uint<32> lastDataFlag=0;
-   ap_uint<1> last;
-   int rowIdx = 0;
+
+   /* Reorder banks from
+	# 18    19    20    21    22    23
+	# 12    13    14    15    16    17
+	#  6     7     8     9    10    11
+	#  0     1     2     3     4     5
+	#
+	#                To
+	#  3     7    11    15    19    23
+	#  2     6    10    14    18    22
+	#  1     5     9    13    17    21
+	#  0     4     8    12    16    20
+	*/
+   	ap_uint bankRemapping[24] = {0, 6, 12, 18, 1, 7, 13, 19, 2, 8, 14, 20, 3, 9, 15, 21, 4, 10, 16, 22, 5, 11, 17, 23};
+    int colOffset[24] = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5 };
+    int rowOffset[24] = {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5 };
+
+    if(ibStream.empty())
+		return;
+
+   	auto ibVar = ibStream.read();
 
    /*
    #pragma HLS DATAFLOW
