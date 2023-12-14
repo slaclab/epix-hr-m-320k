@@ -42,18 +42,116 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # #################################
 # ## Set the clock for the ILA core
 # #################################
-SetDebugCoreClk ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpClk}
+SetDebugCoreClk ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/clk}
 
 # #######################
 # ## Set the debug Probes
 #######################
 
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpTxMasters[0][tData]*} 0 63
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpTxMasters[0][tKeep]*} 0 7
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpTxMasters[0][tUser]*} 0 15
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpTxMasters[0][tLast]}
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpTxMasters[0][tValid]}
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/U_Pgp_Lane6/pgpTxSlaves[0][tReady]}
+ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/sof}
+ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/eof}
+ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/fiducial}
+
+
+
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[1].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[1].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[1].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[2].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[2].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[2].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[3].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[3].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[3].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[4].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[4].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[4].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[5].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[5].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[5].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[6].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[6].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[6].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[7].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[7].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[7].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[8].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[8].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[8].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[9].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[9].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[9].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[10].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[10].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[10].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[11].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[11].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[11].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[12].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[12].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[12].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[13].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[13].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[13].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[14].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[14].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[14].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[15].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[15].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[15].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[16].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[16].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[16].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[17].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[17].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[17].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[18].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[18].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[18].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[19].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[19].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[19].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[20].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[20].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[20].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[21].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[21].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[21].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[22].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[22].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[22].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[23].DataFifo_U/rd_en}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[23].DataFifo_U/valid}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[23].DataFifo_U/dout*} {0} {15}
+#
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/startRdSync}
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/cycleCounter*} {0} {15} 
 
 
 # ##########################

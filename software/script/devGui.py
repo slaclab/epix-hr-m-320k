@@ -83,6 +83,14 @@ if __name__ == "__main__":
         help     = "Zeromq server port",
     )
 
+    parser.add_argument(
+        "--justCtrl",
+        type     = argBool,
+        required = False,
+        default  = False,
+        help     = "Enable acessing AXI registers only",
+    )
+
     # Get the arguments
     args = parser.parse_args()
 
@@ -95,6 +103,7 @@ if __name__ == "__main__":
         initRead   = args.initRead,
         serverPort = args.serverPort,
         pciePgpEn  = args.pciePgpEn,
+        justCtrl   = args.justCtrl,
     ) as root:
 
         ######################

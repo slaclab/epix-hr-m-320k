@@ -345,7 +345,7 @@ begin
                                     -- into one stream only. So this will be 1.
                                     -- The streams will be depacketized and demuxed
                                     -- in software
-         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfigClk5EnClk32.5V-Registers.mem",
+         MEMORY_INIT_FILE_G => "EPixHRM320KPllConfig168Mhz.mem",
          SLOW_ADC_AXI_CFG_G => PGP4_AXIS_CONFIG_C
       )
       port map (
