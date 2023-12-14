@@ -330,7 +330,7 @@ class Root(pr.Root):
 
         self.add(pr.LocalCommand(name='InitASIC',
                                  description='[routine, asic0, asic1, asic2, asic3]',
-                                 value=[0,0,0,0,0],
+                                 value=[4,1,1,1,1],
                                  function=self.fnInitAsic
         ))
 
@@ -473,30 +473,19 @@ class Root(pr.Root):
         """SetTestBitmap command function"""       
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
+        self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
+        self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
+        self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
+        self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
+        self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
+        self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"      
         if arguments[0] == 1:
             self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig250Mhz.csv"
-            self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
-            self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
-            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
-            self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
-            self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"
         if arguments[0] == 2:
             self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig125Mhz.csv"
-            self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
-            self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
-            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
-            self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
-            self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"     
         if arguments[0] == 3:
             self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig168Mhz.csv"
-            self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
-            self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
-            self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-            self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
-            self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
-            self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"                     
+               
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
@@ -505,19 +494,20 @@ class Root(pr.Root):
         arguments = np.asarray(arg)
 
         print("Init ASIC script started")
-        delay = 0.1
+        delay = 1
 
 
         # configure PLL
         print("Loading PLL configuration")
         self.App.enable.set(False)
         if not self.sim :
-            self.Core.Si5345Pll.enable.set(True)
-            self.Core.Si5345Pll.LoadCsvFile(self.filenamePLL)
-            print("Loaded. Waiting for lock...")
-            time.sleep(6) 
-            self.App.enable.set(True)
-            self.Core.Si5345Pll.enable.set(False)
+            if arguments[0] != 4 :
+                self.Core.Si5345Pll.enable.set(True)
+                self.Core.Si5345Pll.LoadCsvFile(self.filenamePLL)
+                print("Loaded. Waiting for lock...")
+                time.sleep(6) 
+                self.App.enable.set(True)
+                self.Core.Si5345Pll.enable.set(False)
 
         # load config that sets prog supply
         print("Loading supply configuration")
@@ -558,6 +548,7 @@ class Root(pr.Root):
         self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(False)
         time.sleep(delay) 
         self.App.AsicTop.RegisterControlDualClock.GlblRstPolarityN.set(True)
+        time.sleep(delay) 
         self.App.AsicTop.RegisterControlDualClock.ClkSyncEn.set(True)
         self.root.readBlocks()
 
