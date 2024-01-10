@@ -540,6 +540,11 @@ class Root(pr.Root):
         self.root.LoadConfig(self.filenameBatcher)
         print("Loading {}".format(self.filenameBatcher))
 
+        #get serial numbers
+        self.App.AsicTop.RegisterControlDualClock.enable.set(True)
+        self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x7)
+        self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x0)
+        
 
         ## takes the asics off of reset
         print("Taking asic off of reset")
