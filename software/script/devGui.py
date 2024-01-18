@@ -104,6 +104,7 @@ if __name__ == "__main__":
         serverPort = args.serverPort,
         pciePgpEn  = args.pciePgpEn,
         justCtrl   = args.justCtrl,
+        fullRateDataReceiverEn = False
     ) as root:
 
         ######################

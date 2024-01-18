@@ -71,6 +71,7 @@ class Root(pr.Root):
             promProg  = False, # Flag to disable all devices not related to PROM programming
             pciePgpEn = False, # Enable PCIE PGP card register space access
             justCtrl  = False, # Enable if you only require Root for accessing AXI registers (no data)
+            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
             **kwargs):
 
         #################################################################
@@ -79,6 +80,7 @@ class Root(pr.Root):
         self.sim      = (dev == 'sim')
         self.top_level = top_level
         self.justCtrl = justCtrl
+        self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
         
         if (self.sim):
@@ -185,14 +187,15 @@ class Root(pr.Root):
         if (self.justCtrl == False) :
             for asicIndex in range(self.numOfAsics):
                 self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
-                self.add(fullRateDataReceiver(
-                    name = f"fullRateDataReceiver[{asicIndex}]",
-                    hidden = True
-                    ))
                 self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
                 self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
-                self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
+                if(self.fullRateDataReceiverEn == True):
+                    self.add(fullRateDataReceiver(
+                        name = f"fullRateDataReceiver[{asicIndex}]",
+                        hidden = True
+                        ))
+                    self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
 
             # Check if not VCS simulation
@@ -279,6 +282,7 @@ class Root(pr.Root):
             # Read file stream. 
             self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
             self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
+            self.dataReceiverFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
             self.fread = rogue.utilities.fileio.StreamReader()
             self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
 
@@ -291,7 +295,7 @@ class Root(pr.Root):
 
             for lane in range(self.numOfAsics):
                 self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
-                self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >> getattr(self, f"DataReceiver{lane}")
+                self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()
         def DisplayViewer0():
@@ -350,8 +354,9 @@ class Root(pr.Root):
             self.CountReset()
 
         if (self.justCtrl == False) :
-            for asicIndex in range(self.numOfAsics):    
-                getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
+            if(self.fullRateDataReceiverEn == True):
+                for asicIndex in range(self.numOfAsics):    
+                    getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
             for asicIndex in range(self.numOfAsics):    
                 getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
 
@@ -371,13 +376,15 @@ class Root(pr.Root):
 
     def disableAndCleanAllFullRateDataRcv(self) :
         if (self.justCtrl == False) :
-            for asicIndex in range(self.numOfAsics) :
-                self.fullRateDataReceiver[asicIndex].cleanData()
-                self.fullRateDataReceiver[asicIndex].RxEnable.set(False)
+            if(self.fullRateDataReceiverEn == True):
+                for asicIndex in range(self.numOfAsics) :
+                    self.fullRateDataReceiver[asicIndex].cleanData()
+                    self.fullRateDataReceiver[asicIndex].RxEnable.set(False)
 
     def enableFullRateDataRcv(self, index, enable) :
         if (self.justCtrl == False) :
-            self.fullRateDataReceiver[index].RxEnable.set(enable)
+            if(self.fullRateDataReceiverEn == True):
+                self.fullRateDataReceiver[index].RxEnable.set(enable)
 
     def enableDataRcv(self, enable) :
         if (self.justCtrl == False) :
@@ -410,8 +417,9 @@ class Root(pr.Root):
             self.App.AsicTop.TriggerRegisters.StopTriggers()  
         
     def enableFullRateDataRcv(self, index, enable) :
-        if (self.justCtrl == False) :
-            self.fullRateDataReceiver[index].RxEnable.set(enable)
+       if (self.justCtrl == False) :
+            if(self.fullRateDataReceiverEn == True):
+                self.fullRateDataReceiver[index].RxEnable.set(enable)
 
     def getLaneLocks(self) :
         for asicIndex in range(self.numOfAsics) : 
