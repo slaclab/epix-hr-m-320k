@@ -52,6 +52,7 @@ entity Application is
       ----------------------
       axilClk            : in sl;
       axilRst            : in sl;
+      pcieDaqTrigPause   : in sl;
 
       -- AXI-Lite Register Interface (sysClk domain)
       -- Register Address Range = [0x80000000:0xFFFFFFFF]
@@ -276,7 +277,7 @@ architecture rtl of Application is
    signal eventRst               : sl;
    signal eventTrigMsgMasters    : AxiStreamMasterArray(NUM_EVENT_CHANNELS_G -1 downto 0);
    signal eventTrigMsgSlaves     : AxiStreamSlaveArray(NUM_EVENT_CHANNELS_G -1 downto 0);
-   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal eventTrigMsgCtrl       : AxiStreamCtrlArray(NUM_EVENT_CHANNELS_G -1 downto 0) := (others => AXI_STREAM_CTRL_UNUSED_C);
    signal eventTimingMsgMasters  : AxiStreamMasterArray(NUM_EVENT_CHANNELS_G -1 downto 0);
    signal eventTimingMsgSlaves   : AxiStreamSlaveArray(NUM_EVENT_CHANNELS_G -1 downto 0);
    signal clearReadout           : slv (NUM_EVENT_CHANNELS_G -1 downto 0) := (others => '0');
@@ -482,7 +483,7 @@ begin
          eventRst             => eventRst,
          eventTrigMsgMasters  => eventTrigMsgMasters,
          eventTrigMsgSlaves   => eventTrigMsgSlaves,
-         eventTrigMsgCtrl     => eventTrigMsgCtrl,
+--       eventTrigMsgCtrl     => eventTrigMsgCtrl, // Using the remote PCIe trigger pause from the DDR/HBM buffer to halt DAQ triggers
          eventTimingMsgMasters=> eventTimingMsgMasters,
          eventTimingMsgSlaves => eventTimingMsgSlaves,
          clearReadout         => clearReadout,
@@ -694,7 +695,18 @@ begin
          v1LinkUp             => v1LinkUp,
          v2LinkUp             => v2LinkUp
       );
-   
+
+   GEN_DAQ_PAUSE :
+   for i in NUM_EVENT_CHANNELS_G -1 downto 0 generate
+      U_triggerPause : entity surf.Synchronizer
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            clk     => eventClk,
+            dataIn  => pcieDaqTrigPause,
+            dataOut => eventTrigMsgCtrl(i).pause);
+   end generate GEN_DAQ_PAUSE;
+
    U_TERM_GTs : entity surf.Gthe4ChannelDummy
       generic map (
          TPD_G   => TPD_G,
