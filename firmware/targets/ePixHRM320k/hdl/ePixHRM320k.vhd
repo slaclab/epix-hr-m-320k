@@ -180,6 +180,8 @@ end entity;
 
 architecture topLevel of ePixHRM320k is
 
+   signal pcieDaqTrigPause : sl;
+
    -- Clock and Reset
    signal axilClk : sl;
    signal axilRst : sl;
@@ -212,6 +214,8 @@ begin
          NUM_OF_SLOW_ADCS_G            => NUM_OF_SLOW_ADCS_G
       )
       port map (
+         pcieDaqTrigPause => pcieDaqTrigPause,
+
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x80000000:0xFFFFFFFF]
          axilClk         => axilClk,
@@ -349,6 +353,8 @@ begin
          SLOW_ADC_AXI_CFG_G => PGP4_AXIS_CONFIG_C
       )
       port map (
+         pcieDaqTrigPause => pcieDaqTrigPause,
+
          -- AXI-Lite Register Interface (sysClk domain)
          -- Register Address Range = [0x00000000:0x80000000]
          axilClk         => axilClk,
