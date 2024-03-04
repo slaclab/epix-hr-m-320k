@@ -23,5 +23,5 @@ Root:
       DigAsicStrmRegisters3:
         enable: True
         asicDataReq: 3071
-        DisableLane: 0x540100
+        DisableLane: 0x540140
         EnumerateDisLane: 0xffffff
