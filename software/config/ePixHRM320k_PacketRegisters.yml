@@ -13,7 +13,7 @@ Root:
       DigAsicStrmRegisters1:
         enable: True
         asicDataReq: 3071
-        DisableLane: 0x5 # carrier 3
+        DisableLane: 0x10045 # carrier 3
         EnumerateDisLane: 0xffffff
       DigAsicStrmRegisters2:
         enable: True
