@@ -55,7 +55,8 @@ class Root(pr.Root):
             promProg  = False, # Flag to disable all devices not related to PROM programming
             pciePgpEn = False, # Enable PCIE PGP card register space access
             justCtrl  = False, # Enable if you only require Root for accessing AXI registers (no data)
-            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter
+            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
+            DDebugSize=1000,
             **kwargs):
 
         #################################################################
@@ -99,7 +100,7 @@ class Root(pr.Root):
             self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
             self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-            self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
+            self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane), size = DDebugSize) for lane in range(self.numOfAsics)]
         
         # Check if not VCS simulation
         if (not self.sim):
