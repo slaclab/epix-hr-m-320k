@@ -71,7 +71,7 @@ class Root(pr.Root):
             promProg  = False, # Flag to disable all devices not related to PROM programming
             pciePgpEn = False, # Enable PCIE PGP card register space access
             justCtrl  = False, # Enable if you only require Root for accessing AXI registers (no data)
-            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
+            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter
             **kwargs):
 
         #################################################################
@@ -82,7 +82,11 @@ class Root(pr.Root):
         self.justCtrl = justCtrl
         self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
-        
+
+
+        self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
+        self.addInterface(self.zmqServer)
+
         if (self.sim):
             # Set the timeout
             kwargs['timeout'] = 10.0 # firmware simulation slow and timeout base on real time (not simulation time)

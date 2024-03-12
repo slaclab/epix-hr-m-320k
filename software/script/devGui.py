@@ -101,7 +101,6 @@ if __name__ == "__main__":
         dev        = args.dev,
         pollEn     = args.pollEn,
         initRead   = args.initRead,
-        serverPort = args.serverPort,
         pciePgpEn  = args.pciePgpEn,
         justCtrl   = args.justCtrl,
         fullRateDataReceiverEn = False
@@ -112,6 +111,7 @@ if __name__ == "__main__":
         ######################
         if (args.guiType == 'PyDM'):
             pyrogue.pydm.runPyDM(
+                serverList=root.zmqServer.address,
                 root  = root,
                 sizeX = 800,
                 sizeY = 800,
