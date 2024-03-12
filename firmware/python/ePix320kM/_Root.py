@@ -12,6 +12,7 @@
 import pyrogue  as pr
 import pyrogue.protocols
 import pyrogue.utilities.fileio
+import pyrogue.interfaces
 
 import rogue
 import rogue.hardware.axi
@@ -34,6 +35,7 @@ import pciePgpCard
 from ePixViewer.asics import ePixHrMv2
 from ePixViewer import EnvDataReceiver
 from ePixViewer import ScopeDataReceiver
+
 
 rogue.Version.minVersion('5.14.0')
 
@@ -84,9 +86,6 @@ class Root(pr.Root):
         self.numOfAsics = 4
 
 
-        self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
-        self.addInterface(self.zmqServer)
-
         if (self.sim):
             # Set the timeout
             kwargs['timeout'] = 10.0 # firmware simulation slow and timeout base on real time (not simulation time)
@@ -97,6 +96,11 @@ class Root(pr.Root):
 
         super().__init__(**kwargs)
 
+
+        self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
+        self.addInterface(self.zmqServer)
+
+        
         #################################################################
 
         # Create an empty list to be filled
