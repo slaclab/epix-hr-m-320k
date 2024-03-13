@@ -41,7 +41,7 @@ try :
 except ImportError:
     pass
 
-rogue.Version.minVersion('5.14.0')
+rogue.Version.minVersion('6.1.3')
 
 #rogue.Logging.setFilter('pyrogue.packetizer', rogue.Logging.Debug)
 
