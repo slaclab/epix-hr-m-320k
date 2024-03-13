@@ -100,7 +100,12 @@ class Root(pr.Root):
         self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
         self.addInterface(self.zmqServer)
 
-        
+        # Create configuration stream
+        stream = pyrogue.interfaces.stream.Variable(root=self)
+
+        # Create StreamWriter with the configuration stream included as channel 1
+        self.dataWriter = pyrogue.utilities.fileio.StreamWriter(configStream={1: stream})
+        self.add(self.dataWriter)        
         #################################################################
 
         # Create an empty list to be filled
@@ -183,9 +188,6 @@ class Root(pr.Root):
             self._cmd.sendCmd(0, 0)
         #################################################################
 
-        # File writer
-        self.dataWriter = pr.utilities.fileio.StreamWriter()
-        self.add(self.dataWriter)
         self.add(pyrogue.RunControl(name = 'runControl',
                                     description='Run Controller hr',
                                     cmd=self.Trigger,
