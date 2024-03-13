@@ -36,34 +36,14 @@ try :
     from ePixViewer.asics import ePixHrMv2
     from ePixViewer import EnvDataReceiver
     from ePixViewer import ScopeDataReceiver
+    import fullRateDataReceiver
+    from dataDebug import dataDebug
 except ImportError:
     pass
 
 rogue.Version.minVersion('5.14.0')
 
 #rogue.Logging.setFilter('pyrogue.packetizer', rogue.Logging.Debug)
-
-class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
-        self.currentFrameCount = 0
-
-    def process(self,frame):
-        if (self.currentFrameCount >= 1000) :
-            print("Max acquistion size of fullRateDataReceiver of 1000 reached. Cleanup dataDebug. Discarding new data.")
-        else :
-            super().process(frame)
-            self.dataAcc[:,:,self.currentFrameCount] = np.intc(self.Data.get())
-            self.currentFrameCount = self.currentFrameCount + 1
-
-    def cleanData(self):
-        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
-        self.currentFrameCount = 0
-
-    def getData(self):
-        return self.dataAcc[:,:,0:self.currentFrameCount]     
 
 
 class Root(pr.Root):
@@ -119,7 +99,7 @@ class Root(pr.Root):
             self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
             self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-            self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
+            self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
         
         # Check if not VCS simulation
         if (not self.sim):
@@ -292,7 +272,7 @@ class Root(pr.Root):
                     
 
             # Read file stream. 
-            self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
+            self.readerReceiver = [dataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
             self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
             self.dataReceiverFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
             self.fread = rogue.utilities.fileio.StreamReader()
