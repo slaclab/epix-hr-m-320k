@@ -25,10 +25,10 @@ import ePix320kM as devBoard
 top_level=f'{os.getcwd()}'# point to the software folder
 while (os.path.basename(top_level) != "software"):
     top_level = os.path.dirname(top_level)
-    if len(top_level) == 0:
-        throw("Software folder not in path. Exiting.")
+    if top_level == '/':
+        raise RuntimeError("\"software\" folder not in path. Exiting.")
 
-print(top_level)
+print("Found path {}. Setting as top level".format(top_level))
 #################################################################
 
 if __name__ == "__main__":
