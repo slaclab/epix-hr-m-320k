@@ -21,8 +21,8 @@ import os
 import ePix320kM as devBoard
 
 ############## Make software top level ##########################
-
 top_level = os.path.realpath(__file__).split('software')[0]
+top_level = top_level+"software"
 #################################################################
 
 if __name__ == "__main__":
