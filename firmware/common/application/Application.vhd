@@ -696,16 +696,16 @@ begin
          v2LinkUp             => v2LinkUp
       );
 
-   GEN_DAQ_PAUSE :
-   for i in NUM_EVENT_CHANNELS_G -1 downto 0 generate
-      U_triggerPause : entity surf.Synchronizer
-         generic map (
-            TPD_G => TPD_G)
-         port map (
-            clk     => eventClk,
-            dataIn  => pcieDaqTrigPause,
-            dataOut => eventTrigMsgCtrl(i).pause);
-   end generate GEN_DAQ_PAUSE;
+   -- [0] RunTrigger, [1] DaqTrigger. DaqTrigger only undergo backpressure. 
+   -- eventTrigMsgCtrl[0] will stay default
+   U_triggerPause : entity surf.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => eventClk,
+         dataIn  => pcieDaqTrigPause,
+         dataOut => eventTrigMsgCtrl(1).pause);
+
 
    U_TERM_GTs : entity surf.Gthe4ChannelDummy
       generic map (
