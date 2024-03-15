@@ -36,7 +36,7 @@ try :
     from ePixViewer.asics import ePixHrMv2
     from ePixViewer import EnvDataReceiver
     from ePixViewer import ScopeDataReceiver
-    import fullRateDataReceiver
+    from fullRateDataReceiver import fullRateDataReceiver
     from dataDebug import dataDebug
 except ImportError:
     pass

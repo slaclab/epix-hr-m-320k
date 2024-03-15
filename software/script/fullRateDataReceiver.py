@@ -1,4 +1,5 @@
 
+import numpy as np
 try :
     from ePixViewer.asics import ePixHrMv2
 except ImportError:
