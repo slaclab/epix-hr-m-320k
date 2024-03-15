@@ -483,7 +483,7 @@ begin
          eventRst             => eventRst,
          eventTrigMsgMasters  => eventTrigMsgMasters,
          eventTrigMsgSlaves   => eventTrigMsgSlaves,
---       eventTrigMsgCtrl     => eventTrigMsgCtrl, // Using the remote PCIe trigger pause from the DDR/HBM buffer to halt DAQ triggers
+         eventTrigMsgCtrl     => eventTrigMsgCtrl, -- Changed to input to monitor pause
          eventTimingMsgMasters=> eventTimingMsgMasters,
          eventTimingMsgSlaves => eventTimingMsgSlaves,
          clearReadout         => clearReadout,
