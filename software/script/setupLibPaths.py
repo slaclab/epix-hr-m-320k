@@ -9,7 +9,10 @@ pr.addLibraryPath(top_level+'firmware/submodules/lcls-timing-core/python')
 pr.addLibraryPath(top_level+'firmware/submodules/l2si-core/python')
 pr.addLibraryPath(top_level+'firmware/submodules/surf/python')
 pr.addLibraryPath(top_level+'firmware/python')
-pr.addLibraryPath(top_level+'firmware/python/ePixViewer/python')
-pr.addLibraryPath(top_level+'firmware/python/AsicRegMapping/python')
+try :
+    pr.addLibraryPath(top_level+'firmware/submodules/ePixViewer/python')
+except :
+    pass
+pr.addLibraryPath(top_level+'firmware/submodules/AsicRegMapping/python')
 pr.addLibraryPath(top_level+'firmware/python/pciePgpCard')
 pr.addLibraryPath(top_level+'firmware/submodules/axi-pcie-core/python')

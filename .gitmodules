@@ -1,27 +1,36 @@
 [submodule "firmware/submodules/ruckus"]
 	path = firmware/submodules/ruckus
 	url = git@github.com:slaclab/ruckus
+	branch = pre-release
 [submodule "firmware/submodules/surf"]
 	path = firmware/submodules/surf
 	url = git@github.com:slaclab/surf
+	branch = pre-release
 [submodule "firmware/submodules/lcls-timing-core"]
 	path = firmware/submodules/lcls-timing-core
 	url = git@github.com:slaclab/lcls-timing-core.git
+	branch = pre-release
 [submodule "firmware/submodules/l2si-core"]
 	path = firmware/submodules/l2si-core
 	url = git@github.com:slaclab/l2si-core.git
+	branch = pre-release
 [submodule "firmware/submodules/epix-hr-leap-common"]
 	path = firmware/submodules/epix-hr-leap-common
 	url = git@github.com:slaclab/epix-hr-leap-common.git
+	branch = pre-release
 [submodule "firmware/submodules/epix-hr-core"]
 	path = firmware/submodules/epix-hr-core
 	url = git@github.com:slaclab/epix-hr-core
+	branch = pre-release
 [submodule "firmware/python/ePixViewer"]
-	path = firmware/python/ePixViewer
+	path = firmware/submodules/ePixViewer
 	url = git@github.com:slaclab/ePixViewer.git
+	branch = pre-release
 [submodule "firmware/python/AsicRegMapping"]
-	path = firmware/python/AsicRegMapping
+	path = firmware/submodules/AsicRegMapping
 	url = git@github.com:slaclab/AsicRegMapping.git
+	branch = pre-release
 [submodule "firmware/submodules/axi-pcie-core"]
 	path = firmware/submodules/axi-pcie-core
 	url = git@github.com:slaclab/axi-pcie-core.git
+	branch = pre-release

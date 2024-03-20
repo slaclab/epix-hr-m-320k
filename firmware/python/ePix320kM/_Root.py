@@ -12,6 +12,7 @@
 import pyrogue  as pr
 import pyrogue.protocols
 import pyrogue.utilities.fileio
+import pyrogue.interfaces
 
 import rogue
 import rogue.hardware.axi
@@ -31,35 +32,18 @@ import epix_hr_leap_common as leapCommon
 import surf.protocols.pgp as pgp
 import pciePgpCard
 
-from ePixViewer.asics import ePixHrMv2
-from ePixViewer import EnvDataReceiver
-from ePixViewer import ScopeDataReceiver
+try :
+    from ePixViewer.asics import ePixHrMv2
+    from ePixViewer import EnvDataReceiver
+    from ePixViewer import ScopeDataReceiver
+    from fullRateDataReceiver import fullRateDataReceiver
+    from dataDebug import dataDebug
+except ImportError:
+    pass
 
-rogue.Version.minVersion('5.14.0')
+rogue.Version.minVersion('6.1.3')
 
 #rogue.Logging.setFilter('pyrogue.packetizer', rogue.Logging.Debug)
-
-class fullRateDataReceiver(ePixHrMv2.DataReceiverEpixHrMv2):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
-        self.currentFrameCount = 0
-
-    def process(self,frame):
-        if (self.currentFrameCount >= 1000) :
-            print("Max acquistion size of fullRateDataReceiver of 1000 reached. Cleanup dataDebug. Discarding new data.")
-        else :
-            super().process(frame)
-            self.dataAcc[:,:,self.currentFrameCount] = np.intc(self.Data.get())
-            self.currentFrameCount = self.currentFrameCount + 1
-
-    def cleanData(self):
-        self.dataAcc = np.zeros((192,384,1000), dtype='int32')
-        self.currentFrameCount = 0
-
-    def getData(self):
-        return self.dataAcc[:,:,0:self.currentFrameCount]     
 
 
 class Root(pr.Root):
@@ -71,7 +55,7 @@ class Root(pr.Root):
             promProg  = False, # Flag to disable all devices not related to PROM programming
             pciePgpEn = False, # Enable PCIE PGP card register space access
             justCtrl  = False, # Enable if you only require Root for accessing AXI registers (no data)
-            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
+            fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter
             **kwargs):
 
         #################################################################
@@ -82,7 +66,8 @@ class Root(pr.Root):
         self.justCtrl = justCtrl
         self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
-        
+
+
         if (self.sim):
             # Set the timeout
             kwargs['timeout'] = 10.0 # firmware simulation slow and timeout base on real time (not simulation time)
@@ -93,6 +78,16 @@ class Root(pr.Root):
 
         super().__init__(**kwargs)
 
+
+        self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
+        self.addInterface(self.zmqServer)
+ 
+        # Create configuration stream
+        stream = pyrogue.interfaces.stream.Variable(root=self)
+
+        # Create StreamWriter with the configuration stream included as channel 1
+        self.dataWriter = pyrogue.utilities.fileio.StreamWriter(configStream={1: stream})
+        self.add(self.dataWriter)        
         #################################################################
 
         # Create an empty list to be filled
@@ -104,7 +99,7 @@ class Root(pr.Root):
             self.rate          = [rogue.interfaces.stream.RateDrop(True,1) for i in range(self.numOfAsics)]
             self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
-            self._dbg          = [fpgaBoard.DataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
+            self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane)) for lane in range(self.numOfAsics)]
         
         # Check if not VCS simulation
         if (not self.sim):
@@ -175,9 +170,6 @@ class Root(pr.Root):
             self._cmd.sendCmd(0, 0)
         #################################################################
 
-        # File writer
-        self.dataWriter = pr.utilities.fileio.StreamWriter()
-        self.add(self.dataWriter)
         self.add(pyrogue.RunControl(name = 'runControl',
                                     description='Run Controller hr',
                                     cmd=self.Trigger,
@@ -280,7 +272,7 @@ class Root(pr.Root):
                     
 
             # Read file stream. 
-            self.readerReceiver = [fpgaBoard.DataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
+            self.readerReceiver = [dataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
             self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
             self.dataReceiverFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
             self.fread = rogue.utilities.fileio.StreamReader()
@@ -299,19 +291,19 @@ class Root(pr.Root):
 
         @self.command()
         def DisplayViewer0():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"]) ], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../firmware/submodules/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(self.zmqServer.port()) ], shell=False)
 
         @self.command()
         def DisplayViewer1():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../firmware/submodules/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver1", "image", "--title", "DataReceiver1", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(self.zmqServer.port())], shell=False)
 
         @self.command()
         def DisplayViewer2():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../firmware/submodules/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver2", "image", "--title", "DataReceiver2", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(self.zmqServer.port())], shell=False)
 
         @self.command()
         def DisplayViewer3():
-            subprocess.Popen(["python", self.top_level+"/../../firmware/python/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(kwargs["serverPort"])], shell=False)
+            subprocess.Popen(["python", self.top_level+"/../firmware/submodules/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(self.zmqServer.port())], shell=False)
 
         #################################################################
 
@@ -481,18 +473,18 @@ class Root(pr.Root):
         """SetTestBitmap command function"""       
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
-        self.filenamePowerSupply = self.root.top_level + "../config/ePixHRM320k_PowerSupply_Enable.yml"
-        self.filenameWaveForms   = self.root.top_level + "../config/ePixHRM320k_RegisterControl.yml"
-        self.filenameASIC        = self.root.top_level + "../config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-        self.filenameDESER       = self.root.top_level + "../config/ePixHRM320k_SspMonGrp_carrier3.yml"
-        self.filenamePacketReg   = self.root.top_level + "../config/ePixHRM320k_PacketRegisters.yml"
-        self.filenameBatcher     = self.root.top_level + "../config/ePixHRM320k_BatcherEventBuilder.yml"      
+        self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
+        self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
+        self.filenameASIC        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
+        self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier3.yml"
+        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
+        self.filenameBatcher     = self.root.top_level + "/config/ePixHRM320k_BatcherEventBuilder.yml"      
         if arguments[0] == 1:
-            self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig250Mhz.csv"
+            self.filenamePLL         = self.root.top_level + "/config/EPixHRM320KPllConfig250Mhz.csv"
         if arguments[0] == 2:
-            self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig125Mhz.csv"
+            self.filenamePLL         = self.root.top_level + "/config/EPixHRM320KPllConfig125Mhz.csv"
         if arguments[0] == 3:
-            self.filenamePLL         = self.root.top_level + "../config/EPixHRM320KPllConfig168Mhz.csv"
+            self.filenamePLL         = self.root.top_level + "/config/EPixHRM320KPllConfig168Mhz.csv"
                
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)

@@ -14,7 +14,7 @@ import numpy as np
 #############################################
 # Descramble class
 #############################################
-class DataDebug(rogue.interfaces.stream.Slave):
+class dataDebug(rogue.interfaces.stream.Slave):
 
     def __init__(self, name, size=1000):
         rogue.interfaces.stream.Slave.__init__(self)

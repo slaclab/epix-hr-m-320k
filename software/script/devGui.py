@@ -20,9 +20,10 @@ import os
 
 import ePix320kM as devBoard
 
+############## Make software top level ##########################
+top_level = os.path.realpath(__file__).split('software')[0]
+top_level = top_level+"software"
 #################################################################
-
-top_level=f'{os.getcwd()}/'# point to the software folder
 
 if __name__ == "__main__":
 
@@ -101,7 +102,6 @@ if __name__ == "__main__":
         dev        = args.dev,
         pollEn     = args.pollEn,
         initRead   = args.initRead,
-        serverPort = args.serverPort,
         pciePgpEn  = args.pciePgpEn,
         justCtrl   = args.justCtrl,
         fullRateDataReceiverEn = False
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         ######################
         if (args.guiType == 'PyDM'):
             pyrogue.pydm.runPyDM(
-                root  = root,
+                serverList=root.zmqServer.address,
                 sizeX = 800,
                 sizeY = 800,
             )
