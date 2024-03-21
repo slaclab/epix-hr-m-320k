@@ -10,6 +10,8 @@ RoguePackages:
   - submodules/epix-hr-leap-common/python
   - submodules/lcls-timing-core/python
   - submodules/surf/python
+  - submodules/AsicRegMapping/python
+  - submodules/ePixViewer/python
   - python
 
 RogueConfig:
