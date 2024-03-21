@@ -470,14 +470,41 @@ class Root(pr.Root):
 
         
     def fnInitAsic(self, dev,cmd,arg):
-        """SetTestBitmap command function"""       
+        """SetTestBitmap command function"""     
+
+        #get serial numbers
+        self.App.AsicTop.RegisterControlDualClock.enable.set(True)
+        self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x7)
+        self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x0)
+
+        # wait for hardware to get serial numbers
+        time.sleep(0.1)        
+
+        # Get serial number for digital board and formulate file names
+        DigIDLow = self.App.AsicTop.RegisterControlDualClock.DigIDLow.get()
+        DigIDHigh = self.App.AsicTop.RegisterControlDualClock.DigIDHigh.get()
+
+        # Use digital board serial number until carrier serial number gets fixed
+        prefix = f'{DigIDHigh:x}{DigIDLow:x}'
+
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
+
+        self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_SspMonGrp_carrier3.yml"
+        if (not os.path.isfile(self.filenameDESER)):
+            #did not find file. Using default file
+            self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier3.yml"
+            print("Did not find SspMonGrp_carrier file. Using generic.")
+
+        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_PacketRegisters.yml"
+        if (not os.path.isfile(self.filenamePacketReg)):
+            #did not find file. Using default file
+            self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
+            print("Did not find filenamePacketReg file. Using generic.")
+
         self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
         self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
         self.filenameASIC        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
-        self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier3.yml"
-        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
         self.filenameBatcher     = self.root.top_level + "/config/ePixHRM320k_BatcherEventBuilder.yml"      
         if arguments[0] == 1:
             self.filenamePLL         = self.root.top_level + "/config/EPixHRM320KPllConfig250Mhz.csv"
@@ -529,22 +556,16 @@ class Root(pr.Root):
         print("Loading {}".format(self.filenameWaveForms))
 
 
-        # load config that sets packet registers
-        print("Loading packet register configurations")
-        self.root.LoadConfig(self.filenamePacketReg)
-        print("Loading {}".format(self.filenamePacketReg))
-
-
         # load batcher
         print("Loading batcher configurations")
         self.root.LoadConfig(self.filenameBatcher)
         print("Loading {}".format(self.filenameBatcher))
 
-        #get serial numbers
-        self.App.AsicTop.RegisterControlDualClock.enable.set(True)
-        self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x7)
-        self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x0)
-        
+        # load config that sets packet registers
+        print("Loading packet register configurations")
+        self.root.LoadConfig(self.filenamePacketReg)
+        print("Loading {}".format(self.filenamePacketReg))
+
 
         ## takes the asics off of reset
         print("Taking asic off of reset")
