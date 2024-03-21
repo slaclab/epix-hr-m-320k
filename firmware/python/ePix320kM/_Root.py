@@ -484,6 +484,7 @@ class Root(pr.Root):
         DigIDLow = self.App.AsicTop.RegisterControlDualClock.DigIDLow.get()
         DigIDHigh = self.App.AsicTop.RegisterControlDualClock.DigIDHigh.get()
 
+        # Use digital board serial number until carrier serial number gets fixed
         prefix = f'{DigIDHigh:x}{DigIDLow:x}'
 
         print("Rysync ASIC started")
