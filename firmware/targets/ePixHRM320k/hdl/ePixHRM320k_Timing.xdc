@@ -42,7 +42,7 @@ create_generated_clock -name timingRefClkDiv2 \
 
 create_generated_clock -name timingRxRecClk \
     -source [get_pins -hier -filter {name =~ U_App/U_TimingRx/U_rxUsrClk/I0}] \
-    -divide_by 1 -add -master_clock timingGtRxOut \
+    -divide_by 2 -add -master_clock timingGtRxOut \
     [get_pins -hier -filter {name =~ U_App/U_TimingRx/U_rxUsrClk/O}]
 
 create_generated_clock -name timingEmuRxClk -source \
