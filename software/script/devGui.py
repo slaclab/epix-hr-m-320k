@@ -77,14 +77,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--serverPort",
-        type     = int,
-        required = False,
-        default  = 9099,
-        help     = "Zeromq server port",
-    )
-
-    parser.add_argument(
         "--justCtrl",
         type     = argBool,
         required = False,

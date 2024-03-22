@@ -83,12 +83,7 @@ class Root(pr.Root):
         self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
         self.addInterface(self.zmqServer)
  
-        # Create configuration stream
-        stream = pyrogue.interfaces.stream.Variable(root=self)
 
-        # Create StreamWriter with the configuration stream included as channel 1
-        self.dataWriter = pyrogue.utilities.fileio.StreamWriter(configStream={1: stream})
-        self.add(self.dataWriter)        
         #################################################################
 
         # Create an empty list to be filled
@@ -101,7 +96,14 @@ class Root(pr.Root):
             self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane), size = DDebugSize) for lane in range(self.numOfAsics)]
-        
+            
+            # Create configuration stream
+            stream = pyrogue.interfaces.stream.Variable(root=self)
+
+            # Create StreamWriter with the configuration stream included as channel 1
+            self.dataWriter = pyrogue.utilities.fileio.StreamWriter(configStream={5: stream})
+            self.add(self.dataWriter)               
+
         # Check if not VCS simulation
         if (not self.sim):
 
