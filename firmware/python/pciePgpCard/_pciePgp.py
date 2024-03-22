@@ -4,7 +4,7 @@ import pyrogue as pr
 import axipcie            as pcie
 import surf.protocols.pgp as pgp
 import rogue
-
+import surf.axi           as axi
 
 class pciePgp(pr.Device):
     def __init__( self,dev,numDmaLanes,**kwargs):
@@ -32,3 +32,10 @@ class pciePgp(pr.Device):
                     writeEn = True,
                     expand  = False
                 )) 
+        for lane in range(numDmaLanes):
+            self.add(axi.AxiStreamDmaV2Fifo(
+                name        = (f'AxiStreamDmaV2Fifo[{lane}]'),
+                offset      = (0x0010_0000 + lane*0x100),
+                memBase     = self.memMap,
+                expand      = False,
+            ))                
