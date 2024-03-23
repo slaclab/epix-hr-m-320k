@@ -308,6 +308,7 @@ class Root(pr.Root):
         def DisplayViewer3():
             subprocess.Popen(["python", self.top_level+"/../firmware/submodules/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver3", "image", "--title", "DataReceiver3", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(self.zmqServer.port())], shell=False)
 
+
         #################################################################
 
         # Add Devices
@@ -331,6 +332,12 @@ class Root(pr.Root):
                                  description='[routine, asic0, asic1, asic2, asic3]',
                                  value=[4,1,1,1,1],
                                  function=self.fnInitAsic
+        ))
+
+        self.add(pr.LocalCommand(name='AdjustLanes',
+                                 description='[asic0, asic1, asic2, asic3]',
+                                 value=[1,1,1,1],
+                                 function=self.adjustLanes
         ))
 
         if (not self.sim and pciePgpEn):
@@ -519,15 +526,7 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        #run some triggers and exercise lanes and locks
-        frames = 100
-        rate = 5000
-
-        self.hwTrigger(frames, rate)
-
-        #wait for lanes to stabilize
-        time.sleep(3)
-        self.getLaneLocks()
+        self.laneDiagnostics(arg[1:5], threshold=20, loops=5, debugPrint=False)
 
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  
@@ -604,7 +603,12 @@ class Root(pr.Root):
 
         return
 
-    def laneDiagnostics(self, asicEnable, threshold=20, loops=5) :
+    def adjustLanes(self, dev,cmd,arg):
+        print(arg)
+        self.laneDiagnostics(arg, threshold=20, loops=5, debugPrint=False)
+
+
+    def laneDiagnostics(self, asicEnable, threshold=20, loops=5, debugPrint=False) :
 
         TimeoutCntLane = [0] * 24
         LockedCnt      = [0] * 24
@@ -615,12 +619,11 @@ class Root(pr.Root):
         collectedFrames= [0] * 4
         asicDone       = [False] * 4
         done           = 0x0
-        # Lane locks
-        self.getLaneLocks()
 
-        # chack disabled lanes 
-        
+        # loop a number of times 
         for loop in range(loops):
+
+            #skip disabled or corrected ASICs
             for asicIndex in range(4):
                 if (asicEnable[asicIndex] == 0) or (asicDone[asicIndex] == True) :
                     done = done | 0x1 << asicIndex
@@ -630,17 +633,16 @@ class Root(pr.Root):
                 getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
                 getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()                
 
-            #run some triggers and exercise lanes and locks
-                        # If done or disabled skip ASIC
-                
+            # if all ASICs finished or are disabled exit
             if done == 0xf :
                 break
             else:             
+                # if at least 1 ASIC is not completed
                 frames = 2500
                 rate = 5000
-
                 self.hwTrigger(frames, rate)
 
+            # evaluate unfinished ASIC
             for asicIndex in range(4):
 
                 # If done or disabled skip ASIC
@@ -649,36 +651,53 @@ class Root(pr.Root):
 
 
                 collectedFrames[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FrameCount.get()
-                print("Frames recieved by DigAsicStrmRegisters{} is {}".format(asicIndex, collectedFrames[asicIndex]))
-                print("Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get())))
+                
+                print("Frames recieved from ASIC{} is {}".format(asicIndex, collectedFrames[asicIndex]))
+                if debugPrint == True :
+                    print("Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get())))
 
                 if (collectedFrames[asicIndex] == frames):
                     asicDone[asicIndex] = True
-                    print("ASIC {} done".format(asicIndex))
+                    print("ASIC {} lane adjustment done".format(asicIndex))
                     continue
 
                 for i in range(24):
                     TimeoutCntLane[i] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").TimeoutCntLane[i].get()
                     if(TimeoutCntLane[i]> threshold) :
-                        #print("Lane {} is having timeouts".format(i))
+                        if debugPrint == True :
+                            print("Lane {} is having timeouts".format(i))
                         disable[asicIndex] = disable[asicIndex] | 0x1<<i
 
-                    # DataOvfLane[i] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DataOvfLane[i].get()
-                    # if(DataOvfLane[i]> 0) :
-                    #    print("Lane {} is having overflow of {}".format(i, DataOvfLane[i]))
+                    if debugPrint == True :
+                        DataOvfLane[i] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DataOvfLane[i].get()
+                        if(DataOvfLane[i]> 0) :
+                            print("Lane {} is having overflow of {}".format(i, DataOvfLane[i]))
 
-                    # LockedCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").LockedCnt[i].get()
-                    #if(LockedCnt[i]> threshold) :
-                    #    #print("Lane {} is having high locked Counts".format(i))
+                        LockedCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").LockedCnt[i].get()
+                        if(LockedCnt[i]> threshold) :
+                            print("Lane {} is having high locked Counts".format(i))
 
-                    # BitSlipCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").BitSlipCnt[i].get()
-                    #if(BitSlipCnt[i]> threshold) :
-                    #    #print("Lane {} is having high bitslip Counts".format(i))
+                        BitSlipCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").BitSlipCnt[i].get()
+                        if(BitSlipCnt[i]> threshold) :
+                            print("Lane {} is having high bitslip Counts".format(i))
 
-                    # ErrorDetCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").ErrorDetCnt[i].get()
-                    # if(ErrorDetCnt[i]> threshold) :
-                    #    #print("Lane {} is having high Error Counts".format(i))
+                        ErrorDetCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").ErrorDetCnt[i].get()
+                        if(ErrorDetCnt[i]> threshold) :
+                            print("Lane {} is having high Error Counts".format(i))
 
-                print("Based on timeout, disabled lanes for ASIC {} should be {}. Adjusting...".format(asicIndex,hex(disable[asicIndex])))
-
+                print("Adjusting ASIC {} lane disable to {}".format(asicIndex,hex(disable[asicIndex])))
                 getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.set(disable[asicIndex])
+
+        # clean up
+        for asicIndex in range(4):
+            if (asicEnable[asicIndex] == 0) or (asicDone[asicIndex] == True) :
+                done = done | 0x1 << asicIndex
+                continue
+
+            #reset counters
+            getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
+            getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()  
+        if done == 0xf :
+            print("ASIC lane adjustment completed successfully")
+        else:
+            print("ASIC lane adjustment completed unsuccessfully")
