@@ -653,7 +653,7 @@ begin
          TPD_G                 => TPD_G,
          SIMULATION_G          => SIMULATION_G,
          AXIL_CLK_FREQ_G       => AXIL_CLK_FREQ_C,
-         EVENT_AXIS_CONFIG_G   => PGP4_AXIS_CONFIG_C,
+         EVENT_AXIS_CONFIG_G   => SSI_CONFIG_INIT_C,
          NUM_EVENT_CHANNELS_G  => NUM_EVENT_CHANNELS_G,
          AXIL_BASE_ADDR_G      => XBAR_CONFIG_C(TIMING_INDEX_C).baseAddr
       )
