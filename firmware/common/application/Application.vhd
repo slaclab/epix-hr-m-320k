@@ -20,6 +20,7 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 use surf.Pgp4Pkg.all;
+use surf.SsiPkg.all;
 
 library lcls_timing_core;
 use lcls_timing_core.TimingPkg.all;
