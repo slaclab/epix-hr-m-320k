@@ -610,7 +610,7 @@ class Root(pr.Root):
 
     def laneDiagnostics(self, asicEnable, threshold=20, loops=5, debugPrint=False) :
 
-        self.enableFullRateDataRcv(False)
+        self.disableAndCleanAllFullRateDataRcv()
         self.enableDataRcv(False)
         self.enableDataDebug(False)
 
