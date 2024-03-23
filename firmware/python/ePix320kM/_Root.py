@@ -519,6 +519,16 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
+        #run some triggers and exercise lanes and locks
+        frames = 100
+        rate = 5000
+
+        self.hwTrigger(frames, rate)
+
+        #wait for lanes to stabilize
+        time.sleep(3)
+        self.getLaneLocks()
+
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  
         arguments = np.asarray(arg)
@@ -593,3 +603,62 @@ class Root(pr.Root):
         print("Initialization routine completed.")
 
         return
+
+    def laneDiagnostics(self, asicIndex, threshold=20, loops=1) :
+
+        TimeoutCntLane = [0] * 24
+        LockedCnt      = [0] * 24
+        BitSlipCnt     = [0] * 24
+        ErrorDetCnt    = [0] * 24
+        DataOvfLane    = [0] * 24
+        disable = 0
+
+        self.getLaneLocks()
+
+
+        # chack disabled lanes 
+        
+        for loop in range(loops):
+
+            #reset counters
+            getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
+            getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()                
+
+            #run some triggers and exercise lanes and locks
+            frames = 2500
+            rate = 5000
+
+            self.hwTrigger(frames, rate)
+
+            collectedFrames = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FrameCount.get()
+            print("Frames recieved by DigAsicStrmRegisters is {}".format(collectedFrames))
+            print("Disabled lanes now are {}".format(hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get())))
+
+            if (collectedFrames == frames):
+                return
+
+            for i in range(24):
+                TimeoutCntLane[i] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").TimeoutCntLane[i].get()
+                if(TimeoutCntLane[i]> threshold) :
+                    print("Lane {} is having timeouts".format(i))
+                    disable = disable | 0x1<<i
+
+                DataOvfLane[i] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DataOvfLane[i].get()
+                if(DataOvfLane[i]> 0) :
+                    print("Lane {} is having overflow of {}".format(i, DataOvfLane[i]))
+
+                LockedCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").LockedCnt[i].get()
+                if(LockedCnt[i]> threshold) :
+                    print("Lane {} is having high locked Counts".format(i))
+
+                BitSlipCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").BitSlipCnt[i].get()
+                if(BitSlipCnt[i]> threshold) :
+                    print("Lane {} is having high bitslip Counts".format(i))
+
+                ErrorDetCnt[i] = getattr(self.root.App, f"SspMonGrp[{asicIndex}]").ErrorDetCnt[i].get()
+                if(ErrorDetCnt[i]> threshold) :
+                    print("Lane {} is having high Error Counts".format(i))
+
+            print("Based on timeout, disabled lanes should be {}".format(hex(disable)))
+
+            getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.set(disable)
