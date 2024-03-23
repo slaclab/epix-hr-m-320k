@@ -610,6 +610,10 @@ class Root(pr.Root):
 
     def laneDiagnostics(self, asicEnable, threshold=20, loops=5, debugPrint=False) :
 
+        self.disableAndCleanAllFullRateDataRcv()
+        self.enableDataRcv(False)
+        self.enableDataDebug(False)
+
         TimeoutCntLane = [0] * 24
         LockedCnt      = [0] * 24
         BitSlipCnt     = [0] * 24
