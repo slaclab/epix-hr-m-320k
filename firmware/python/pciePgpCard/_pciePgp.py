@@ -18,7 +18,7 @@ class pciePgp(pr.Device):
             offset     = 0x00000000,
             memBase     = self.memMap,
             numDmaLanes = numDmaLanes,
-            boardType   = None,
+            boardType   = "XilinxAlveoU200",
             expand      = False,
         ))
 
