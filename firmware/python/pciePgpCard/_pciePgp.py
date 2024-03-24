@@ -7,7 +7,7 @@ import rogue
 import surf.axi           as axi
 
 class pciePgp(pr.Device):
-    def __init__( self,dev,numDmaLanes,**kwargs):
+    def __init__( self,dev,numDmaLanes,boardType,**kwargs):
         super().__init__(**kwargs)
 
         # Create PCIE memory mapped interface
@@ -18,7 +18,7 @@ class pciePgp(pr.Device):
             offset     = 0x00000000,
             memBase     = self.memMap,
             numDmaLanes = numDmaLanes,
-            boardType   = "XilinxAlveoU200",
+            boardType   = boardType,
             expand      = False,
         ))
 

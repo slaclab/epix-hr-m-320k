@@ -56,6 +56,7 @@ class Root(pr.Root):
             pciePgpEn = False, # Enable PCIE PGP card register space access
             justCtrl  = False, # Enable if you only require Root for accessing AXI registers (no data)
             fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
+            boardType = None,
             DDebugSize=1000,
             **kwargs):
 
@@ -67,7 +68,7 @@ class Root(pr.Root):
         self.justCtrl = justCtrl
         self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
-
+        self.boardType = boardType
 
         if (self.sim):
             # Set the timeout
@@ -345,6 +346,7 @@ class Root(pr.Root):
                                     dev      = dev,
                                     expand   = False,
                                     numDmaLanes = 8,
+                                    boardType = self.boardType,
             ))
 
 
