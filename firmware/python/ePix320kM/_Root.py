@@ -318,6 +318,7 @@ class Root(pr.Root):
             memBase  = self.srp,
             sim      = self.sim,
             promProg = self.promProg,
+            pgpLaneVc= [1,1,1,1,0,3,1,1],
             expand   = False,
         ))
 
@@ -711,3 +712,8 @@ class Root(pr.Root):
             print("ASIC lane adjustment completed successfully")
         else:
             print("ASIC lane adjustment completed unsuccessfully")
+
+        #cleanup
+        for asicIndex in range(4):
+            getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
+            getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
