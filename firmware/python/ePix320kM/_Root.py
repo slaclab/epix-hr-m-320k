@@ -622,6 +622,14 @@ class Root(pr.Root):
         asicDone       = [False] * 4
         done           = 0x0
 
+        #empty run
+        frames = 2500
+        rate = 5000
+        self.hwTrigger(frames, rate)
+        time.sleep(1)
+        frames = 2500
+        rate = 5000
+        self.hwTrigger(frames, rate)        
         # loop a number of times 
         for loop in range(loops):
 
