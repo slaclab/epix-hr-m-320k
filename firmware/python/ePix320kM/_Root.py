@@ -603,7 +603,7 @@ class Root(pr.Root):
 
     def adjustLanes(self, dev,cmd,arg):
         print(arg)
-        self.laneDiagnostics(arg, threshold=20, loops=5, debugPrint=False)
+        self.laneDiagnostics(arg, threshold=20, loops=5, debugPrint=True)
 
 
     def laneDiagnostics(self, asicEnable, threshold=20, loops=5, debugPrint=False) :
