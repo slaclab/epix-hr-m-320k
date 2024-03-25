@@ -33,12 +33,12 @@ Root:
     SspMonGrp[1]:
       enable: True
       EnUsrDlyCfg: 0x1
-      UsrDlyCfg[0]: 0x6b
+      UsrDlyCfg[0]: 0x90
       UsrDlyCfg[1]: 0x87
       UsrDlyCfg[2]: 0x70
       UsrDlyCfg[3]: 0xa2
       UsrDlyCfg[4]: 0x7f
-      UsrDlyCfg[5]: 0x84
+      UsrDlyCfg[5]: 0x1ff
       UsrDlyCfg[6]: 0x75
       UsrDlyCfg[7]: 0x7f
       UsrDlyCfg[8]: 0x7f
@@ -46,15 +46,15 @@ Root:
       UsrDlyCfg[10]: 0x7f
       UsrDlyCfg[11]: 0x87
       UsrDlyCfg[12]: 0x7f
-      UsrDlyCfg[13]: 0x144
+      UsrDlyCfg[13]: 0x1ff
       UsrDlyCfg[14]: 0x7f
       UsrDlyCfg[15]: 0x7f
       UsrDlyCfg[16]: 0x7f
-      UsrDlyCfg[17]: 0x97
+      UsrDlyCfg[17]: 0x1ff
       UsrDlyCfg[18]: 0x7f
       UsrDlyCfg[19]: 0x82
       UsrDlyCfg[20]: 0x7f
-      UsrDlyCfg[21]: 0xd9
+      UsrDlyCfg[21]: 0x1ff
       UsrDlyCfg[22]: 0x7f
       UsrDlyCfg[23]: 0x7f      
     SspMonGrp[2]:
