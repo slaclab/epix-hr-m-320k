@@ -264,11 +264,7 @@ class App(pr.Device):
     def start_capture(self):
         self.root.runControl.runState.set(1)
 
-    def prepareChargeInjection(self, asicIndex, firstCol, lastCol, pulserValue):
-
-        lane_selected = np.zeros(384)
-        lane_selected[firstCol : lastCol + 1] = 1
-
+    def setupChargeInjection(self, asicIndex, lane_selected, pulserValue):
         self.Mv2Asic[asicIndex].enable.set(True)
         self.Mv2Asic[asicIndex].FE_ACQ2GR_en.set(True)
         self.Mv2Asic[asicIndex].FE_sync2GR_en.set(False)
@@ -279,6 +275,14 @@ class App(pr.Device):
             self.Mv2Asic[asicIndex].ClkInj_ePixM.set(1)
             # ff chain advances on falling edge of clock signal
             self.Mv2Asic[asicIndex].ClkInj_ePixM.set(0)
+
+    def prepareChargeInjection(self, asicIndex, firstCol, lastCol, pulserValue):
+
+        lane_selected = np.zeros(384)
+        lane_selected[firstCol : lastCol + 1] = 1
+
+        self.setupChargeInjection(self, asicIndex, lane_selected, pulserValue)
+
 
     def chargeInjectionCleanup(self, asicIndex):
         self.Mv2Asic[asicIndex].enable.set(True)

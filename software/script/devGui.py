@@ -84,6 +84,13 @@ if __name__ == "__main__":
         help     = "Enable acessing AXI registers only",
     )
 
+    parser.add_argument(
+        "--boardType",
+        type     = str,
+        required = False,
+        default  = None,
+        help     = "define the type of PCIe card, used to select I2C mapping. Options: [none, XilinxAlveoU55c, XilinxAlveoU200, XilinxAlveoU250, SlacPgpCardG4, XilinxKcu1500, XilinxVariumC1100SS]",
+    )
     # Get the arguments
     args = parser.parse_args()
 
@@ -96,6 +103,7 @@ if __name__ == "__main__":
         initRead   = args.initRead,
         pciePgpEn  = args.pciePgpEn,
         justCtrl   = args.justCtrl,
+        boardType  = args.boardType,
         fullRateDataReceiverEn = False
     ) as root:
 
