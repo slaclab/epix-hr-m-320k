@@ -32,6 +32,19 @@ import epix_hr_leap_common as leapCommon
 import surf.protocols.pgp as pgp
 import pciePgpCard
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 try :
     from ePixViewer.asics import ePixHrMv2
     from ePixViewer import EnvDataReceiver
@@ -669,7 +682,7 @@ class Root(pr.Root):
 
                 if (collectedFrames[asicIndex] == frames):
                     asicDone[asicIndex] = True
-                    print("ASIC {} lane adjustment done".format(asicIndex))
+                    print(bcolors.OKGREEN + "ASIC {} lane adjustment done".format(asicIndex) + bcolors.ENDC)
                     continue
 
                 for i in range(24):
@@ -696,7 +709,7 @@ class Root(pr.Root):
                         if(ErrorDetCnt[i]> threshold) :
                             print("Lane {} is having high Error Counts".format(i))
 
-                print("Adjusting ASIC {} lane disable to {}".format(asicIndex,hex(disable[asicIndex])))
+                print(bcolors.FAIL + "Adjusting ASIC {} lane disable to {}".format(asicIndex,hex(disable[asicIndex])) + bcolors.ENDC)
                 getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.set(disable[asicIndex])
 
         # clean up
