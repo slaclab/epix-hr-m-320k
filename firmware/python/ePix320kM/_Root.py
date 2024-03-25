@@ -502,18 +502,14 @@ class Root(pr.Root):
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
 
-        self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_SspMonGrp_carrier3.yml"
+        self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_SspMonGrp_carrier.yml"
         if (not os.path.isfile(self.filenameDESER)):
             #did not find file. Using default file
-            self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier3.yml"
+            self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier.yml"
             print("Did not find SspMonGrp_carrier file. Using generic.")
 
-        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_PacketRegisters.yml"
-        if (not os.path.isfile(self.filenamePacketReg)):
-            #did not find file. Using default file
-            self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
-            print("Did not find filenamePacketReg file. Using generic.")
 
+        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
         self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
         self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
         self.filenameASIC        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
