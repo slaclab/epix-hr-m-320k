@@ -522,8 +522,13 @@ class Root(pr.Root):
             self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier.yml"
             print("Did not find SspMonGrp_carrier file. Using generic.")
 
+        self.filenamePacketReg       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_PacketRegisters.yml"
+        if (not os.path.isfile(self.filenamePacketReg)):
+            #did not find file. Using default file
+            self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
+            print("Did not find SspMonGrp_carrier file. Using generic.")
 
-        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
+        
         self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
         self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
         self.filenameASIC        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
@@ -538,7 +543,7 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        self.laneDiagnostics(arg[1:5], threshold=20, loops=5, debugPrint=False)
+        self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  
@@ -617,10 +622,10 @@ class Root(pr.Root):
 
     def adjustLanes(self, dev,cmd,arg):
         print(arg)
-        self.laneDiagnostics(arg, threshold=20, loops=5, debugPrint=True)
+        self.laneDiagnostics(arg, threshold=1, loops=5, debugPrint=True)
 
 
-    def laneDiagnostics(self, asicEnable, threshold=20, loops=5, debugPrint=False) :
+    def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False) :
 
         self.disableAndCleanAllFullRateDataRcv()
         self.enableDataRcv(False)
@@ -640,10 +645,11 @@ class Root(pr.Root):
         frames = 2500
         rate = 5000
         self.hwTrigger(frames, rate)
-        time.sleep(1)
-        frames = 2500
-        rate = 5000
-        self.hwTrigger(frames, rate)        
+        
+        # Should be 0 unless forced to 1 by file
+        for asicIndex in range(4):
+            disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+
         # loop a number of times 
         for loop in range(loops):
 
@@ -730,3 +736,4 @@ class Root(pr.Root):
         for asicIndex in range(4):
             getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
             getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
+            print(bcolors.BOLD + "Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()))  + bcolors.ENDC)
