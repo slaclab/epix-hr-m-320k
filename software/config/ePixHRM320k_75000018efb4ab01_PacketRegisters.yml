@@ -8,7 +8,7 @@ Root:
       DigAsicStrmRegisters0:
         enable: True
         asicDataReq: 3071
-        DisableLane: 0x0
+        DisableLane: 0x1
         EnumerateDisLane: 0x0
       DigAsicStrmRegisters1:
         enable: True
@@ -18,7 +18,7 @@ Root:
       DigAsicStrmRegisters2:
         enable: True
         asicDataReq: 3071
-        DisableLane: 0x0
+        DisableLane: 0x300020
         EnumerateDisLane: 0x0
       DigAsicStrmRegisters3:
         enable: True
