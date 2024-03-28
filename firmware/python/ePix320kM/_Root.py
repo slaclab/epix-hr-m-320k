@@ -645,6 +645,7 @@ class Root(pr.Root):
         frames = 2500
         rate = 5000
         self.hwTrigger(frames, rate)
+        time.sleep(3)
         
         # Should be 0 unless forced to 1 by file
         for asicIndex in range(4):
