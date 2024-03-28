@@ -1,1 +1,1 @@
-from _pciePgp import *
+from pciePgpCard._pciePgp import *

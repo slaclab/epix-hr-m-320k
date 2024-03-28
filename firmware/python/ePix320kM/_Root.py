@@ -32,6 +32,19 @@ import epix_hr_leap_common as leapCommon
 import surf.protocols.pgp as pgp
 import pciePgpCard
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 try :
     from ePixViewer.asics import ePixHrMv2
     from ePixViewer import EnvDataReceiver
@@ -41,7 +54,7 @@ try :
 except ImportError:
     pass
 
-rogue.Version.minVersion('6.1.3')
+rogue.Version.minVersion('6.1.0')
 
 #rogue.Logging.setFilter('pyrogue.packetizer', rogue.Logging.Debug)
 
@@ -318,6 +331,7 @@ class Root(pr.Root):
             memBase  = self.srp,
             sim      = self.sim,
             promProg = self.promProg,
+            pgpLaneVc= [1,1,1,1,0,3,1,1],
             expand   = False,
         ))
 
@@ -508,8 +522,13 @@ class Root(pr.Root):
             self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier.yml"
             print("Did not find SspMonGrp_carrier file. Using generic.")
 
+        self.filenamePacketReg       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_PacketRegisters.yml"
+        if (not os.path.isfile(self.filenamePacketReg)):
+            #did not find file. Using default file
+            self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
+            print("Did not find SspMonGrp_carrier file. Using generic.")
 
-        self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
+        
         self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
         self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
         self.filenameASIC        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
@@ -524,7 +543,7 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        self.laneDiagnostics(arg[1:5], threshold=20, loops=5, debugPrint=False)
+        self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  
@@ -603,10 +622,10 @@ class Root(pr.Root):
 
     def adjustLanes(self, dev,cmd,arg):
         print(arg)
-        self.laneDiagnostics(arg, threshold=20, loops=5, debugPrint=True)
+        self.laneDiagnostics(arg, threshold=1, loops=5, debugPrint=True)
 
 
-    def laneDiagnostics(self, asicEnable, threshold=20, loops=5, debugPrint=False) :
+    def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False) :
 
         self.disableAndCleanAllFullRateDataRcv()
         self.enableDataRcv(False)
@@ -626,10 +645,12 @@ class Root(pr.Root):
         frames = 2500
         rate = 5000
         self.hwTrigger(frames, rate)
-        time.sleep(1)
-        frames = 2500
-        rate = 5000
-        self.hwTrigger(frames, rate)        
+        time.sleep(3)
+        
+        # Should be 0 unless forced to 1 by file
+        for asicIndex in range(4):
+            disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+
         # loop a number of times 
         for loop in range(loops):
 
@@ -668,7 +689,7 @@ class Root(pr.Root):
 
                 if (collectedFrames[asicIndex] == frames):
                     asicDone[asicIndex] = True
-                    print("ASIC {} lane adjustment done".format(asicIndex))
+                    print(bcolors.OKGREEN + "ASIC {} lane adjustment done".format(asicIndex) + bcolors.ENDC)
                     continue
 
                 for i in range(24):
@@ -695,7 +716,7 @@ class Root(pr.Root):
                         if(ErrorDetCnt[i]> threshold) :
                             print("Lane {} is having high Error Counts".format(i))
 
-                print("Adjusting ASIC {} lane disable to {}".format(asicIndex,hex(disable[asicIndex])))
+                print(bcolors.FAIL + "Adjusting ASIC {} lane disable to {}".format(asicIndex,hex(disable[asicIndex])) + bcolors.ENDC)
                 getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.set(disable[asicIndex])
 
         # clean up
@@ -711,3 +732,9 @@ class Root(pr.Root):
             print("ASIC lane adjustment completed successfully")
         else:
             print("ASIC lane adjustment completed unsuccessfully")
+
+        #cleanup
+        for asicIndex in range(4):
+            getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
+            getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
+            print(bcolors.BOLD + "Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()))  + bcolors.ENDC)
