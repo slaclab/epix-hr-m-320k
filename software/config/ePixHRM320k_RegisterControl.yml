@@ -14,18 +14,18 @@ Root:
         SyncDelay: 40000
         SyncWidth: 100
         SR0Polarity: False
-        SR0Delay1: 630
-        SR0Width1: 38000
+        SR0Delay1: 336
+        SR0Width1: 30000
         ePixAdcSHPeriod: 160
         ePixAdcSHOffset: 80
         AcqPolarity: False
-        AcqDelay1: 360
+        AcqDelay1: 170
         AcqWidth1: 160
         AcqDelay2: 0
         AcqWidth2: 0
         R0Polarity: False
-        R0Delay: 200
-        R0Width: 420
+        R0Delay: 10
+        R0Width: 325
         PPbePolarity: False
         PPbeDelay: 0
         PPbeWidth: 0
@@ -42,5 +42,5 @@ Root:
         AsicPwrManualAna: False
         AsicPwrManualIo: False
         AsicPwrManualFpga: False
-        DebugSel0: AsicDM(0)
-        DebugSel1: AsicDM(1)
+        DebugSel0: AsicDM0
+        DebugSel1: AsicDM0

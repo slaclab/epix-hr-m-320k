@@ -503,6 +503,8 @@ class Root(pr.Root):
         self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x7)
         self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x0)
 
+        self.filenameASIC = ["" for x in range(self.numOfAsics)]
+
         # wait for hardware to get serial numbers
         time.sleep(0.1)        
 
@@ -527,11 +529,18 @@ class Root(pr.Root):
             #did not find file. Using default file
             self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
             print("Did not find SspMonGrp_carrier file. Using generic.")
-
         
         self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
         self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
-        self.filenameASIC        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}_PLLBypass.yml"
+
+        for i in range(self.numOfAsics) :
+            self.filenameASIC[i]        = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_ASIC_u{}.yml".format(i+1)
+            if not os.path.isfile(self.filenameASIC[i]):
+                #did not find file. Using default file
+                self.filenameASIC[i]        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}.yml".format(i+1)
+                print("Did not find specific ASIC{} file. Using generic.".format(i+1))
+
+        
         self.filenameBatcher     = self.root.top_level + "/config/ePixHRM320k_BatcherEventBuilder.yml"      
         if arguments[0] == 1:
             self.filenamePLL         = self.root.top_level + "/config/EPixHRM320KPllConfig250Mhz.csv"
@@ -613,8 +622,8 @@ class Root(pr.Root):
             print("Loading ASICs and timing configuration")
             for asicIndex in range(1 ,5, 1):
                 if arguments[asicIndex] != 0:
-                    self.root.LoadConfig(self.filenameASIC.format(asicIndex))
-                    print("Loading {}".format(self.filenameASIC.format(asicIndex)))
+                    self.root.LoadConfig(self.filenameASIC[asicIndex-1])
+                    print("Loading {}".format(self.filenameASIC[asicIndex-1]))
 
         print("Initialization routine completed.")
 
