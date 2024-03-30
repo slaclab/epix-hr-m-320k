@@ -552,7 +552,8 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
+        if not self.sim :
+            self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  

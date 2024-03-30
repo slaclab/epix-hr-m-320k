@@ -14,18 +14,18 @@ Root:
         SyncDelay: 40000
         SyncWidth: 100
         SR0Polarity: False
-        SR0Delay1: 900
+        SR0Delay1: 817
         SR0Width1: 31600
         ePixAdcSHPeriod: 160
         ePixAdcSHOffset: 80
         AcqPolarity: False
-        AcqDelay1: 353
-        AcqWidth1: 352
+        AcqDelay1: 380
+        AcqWidth1: 370
         AcqDelay2: 0
         AcqWidth2: 0
         R0Polarity: False
-        R0Delay: 1
-        R0Width: 705
+        R0Delay: 10
+        R0Width: 741
         PPbePolarity: False
         PPbeDelay: 0
         PPbeWidth: 0
