@@ -383,15 +383,8 @@ class App(pr.Device):
 
         lane_adj_eyes_all = []
 
-        print(" Disabling batcher of unused ASICs".format(asicIndex))
-
         for i in range(4) :
-            if (i == asicIndex) :
-                print("Enabling batcher {}".format(i))
-                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
-            else :
-                print("Disabling batcher {}".format(i))
-                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
+            getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
 
         all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
 
