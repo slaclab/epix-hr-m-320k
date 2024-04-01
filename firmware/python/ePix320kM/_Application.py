@@ -100,20 +100,20 @@ class App(pr.Device):
       # Create block / variable combinations
       #############################################
 
-        debugChEnum=[  {0:'AsicDM(0)', 1:'AsicDM(1)', 2:'AsicSync', 3:'AsicAcq', 4:'AsicSR0',  
-                        5: 'AsicGRst', 6:'AsicClkEn', 7:'AsicR0', 8:'AsicSaciCmd(0)', 9:'AsicSaciClk', 
-                        10:'AsicSaciSelL(0)', 11:'AsicSaciSelL(1)', 12:'AsicSaciSelL(2)',
+        debugChEnum=[  {0:'AsicDM0', 1:'AsicDM1', 2:'AsicSync', 3:'AsicAcq', 4:'AsicSR0',  
+                        5: 'AsicGRst', 6:'AsicClkEn', 7:'AsicR0', 8:'AsicSaciCmd0', 9:'AsicSaciClk', 
+                        10:'AsicSaciSelL0', 11:'AsicSaciSelL1', 12:'AsicSaciSelL(2)',
                         13:'AsicSaciSelL(3)', 14: 'AsicRsp', 15:'LdoShutDnl0', 16:'LdoShutDnl1',
                         17: 'pllLolL', 18:'biasDacDin', 19: 'biasDacSclk',
                         20: 'biasDacCsb', 21: 'biasDacClrb', 22: 'hsDacCsb',
-                        23: 'hsDacSclk', 24: 'hsDacDin', 25:'hsLdacb', 26: 'slowAdcDout(0)',
-                        27: 'slowAdcDrdyL(0)', 28: 'slowAdcSyncL(0)', 29: 'slowAdcSclk(0)',
-                        30: 'slowAdcCsL(0)', 31: 'slowAdcDin(0)' , 32: 'slowAdcRefClk(0)',
-                        33: 'slowAdcDout(1)',
-                        34: 'slowAdcDrdyL(1)', 35: 'slowAdcSyncL(1)', 36: 'slowAdcSclk(1)',
-                        37: 'slowAdcCsL(1)', 38: 'slowAdcDin(1)' , 39: 'slowAdcRefClk(1)'},
+                        23: 'hsDacSclk', 24: 'hsDacDin', 25:'hsLdacb', 26: 'slowAdcDout0',
+                        27: 'slowAdcDrdyL0', 28: 'slowAdcSyncL0', 29: 'slowAdcSclk0',
+                        30: 'slowAdcCsL0', 31: 'slowAdcDin0' , 32: 'slowAdcRefClk(0)',
+                        33: 'slowAdcDout1',
+                        34: 'slowAdcDrdyL1', 35: 'slowAdcSyncL1', 36: 'slowAdcSclk1',
+                        37: 'slowAdcCsL1', 38: 'slowAdcDin1' , 39: 'slowAdcRefClk1'},
 
-                    {0:'AsicDM(1)'}]
+                    {0:'AsicDM0'}]
 
         snEnum = { 0: 'CarrierIDLow', 1: 'CarrierIDHigh', 2: 'PowerAndCommIDLow', 3: 'PowerAndCommIDHigh',
                    4: 'DigIDLow', 5: 'DigIDHigh'}
@@ -383,15 +383,8 @@ class App(pr.Device):
 
         lane_adj_eyes_all = []
 
-        print(" Disabling batcher of unused ASICs".format(asicIndex))
-
         for i in range(4) :
-            if (i == asicIndex) :
-                print("Enabling batcher {}".format(i))
-                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(False)
-            else :
-                print("Disabling batcher {}".format(i))
-                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
+            getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
 
         all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
 

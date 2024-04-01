@@ -3,9 +3,9 @@ Root:
   ForceWrite: False
   App:
     enable: True
-    Mv2Asic[2]:
+    Mv2Asic[0]:
       enable: True
-      shvc_DAC: 0x17
+      shvc_DAC: 30
       fastPP_enable: False
       PulserSync: False
       Pll_RO_Reset: True
@@ -24,7 +24,7 @@ Root:
       DigMon2: 0x1
       PulserDac: 0x3
       MonostPulser: 0x0
-      RefGenB: 0x3
+      RefGenB: 0x1
       Dm1En: True
       Dm2En: False
       emph_bd: 0x0
@@ -59,32 +59,31 @@ Root:
       SlvdsBit: True
       FE_Autogain: True
       FE_Lowgain: False
-      RowStartAddr: 0x0
-      RowStopAddr: 0x91
-      ColStartAddr: 0x0
-      ColStopAddr: 0x2f
+      #RowStartAddr: 0x0
+      #RowStopAddr: 0x91
+      #ColStartAddr: 0x0
+      #ColStopAddr: 0x2f
       DCycle_DAC: 0x0
       DCycle_en: False
       DCycle_bypass: False
       Debug_bit: 0x3
       OSRsel: False
       SecondOrder: False
-      DHg: False
-      RefGenC: 0x2
+      DHg: True
+      RefGenC: 0x1
       dbus_del_sel: False
       SDclk_b: 0x0
       SDrst_b: 0x8
       Filter_DAC: 0x26
-      Ref_gen_d: 0x2
+      Ref_gen_d: 0x3
       CompEn: 0x7
       Pixel_CB: 0x4
       InjEn_ePixM: False
       ClkInj_ePixM: False
       rowCK2matrix_delay: 0x4
-      DigRO_disable2: 0x0
-      RefinN: 0x3
+      RefinN: 0x0
       RefinCompN: 0x3
-      RefinP: 0x3
+      RefinP: 0x0
       ro_mode_i: 0x0
       SDclk1_b: 0x0
       SDrst1_b: 0x8
@@ -92,12 +91,12 @@ Root:
       SDrst2_b: 0x8
       SDclk3_b: 0x0
       SDrst3_b: 0x8
-      CompTH_ePixM: 0x14
-      Precharge_DAC_ePixM: 0x20
+      CompTH_ePixM: 0x0
+      Precharge_DAC_ePixM: 45
       FE_CLK_dly: 0x4
       FE_CLK_cnt_en: True
-      FE_ACQ2GR_en: False
-      FE_sync2GR_en: True
+      FE_ACQ2GR_en: True
+      FE_sync2GR_en: False
       FE_ACQ2InjEn: False
       # To disable banks
       #DigRO_disable2: 0xe
