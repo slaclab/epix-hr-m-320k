@@ -89,7 +89,7 @@ if __name__ == "__main__":
         type     = str,
         required = False,
         default  = None,
-        help     = "define the type of PCIe card, used to select I2C mapping. Options: [none, XilinxAlveoU55c, XilinxAlveoU200, XilinxAlveoU250, SlacPgpCardG4, XilinxKcu1500, XilinxVariumC1100SS]",
+        help     = "define the type of PCIe card, used to select I2C mapping. Options: [none, XilinxAlveoU55c, XilinxAlveoU200, XilinxAlveoU250, SlacPgpCardG4, XilinxKcu1500, XilinxVariumC1100]",
     )
     # Get the arguments
     args = parser.parse_args()
