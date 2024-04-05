@@ -11,25 +11,29 @@ Root:
         DisableLane: 0x0
         EnumerateDisLane: 0x0
         fillOnFailEn: 0x1
-        fillOnFailTimeout: 700
+        fillOnFailTimeout: 100
+        fillOnFailTimeoutOffset: 600
       DigAsicStrmRegisters1:
         enable: True
         asicDataReq: 3071
         DisableLane: 0x0
         EnumerateDisLane: 0x0
         fillOnFailEn: 0x1
-        fillOnFailTimeout: 700        
+        fillOnFailTimeout: 100
+        fillOnFailTimeoutOffset: 600      
       DigAsicStrmRegisters2:
         enable: True
         asicDataReq: 3071
         DisableLane: 0x0
         EnumerateDisLane: 0x0
         fillOnFailEn: 0x1
-        fillOnFailTimeout: 700        
+        fillOnFailTimeout: 100
+        fillOnFailTimeoutOffset: 600       
       DigAsicStrmRegisters3:
         enable: True
         asicDataReq: 3071
         DisableLane: 0x0
         EnumerateDisLane: 0x0
         fillOnFailEn: 0x1
-        fillOnFailTimeout: 700        
+        fillOnFailTimeout: 100
+        fillOnFailTimeoutOffset: 600       
