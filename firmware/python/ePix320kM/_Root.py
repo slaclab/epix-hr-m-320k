@@ -552,9 +552,14 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        if not self.sim :
-            self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
+        #if not self.sim :
+        #    self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
+        #frames = 2500
+        #rate = 5000
+        #self.hwTrigger(frames, rate)
+
+        
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  
         arguments = np.asarray(arg)
