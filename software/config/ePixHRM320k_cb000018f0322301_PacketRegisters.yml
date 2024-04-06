@@ -24,7 +24,7 @@ Root:
       DigAsicStrmRegisters2:
         enable: True
         asicDataReq: 3071
-        DisableLane: 0x0
+        DisableLane: 0xc10000
         EnumerateDisLane: 0x0
         fillOnFailEn: 0x1
         fillOnFailTimeout: 4

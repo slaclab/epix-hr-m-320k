@@ -5,13 +5,61 @@ Root:
     enable: True  
     SspMonGrp[0]:
       enable: True
-      EnUsrDlyCfg: 0x0
+      EnUsrDlyCfg: 0x1
+      UsrDlyCfg[0]: 0x77
+      UsrDlyCfg[1]: 0x101
+      UsrDlyCfg[2]: 0x70
+      UsrDlyCfg[3]: 0xff
+      UsrDlyCfg[4]: 0x85
+      UsrDlyCfg[5]: 0xff
+      UsrDlyCfg[6]: 0x2d
+      UsrDlyCfg[7]: 0xc7
+      UsrDlyCfg[8]: 0x3f
+      UsrDlyCfg[9]: 0x106
+      UsrDlyCfg[10]: 0x66
+      UsrDlyCfg[11]: 0xff
+      UsrDlyCfg[12]: 0x6a
+      UsrDlyCfg[13]: 0x53
+      UsrDlyCfg[14]: 0x45
+      UsrDlyCfg[15]: 0xc0
+      UsrDlyCfg[16]: 0x6
+      UsrDlyCfg[17]: 0xd4
+      UsrDlyCfg[18]: 0x2f
+      UsrDlyCfg[19]: 0x100
+      UsrDlyCfg[20]: 0x53
+      UsrDlyCfg[21]: 0xf7
+      UsrDlyCfg[22]: 0x1d
+      UsrDlyCfg[23]: 0xd4      
     SspMonGrp[1]:
       enable: True
       EnUsrDlyCfg: 0x0
     SspMonGrp[2]:
       enable: True
-      EnUsrDlyCfg: 0x0
+      EnUsrDlyCfg: 0x1
+      UsrDlyCfg[0]: 0x14
+      UsrDlyCfg[1]: 0x42
+      UsrDlyCfg[2]: 0xff
+      UsrDlyCfg[3]: 0x3d
+      UsrDlyCfg[4]: 0x136
+      UsrDlyCfg[5]: 0x22
+      UsrDlyCfg[6]: 0xb3
+      UsrDlyCfg[7]: 0x117
+      UsrDlyCfg[8]: 0x114
+      UsrDlyCfg[9]: 0x47
+      UsrDlyCfg[10]: 0xff
+      UsrDlyCfg[11]: 0x46
+      UsrDlyCfg[12]: 0x14c
+      UsrDlyCfg[13]: 0x6b
+      UsrDlyCfg[14]: 0xfa
+      UsrDlyCfg[15]: 0xff
+      UsrDlyCfg[16]: 0xff
+      UsrDlyCfg[17]: 0x17b
+      UsrDlyCfg[18]: 0xd6
+      UsrDlyCfg[19]: 0x6
+      UsrDlyCfg[20]: 0x132
+      UsrDlyCfg[21]: 0x1f
+      UsrDlyCfg[22]: 0xff
+      UsrDlyCfg[23]: 0xff      
     SspMonGrp[3]:
       enable: True
       EnUsrDlyCfg: 0x0
