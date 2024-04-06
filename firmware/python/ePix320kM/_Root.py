@@ -553,7 +553,7 @@ class Root(pr.Root):
             self.fnInitAsicScript(dev,cmd,arg)
         
         # Wait necessary to lock lanes
-        # time.sleep(3)
+        time.sleep(3)
         #if not self.sim :
         #    self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
