@@ -101,7 +101,7 @@ class dataDebug(rogue.interfaces.stream.Slave):
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
         current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
         """performs the EpixMv2 image descrambling (simply applying lookup table) """
-        if (len(rawData)==73752):
+        if (len(rawData)==73776):
              imgDesc = np.frombuffer(rawData[24:73752],dtype='uint16').reshape(192, 384)
         else:
             print("{}: descramble error".format(self.name))
