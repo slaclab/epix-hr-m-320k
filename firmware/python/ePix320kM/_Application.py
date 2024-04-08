@@ -281,7 +281,7 @@ class App(pr.Device):
         lane_selected = np.zeros(384)
         lane_selected[firstCol : lastCol + 1] = 1
 
-        self.setupChargeInjection(self, asicIndex, lane_selected, pulserValue)
+        self.setupChargeInjection(asicIndex, lane_selected, pulserValue)
 
 
     def chargeInjectionCleanup(self, asicIndex):
