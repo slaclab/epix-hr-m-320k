@@ -358,6 +358,12 @@ class Root(pr.Root):
                                  function=self.adjustLanes
         ))
 
+        self.add(pr.LocalCommand(name='DumpCounters',
+                                 description='[asic0, asic1, asic2, asic3]',
+                                 value=[1,1,1,1],
+                                 function=self.dumpCounters
+        ))
+
         if (not self.sim and pciePgpEn):
             self.add(pciePgpCard.pciePgp(        
                                     dev      = dev,
@@ -656,9 +662,10 @@ class Root(pr.Root):
         return
 
     def adjustLanes(self, dev,cmd,arg):
-        print(arg)
         self.laneDiagnostics(arg, threshold=1, loops=5, debugPrint=True)
 
+    def dumpCounters(self, dev,cmd,arg):
+        self.getPKREGCounters(arg)
 
     def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False) :
 
@@ -818,6 +825,7 @@ class Root(pr.Root):
         BitSlipCnt     = [0] * 24
         ErrorDetCnt    = [0] * 24
         DataOvfLane    = [0] * 24    
+        FillOnFailCnt  = [0] * 24
         threshold = 1
         for asicIndex, asicEnable in enumerate(enableAsics):
             if(asicEnable == 1):
@@ -828,11 +836,16 @@ class Root(pr.Root):
                         continue
                     TimeoutCntLane[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").TimeoutCntLane[i].get()
                     if(TimeoutCntLane[i]> threshold) :
-                        print("ASIC {} Lane {} is having {} timeouts".format(asicIndex, i, TimeoutCntLane[i]))
+                        print("ASIC {} Lane {} had {} timeouts".format(asicIndex, i, TimeoutCntLane[i]))
         
                     DataOvfLane[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DataOvfLane[i].get()
                     if(DataOvfLane[i]> 0) :
-                        print("ASIC {} Lane {} is having overflow of {}".format(asicIndex, i, DataOvfLane[i]))
+                        print("ASIC {} Lane {} had overflow of {}".format(asicIndex, i, DataOvfLane[i]))
+
+                    FillOnFailCnt[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").fillOnFailCntLane[i].get()
+                    if(FillOnFailCnt[i]> 0) :
+                        print("ASIC {} Lane {} had FillOnFailCnt of {}".format(asicIndex, i, FillOnFailCnt[i]))
+                        
                     '''
                     LockedCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").LockedCnt[i].get()
                     if(LockedCnt[i]> threshold) :
