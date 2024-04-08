@@ -80,6 +80,7 @@ class Root(pr.Root):
         self.sim      = (dev == 'sim')
         self.top_level = top_level
         self.justCtrl = justCtrl
+        self.pciePgpEn = pciePgpEn
         self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
         self.boardType = boardType
@@ -365,6 +366,13 @@ class Root(pr.Root):
                                     boardType = self.boardType,
             ))
 
+        @self.command()
+        def ClearCounters() :
+            self.clearUpStreamPpg()
+            self.clearDownStreamPpg()
+            self.clearSspMonGrp()
+            self.clearDigAsicStrmReg()
+            self.clearTrigRegisters()
 
         @self.command()
         def RebootFPGA():
@@ -372,7 +380,7 @@ class Root(pr.Root):
             self.Core.AxiVersion.FpgaReload()
             time.sleep(20)
             print('\nReloading FPGA done')
-            
+
     def start(self, **kwargs):
         super().start(**kwargs)
         # Check if not simulation and not PROM programming
@@ -765,3 +773,77 @@ class Root(pr.Root):
             getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
             getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
             print(bcolors.BOLD + "Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()))  + bcolors.ENDC)
+
+
+    def clearUpStreamPpg(self):
+        if (self.pciePgpEn == False) :
+            return        
+        for i in range(4):
+            self.pciePgp.Lane[i].Ctrl.CountReset()
+
+    def clearTrigRegisters(self):
+        self.App.AsicTop.TriggerRegisters.AcqCountReset()
+
+    def clearDownStreamPpg(self):
+        for i in range(4):
+            self.Core.PgpMon[i].Ctrl.CountReset()
+
+    def getUpStreamPpgFrmCnt(self):
+        if (self.pciePgpEn == False) :
+            return
+        for i in range(4):
+            print("Upstream pgp got {} frames".format(self.pciePgp.Lane[i].RxStatus.FrameCnt.get()))
+
+    def getDownStreamPpgFrmCnt(self):
+        for i in range(4):
+            print("Downstream pgp got {} frames".format(self.Core.PgpMon[i].TxStatus.FrameCnt.get()))
+            
+    def clearDigAsicStrmReg(self):
+        for i in range(4):
+            getattr(self.App.AsicTop, f"DigAsicStrmRegisters{i}").CountReset()
+
+    def clearSspMonGrp(self) :
+        for i in range(4):
+            self.App.SspMonGrp[i].CntRst()
+
+    def disablePpgFlowCtrl(self, disable):
+        if (self.pciePgpEn == False) :
+            return    
+        for i in range(4):
+            self.pciePgp.Lane[i].Ctrl.FlowControlDisable.set(disable)
+
+    def getPKREGCounters(self, enableAsics) :
+        TimeoutCntLane = [0] * 24
+        LockedCnt      = [0] * 24
+        BitSlipCnt     = [0] * 24
+        ErrorDetCnt    = [0] * 24
+        DataOvfLane    = [0] * 24    
+        threshold = 1
+        for asicIndex, asicEnable in enumerate(enableAsics):
+            if(asicEnable == 1):
+                disable = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+                print("DigAsicStrmRegister{} FrameCount={} disable={}".format(asicIndex,  getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FrameCount.get(), hex(disable)))
+                for i in range(24):
+                    if ((0x1 << i) & disable) != 0 :
+                        continue
+                    TimeoutCntLane[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").TimeoutCntLane[i].get()
+                    if(TimeoutCntLane[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} timeouts".format(asicIndex, i, TimeoutCntLane[i]))
+        
+                    DataOvfLane[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DataOvfLane[i].get()
+                    if(DataOvfLane[i]> 0) :
+                        print("ASIC {} Lane {} is having overflow of {}".format(asicIndex, i, DataOvfLane[i]))
+                    '''
+                    LockedCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").LockedCnt[i].get()
+                    if(LockedCnt[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} locked Counts".format(asicIndex, i, LockedCnt[i]))
+        
+                    BitSlipCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").BitSlipCnt[i].get()
+                    if(BitSlipCnt[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} bitslip Counts".format(asicIndex, i, BitSlipCnt[i]))
+        
+                    ErrorDetCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").ErrorDetCnt[i].get()
+                    if(ErrorDetCnt[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} Error Counts".format(asicIndex, i, ErrorDetCnt[i]))    
+                    '''            
+
