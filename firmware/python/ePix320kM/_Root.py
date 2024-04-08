@@ -25,6 +25,7 @@ import os
 import numpy as np
 import time
 import subprocess
+import sys
 
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
@@ -185,6 +186,7 @@ class Root(pr.Root):
         @self.command()
         def Trigger():
             self._cmd.sendCmd(0, 0)
+        
         #################################################################
 
         self.add(pyrogue.RunControl(name = 'runControl',
@@ -364,7 +366,13 @@ class Root(pr.Root):
             ))
 
 
-
+        @self.command()
+        def RebootFPGA():
+            print('\nReloading FPGA firmware from PROM .... Wait...')
+            self.Core.AxiVersion.FpgaReload()
+            time.sleep(20)
+            print('\nReloading FPGA done')
+            
     def start(self, **kwargs):
         super().start(**kwargs)
         # Check if not simulation and not PROM programming
