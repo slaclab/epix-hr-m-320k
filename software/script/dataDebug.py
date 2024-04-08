@@ -24,6 +24,7 @@ class dataDebug(rogue.interfaces.stream.Slave):
         self.enable = False
         self.enableDP = False
         self.dataAcc = np.zeros((192,384,size), dtype='int32')
+        self.metaData = [dict() for x in range(size)]
         self.currentFrameCount = 0
         self.size = size
         self.framePixelRow = 192
@@ -98,11 +99,18 @@ class dataDebug(rogue.interfaces.stream.Slave):
 
 
     def descramble(self, frame):
+        metaData = {}
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
         current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
         """performs the EpixMv2 image descrambling (simply applying lookup table) """
         if (len(rawData)==73776):
-             imgDesc = np.frombuffer(rawData[24:73752],dtype='uint16').reshape(192, 384)
+            imgDesc = np.frombuffer(rawData[24:73752],dtype='uint16').reshape(192, 384)
+            metaData['autoFillMask'] = rawData[73753] << 16 | rawData[73752] 
+            metaData['fixedMask']    = rawData[73755] << 16 | rawData[73754] 
+            metaData['allMasks'] = metaData['autoFillMask'] | metaData['fixedMask']
+            metaData['ASIC'] = rawData[4] & 0x7
+            metaData['frameNo'] = rawData[3]<< 16 | rawData[2]
+
         else:
             print("{}: descramble error".format(self.name))
             print('rawData length {}'.format(len(rawData)))
@@ -112,7 +120,7 @@ class dataDebug(rogue.interfaces.stream.Slave):
         current_frame_temp[self.lookupTableRow, self.lookupTableCol] = imgDesc
         # returns final image
         #return np.bitwise_and(current_frame_temp, self.PixelBitMask.get())
-        return current_frame_temp
+        return (metaData, current_frame_temp)
         
     def _acceptFrame(self, frame):
 
@@ -120,14 +128,13 @@ class dataDebug(rogue.interfaces.stream.Slave):
             return
         
         #channel = frame.getChannel()
-        
         frameSize = frame.getPayload()
         ba = bytearray(frameSize)
         frame.read(ba, 0)
         if (self.currentFrameCount >= self.size) :
             print("Max acquistion size of dataDebug of {} reached. Cleanup dataDebug. Discarding new data.".format(self.size))
         else :
-            self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
+            self.metaData[self.currentFrameCount], self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
 
         self.currentFrameCount = self.currentFrameCount + 1 
    
@@ -136,11 +143,15 @@ class dataDebug(rogue.interfaces.stream.Slave):
 
     def cleanData(self):
         self.dataAcc = np.zeros((192,384,self.size), dtype='int32')
+        self.metaData = [dict() for x in range(self.size)]
         self.currentFrameCount = 0
 
     def getData(self):
         return self.dataAcc[:,:,0:self.currentFrameCount]    
 
+    def getMetaData(self):
+        return self.metaData[0:self.currentFrameCount]   
+    
     def enableDataDebug(self, enable):
         self.enable = enable 
 
