@@ -42,18 +42,22 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # #################################
 # ## Set the clock for the ILA core
 # #################################
-SetDebugCoreClk ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/clk}
+SetDebugCoreClk ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/axilClk}
 
 # #######################
 # ## Set the debug Probes
 #######################
 
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/sof}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/eof}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/fiducial}
+#156.25 clock domain
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/DeserAxisDualClockFifo_U/mAxisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/AxisResize48to16_U/mAxisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_EventBuilders[0].U_EventBuilder/mAxisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/eventTrigMsgCtrl[1][pause]}
+ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/GEN_PGP_DATA[0].U_TX_FIFO/axisSlave[tReady]}
 
 
-
+# 42 MHz clk domain
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[state]*} 0 2
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/rd_en}
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/valid}
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/dout*} {0} {15}
