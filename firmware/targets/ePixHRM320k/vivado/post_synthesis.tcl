@@ -15,7 +15,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_env_var.tcl
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Bypass the debug chipscope generation
-return
+#return
 
 ############################
 ## Open the synthesis design
@@ -54,6 +54,10 @@ ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/Axi
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_EventBuilders[0].U_EventBuilder/mAxisSlave[tReady]}
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/eventTrigMsgCtrl[1][pause]}
 ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/GEN_PGP_DATA[0].U_TX_FIFO/axisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/startRdout}
+
+
+
 
 
 # 42 MHz clk domain
