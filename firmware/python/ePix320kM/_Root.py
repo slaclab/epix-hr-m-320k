@@ -72,6 +72,7 @@ class Root(pr.Root):
             fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
             boardType = None,
             DDebugSize=1000,
+            xvcEn     =False,
             **kwargs):
 
         #################################################################
@@ -84,6 +85,7 @@ class Root(pr.Root):
         self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
         self.boardType = boardType
+        self.xvcEn = xvcEn
 
         if (self.sim):
             # Set the timeout
@@ -143,12 +145,13 @@ class Root(pr.Root):
                 for vc in range(4):                
                     self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
+            if self.xvcEn == True : 
             # # Create (Xilinx Virtual Cable) XVC on localhost
-            self.xvc = rogue.protocols.xilinx.Xvc(2542)
-            self.addProtocol(self.xvc)
+                self.xvc = rogue.protocols.xilinx.Xvc(2542)
+                self.addProtocol(self.xvc)
 
-            # # Connect xvcStream to XVC module
-            self.xvcStream == self.xvc
+                # # Connect xvcStream to XVC module
+                self.xvcStream == self.xvc
 
             # # Create SRPv3
             self.srp = rogue.protocols.srp.SrpV3()
