@@ -65,7 +65,6 @@ entity Application is
       -- Streaming Interfaces (axilClk domain)
       asicDataMasters    : out AxiStreamMasterArray(3 downto 0);
       asicDataSlaves     : in  AxiStreamSlaveArray(3 downto 0);
-      remoteDmaPause     : in  slv(3 downto 0);
       oscopeMasters      : out AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
       oscopeSlaves       : in  AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
       slowAdcMasters     : out AxiStreamMasterArray(0 downto 0);
@@ -268,6 +267,7 @@ architecture rtl of Application is
    signal triggerClk             : sl;
    signal triggerRst             : sl;
    signal triggerData            : TriggerEventDataArray(NUM_EVENT_CHANNELS_G -1 downto 0);
+   signal triggerUseMiniTpg      : sl;
 
    signal l1Clk                  : sl                    := '0';
    signal l1Rst                  : sl                    := '0';
@@ -460,6 +460,7 @@ begin
          AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr
       )
       port map (
+         pcieDaqTrigPause     => pcieDaqTrigPause,
          -- sys clock signals (ASIC RD clock domain)
          sysRst               => rst250,
          sysClk               => clk250,
@@ -467,6 +468,7 @@ begin
          triggerClk           => triggerClk,
          triggerRst           => triggerRst,
          triggerData          => triggerData,
+         triggerUseMiniTpg    => triggerUseMiniTpg,
          -- L1 trigger feedback (optional)
          l1Clk                => l1Clk,
          l1Rst                => l1Rst,
@@ -512,7 +514,6 @@ begin
          -- Streaming Interfaces (axilClk domain)
          asicDataMasters      => asicDataMasters,
          asicDataSlaves       => asicDataSlaves,
-         remoteDmaPause       => remoteDmaPause,
          -------------------
          --  Top Level Ports
          -------------------
@@ -663,6 +664,7 @@ begin
          triggerClk           => triggerClk,
          triggerRst           => triggerRst,
          triggerData          => triggerData,
+         triggerUseMiniTpg    => triggerUseMiniTpg,
          -- L1 trigger feedback (optional)
          l1Clk                => l1Clk,
          l1Rst                => l1Rst,
