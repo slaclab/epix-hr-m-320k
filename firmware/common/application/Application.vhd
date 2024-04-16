@@ -456,7 +456,8 @@ begin
          NUM_DS2411_G           => 3,
          NUM_OF_SLOW_ADCS_G     => NUM_OF_SLOW_ADCS_G,
          NUM_LANES_G            => NUM_OF_ASICS_G,
-         AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr
+         AXIL_BASE_ADDR_G       => XBAR_CONFIG_C(ASIC_INDEX_C).baseAddr,
+         INVERT_BITS_G          => true
       )
       port map (
          -- sys clock signals (ASIC RD clock domain)
