@@ -24,7 +24,11 @@ class dataDebug(rogue.interfaces.stream.Slave):
         self.enable = False
         self.enableDP = False
         self.dataAcc = np.zeros((192,384,size), dtype='int32')
-        self.metaData = [dict() for x in range(size)]
+        self.autoFillMask = np.zeros((size), dtype='int32')
+        self.fixedMask    = np.zeros((size), dtype='int32')
+        self.allMasks     = np.zeros((size), dtype='int32')
+        self.ASIC         = np.zeros((size), dtype='int32')
+        self.frameNo      = np.zeros((size), dtype='int32')        
         self.currentFrameCount = 0
         self.size = size
         self.framePixelRow = 192
@@ -75,7 +79,7 @@ class dataDebug(rogue.interfaces.stream.Slave):
         descarambledImg = np.concatenate((descarambledImg, quadrant[2]),0)
         descarambledImg = np.concatenate((descarambledImg, quadrant[3]),0)  
 
-        # Work around ASIC/firmware bug: first and last row of each bank are exchanged
+        # Work around ASIC/firmware bug: all rows shifted by 1
         # Create lookup table where each row points to the next
         hardwareBugWorkAroundRowLUT = np.zeros((self.framePixelRow))
         for index in range (self.framePixelRow) :
@@ -134,7 +138,12 @@ class dataDebug(rogue.interfaces.stream.Slave):
         if (self.currentFrameCount >= self.size) :
             print("Max acquistion size of dataDebug of {} reached. Cleanup dataDebug. Discarding new data.".format(self.size))
         else :
-            self.metaData[self.currentFrameCount], self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
+            metaData , self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
+            self.autoFillMask[self.currentFrameCount] = metaData['autoFillMask']
+            self.fixedMask[self.currentFrameCount] = metaData['fixedMask']
+            self.allMasks[self.currentFrameCount] = metaData['allMasks']
+            self.ASIC[self.currentFrameCount] = metaData['ASIC']
+            self.frameNo[self.currentFrameCount] = metaData['frameNo']
 
         self.currentFrameCount = self.currentFrameCount + 1 
    
@@ -143,14 +152,18 @@ class dataDebug(rogue.interfaces.stream.Slave):
 
     def cleanData(self):
         self.dataAcc = np.zeros((192,384,self.size), dtype='int32')
-        self.metaData = [dict() for x in range(self.size)]
+        self.autoFillMask = np.zeros((self.size), dtype='int32')
+        self.fixedMask    = np.zeros((self.size), dtype='int32')
+        self.allMasks     = np.zeros((self.size), dtype='int32')
+        self.ASIC         = np.zeros((self.size), dtype='int32')
+        self.frameNo      = np.zeros((self.size), dtype='int32')
         self.currentFrameCount = 0
 
     def getData(self):
         return self.dataAcc[:,:,0:self.currentFrameCount]    
 
     def getMetaData(self):
-        return self.metaData[0:self.currentFrameCount]   
+        return self.ASIC[0:self.currentFrameCount], self.frameNo[0:self.currentFrameCount], self.fixedMask[0:self.currentFrameCount], self.autoFillMask[0:self.currentFrameCount], self.allMasks[0:self.currentFrameCount]
     
     def enableDataDebug(self, enable):
         self.enable = enable 
