@@ -89,8 +89,17 @@ if __name__ == "__main__":
         type     = str,
         required = False,
         default  = None,
-        help     = "define the type of PCIe card, used to select I2C mapping. Options: [none, XilinxAlveoU55c, XilinxAlveoU200, XilinxAlveoU250, SlacPgpCardG4, XilinxKcu1500, XilinxVariumC1100SS]",
+        help     = "define the type of PCIe card, used to select I2C mapping. Options: [none, XilinxAlveoU55c, XilinxAlveoU200, XilinxAlveoU250, SlacPgpCardG4, XilinxKcu1500, XilinxVariumC1100]",
     )
+
+    parser.add_argument(
+        "--xvcEn",
+        type     = argBool,
+        required = False,
+        default  = True,
+        help     = "Enable Xilinx Virtual Cable",
+    )
+
     # Get the arguments
     args = parser.parse_args()
 
@@ -104,7 +113,8 @@ if __name__ == "__main__":
         pciePgpEn  = args.pciePgpEn,
         justCtrl   = args.justCtrl,
         boardType  = args.boardType,
-        fullRateDataReceiverEn = False
+        fullRateDataReceiverEn = False,
+        xvcEn      = args.xvcEn
     ) as root:
 
         ######################

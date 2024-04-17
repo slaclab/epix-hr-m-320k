@@ -5,13 +5,13 @@ Root:
     enable: True  
     SspMonGrp[0]:
       enable: True
-      EnUsrDlyCfg: 0x0
+      EnUsrDlyCfg: 0x0  
     SspMonGrp[1]:
       enable: True
       EnUsrDlyCfg: 0x0
     SspMonGrp[2]:
       enable: True
-      EnUsrDlyCfg: 0x0
+      EnUsrDlyCfg: 0x0    
     SspMonGrp[3]:
       enable: True
       EnUsrDlyCfg: 0x0

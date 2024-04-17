@@ -15,7 +15,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_env_var.tcl
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Bypass the debug chipscope generation
-return
+#return
 
 ############################
 ## Open the synthesis design
@@ -42,18 +42,39 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # #################################
 # ## Set the clock for the ILA core
 # #################################
-SetDebugCoreClk ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/clk}
+SetDebugCoreClk ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/axilClk}
 
 # #######################
 # ## Set the debug Probes
 #######################
 
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/sof}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/eof}
-ConfigProbe ${ila0Name} {U_App/U_TimingRx/U_TimingCore/U_TimingRx/GEN_RxLcls2.U_RxLcls2/U_Deserializer/fiducial}
+#156.25 clock domain
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/DeserAxisDualClockFifo_U/mAxisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/AxisResize48to16_U/mAxisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_EventBuilders[0].U_EventBuilder/mAxisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/eventTrigMsgCtrl[1][pause]}
+ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/GEN_PGP_DATA[0].U_TX_FIFO/axisSlave[tReady]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/startRdout}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/daqTrigPause}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/runTrigger}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/daqTrigger}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/timingRunTrigger}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/timingDaqTrigger}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/acqStart}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/dataSend}
+
+
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/U_AutoTrig/iDaqTrigPause}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/U_AutoTrig/iDaqTrigOut}
 
 
 
+
+
+
+
+# 42 MHz clk domain
+#ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[state]*} 0 2
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/rd_en}
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/valid}
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/G_FIFO[0].DataFifo_U/dout*} {0} {15}

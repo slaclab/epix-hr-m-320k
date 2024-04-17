@@ -25,6 +25,7 @@ import os
 import numpy as np
 import time
 import subprocess
+import sys
 
 import ePix320kM as fpgaBoard
 import epix_hr_leap_common as leapCommon
@@ -71,6 +72,7 @@ class Root(pr.Root):
             fullRateDataReceiverEn = True, #Enable Full rate data receivers for jupyter 
             boardType = None,
             DDebugSize=1000,
+            xvcEn     =False,
             **kwargs):
 
         #################################################################
@@ -79,9 +81,11 @@ class Root(pr.Root):
         self.sim      = (dev == 'sim')
         self.top_level = top_level
         self.justCtrl = justCtrl
+        self.pciePgpEn = pciePgpEn
         self.fullRateDataReceiverEn = fullRateDataReceiverEn
         self.numOfAsics = 4
         self.boardType = boardType
+        self.xvcEn = xvcEn
 
         if (self.sim):
             # Set the timeout
@@ -141,12 +145,13 @@ class Root(pr.Root):
                 for vc in range(4):                
                     self.oscopeStream[vc] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 7 + vc, 1)
 
+            if self.xvcEn == True : 
             # # Create (Xilinx Virtual Cable) XVC on localhost
-            self.xvc = rogue.protocols.xilinx.Xvc(2542)
-            self.addProtocol(self.xvc)
+                self.xvc = rogue.protocols.xilinx.Xvc(2542)
+                self.addProtocol(self.xvc)
 
-            # # Connect xvcStream to XVC module
-            self.xvcStream == self.xvc
+                # # Connect xvcStream to XVC module
+                self.xvcStream == self.xvc
 
             # # Create SRPv3
             self.srp = rogue.protocols.srp.SrpV3()
@@ -185,6 +190,7 @@ class Root(pr.Root):
         @self.command()
         def Trigger():
             self._cmd.sendCmd(0, 0)
+        
         #################################################################
 
         self.add(pyrogue.RunControl(name = 'runControl',
@@ -355,6 +361,12 @@ class Root(pr.Root):
                                  function=self.adjustLanes
         ))
 
+        self.add(pr.LocalCommand(name='DumpCounters',
+                                 description='[asic0, asic1, asic2, asic3]',
+                                 value=[1,1,1,1],
+                                 function=self.dumpCounters
+        ))
+
         if (not self.sim and pciePgpEn):
             self.add(pciePgpCard.pciePgp(        
                                     dev      = dev,
@@ -363,7 +375,20 @@ class Root(pr.Root):
                                     boardType = self.boardType,
             ))
 
+        @self.command()
+        def ClearCounters() :
+            self.clearUpStreamPpg()
+            self.clearDownStreamPpg()
+            self.clearSspMonGrp()
+            self.clearDigAsicStrmReg()
+            self.clearTrigRegisters()
 
+        @self.command()
+        def RebootFPGA():
+            print('\nReloading FPGA firmware from PROM .... Wait...')
+            self.Core.AxiVersion.FpgaReload()
+            time.sleep(20)
+            print('\nReloading FPGA done')
 
     def start(self, **kwargs):
         super().start(**kwargs)
@@ -552,9 +577,18 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        if not self.sim :
-            self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
+        frames = 2500
+        rate = 5000
+        self.hwTrigger(frames, rate)
+                
+        # Wait necessary to lock lanes
+        time.sleep(3)
+        #if not self.sim :
+        #    self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
+
+
+        
     def fnInitAsicScript(self, dev,cmd,arg):
         """SetTestBitmap command function"""  
         arguments = np.asarray(arg)
@@ -631,9 +665,10 @@ class Root(pr.Root):
         return
 
     def adjustLanes(self, dev,cmd,arg):
-        print(arg)
         self.laneDiagnostics(arg, threshold=1, loops=5, debugPrint=True)
 
+    def dumpCounters(self, dev,cmd,arg):
+        self.getPKREGCounters(arg)
 
     def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False) :
 
@@ -748,3 +783,83 @@ class Root(pr.Root):
             getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
             getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
             print(bcolors.BOLD + "Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()))  + bcolors.ENDC)
+
+
+    def clearUpStreamPpg(self):
+        if (self.pciePgpEn == False) :
+            return        
+        for i in range(4):
+            self.pciePgp.Lane[i].Ctrl.CountReset()
+
+    def clearTrigRegisters(self):
+        self.App.AsicTop.TriggerRegisters.AcqCountReset()
+
+    def clearDownStreamPpg(self):
+        for i in range(4):
+            self.Core.PgpMon[i].Ctrl.CountReset()
+
+    def getUpStreamPpgFrmCnt(self):
+        if (self.pciePgpEn == False) :
+            return
+        for i in range(4):
+            print("Upstream pgp got {} frames".format(self.pciePgp.Lane[i].RxStatus.FrameCnt.get()))
+
+    def getDownStreamPpgFrmCnt(self):
+        for i in range(4):
+            print("Downstream pgp got {} frames".format(self.Core.PgpMon[i].TxStatus.FrameCnt.get()))
+            
+    def clearDigAsicStrmReg(self):
+        for i in range(4):
+            getattr(self.App.AsicTop, f"DigAsicStrmRegisters{i}").CountReset()
+
+    def clearSspMonGrp(self) :
+        for i in range(4):
+            self.App.SspMonGrp[i].CntRst()
+
+    def disablePpgFlowCtrl(self, disable):
+        if (self.pciePgpEn == False) :
+            return    
+        for i in range(4):
+            self.pciePgp.Lane[i].Ctrl.FlowControlDisable.set(disable)
+
+    def getPKREGCounters(self, enableAsics) :
+        TimeoutCntLane = [0] * 24
+        LockedCnt      = [0] * 24
+        BitSlipCnt     = [0] * 24
+        ErrorDetCnt    = [0] * 24
+        DataOvfLane    = [0] * 24    
+        FillOnFailCnt  = [0] * 24
+        threshold = 1
+        for asicIndex, asicEnable in enumerate(enableAsics):
+            if(asicEnable == 1):
+                disable = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+                print("DigAsicStrmRegister{} FrameCount={} disable={}".format(asicIndex,  getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FrameCount.get(), hex(disable)))
+                for i in range(24):
+                    if ((0x1 << i) & disable) != 0 :
+                        continue
+                    TimeoutCntLane[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").TimeoutCntLane[i].get()
+                    if(TimeoutCntLane[i]> threshold) :
+                        print("ASIC {} Lane {} had {} timeouts".format(asicIndex, i, TimeoutCntLane[i]))
+        
+                    DataOvfLane[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DataOvfLane[i].get()
+                    if(DataOvfLane[i]> 0) :
+                        print("ASIC {} Lane {} had overflow of {}".format(asicIndex, i, DataOvfLane[i]))
+
+                    FillOnFailCnt[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").fillOnFailCntLane[i].get()
+                    if(FillOnFailCnt[i]> 0) :
+                        print("ASIC {} Lane {} had FillOnFailCnt of {}".format(asicIndex, i, FillOnFailCnt[i]))
+                        
+                    '''
+                    LockedCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").LockedCnt[i].get()
+                    if(LockedCnt[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} locked Counts".format(asicIndex, i, LockedCnt[i]))
+        
+                    BitSlipCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").BitSlipCnt[i].get()
+                    if(BitSlipCnt[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} bitslip Counts".format(asicIndex, i, BitSlipCnt[i]))
+        
+                    ErrorDetCnt[i] = getattr(self.App, f"SspMonGrp[{asicIndex}]").ErrorDetCnt[i].get()
+                    if(ErrorDetCnt[i]> threshold) :
+                        print("ASIC {} Lane {} is having {} Error Counts".format(asicIndex, i, ErrorDetCnt[i]))    
+                    '''            
+

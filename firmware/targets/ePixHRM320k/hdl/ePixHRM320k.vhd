@@ -189,7 +189,6 @@ architecture topLevel of ePixHRM320k is
    -- AXI-Stream: Stream Interface
    signal asicDataMasters : AxiStreamMasterArray(NUM_OF_ASICS_G - 1 downto 0);
    signal asicDataSlaves  : AxiStreamSlaveArray(NUM_OF_ASICS_G - 1 downto 0);
-   signal remoteDmaPause  : slv(NUM_OF_ASICS_G - 1 downto 0);
    signal oscopeMasters   : AxiStreamMasterArray(NUM_OF_PSCOPE_G - 1 downto 0);
    signal oscopeSlaves    : AxiStreamSlaveArray(NUM_OF_PSCOPE_G - 1 downto 0);
    signal slowAdcMasters  : AxiStreamMasterArray(0 downto 0);
@@ -228,7 +227,6 @@ begin
          -- Streaming Interfaces (axilClk domain)
          asicDataMasters => asicDataMasters,
          asicDataSlaves  => asicDataSlaves,
-         remoteDmaPause  => remoteDmaPause,
          oscopeMasters   => oscopeMasters,
          oscopeSlaves    => oscopeSlaves,
          slowAdcMasters  => slowAdcMasters,
@@ -367,7 +365,6 @@ begin
          -- Streaming Interfaces (axilClk domain)
          asicDataMasters => asicDataMasters,
          asicDataSlaves  => asicDataSlaves,
-         remoteDmaPause  => remoteDmaPause,
          oscopeMasters   => oscopeMasters,
          oscopeSlaves    => oscopeSlaves,
          slowAdcMasters  => slowAdcMasters,
