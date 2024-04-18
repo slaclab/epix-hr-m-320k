@@ -208,7 +208,8 @@ class Root(pr.Root):
                 if(self.fullRateDataReceiverEn == True):
                     self.add(fullRateDataReceiver(
                         name = f"fullRateDataReceiver[{asicIndex}]",
-                        hidden = True
+                        hidden = True,
+                        enableOnStart = False
                         ))
                     self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
@@ -281,6 +282,7 @@ class Root(pr.Root):
                         clockT = 6.4e-9, 
                         rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
                         name = f"EnvData[{vc}]",
+                        enableOnStart = False,
                         payloadElementSize = 8
                     )
                 )
@@ -290,7 +292,7 @@ class Root(pr.Root):
             if (not self.sim):
                 for vc in range(4):
                     self.oscopeStream[vc] >> self.dataWriter.getChannel(vc+13)
-                    self.add(ScopeDataReceiver(name = f"ScopeData{vc}"))
+                    self.add(ScopeDataReceiver(name = f"ScopeData{vc}", enableOnStart = False))
                     self.oscopeStream[vc] >> getattr(self, f"ScopeData{vc}")
                     
 
@@ -309,7 +311,7 @@ class Root(pr.Root):
 
 
             for lane in range(self.numOfAsics):
-                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
+                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", enableOnStart = False))
                 self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()
@@ -395,20 +397,6 @@ class Root(pr.Root):
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
-
-        if (self.justCtrl == False) :
-            if(self.fullRateDataReceiverEn == True):
-                for asicIndex in range(self.numOfAsics):    
-                    getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
-            for asicIndex in range(self.numOfAsics):    
-                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
-
-            for vc in range(5): 
-                self.EnvData[vc].RxEnable.set(False)
-            if (not self.sim) : 
-                for vc in range(4):             
-                    getattr(self, f"ScopeData{vc}").RxEnable.set(False)
-
 
     def enableAllAsics(self, enable) :
         for batcherIndex in range(self.numOfAsics) :
