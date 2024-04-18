@@ -12,12 +12,21 @@
 # Common Clocks
 ###############
 
-create_clock -period 4.000 -name gtPllClkP0  [get_ports { gtPllClkP[0] }]
-create_clock -period 4.000 -name gtPllClkP1  [get_ports { gtPllClkP[1] }]
+# SILAB PORT 0 and 1 (168MHz)
+create_clock -period 5.952 -name gtPllClkP0  [get_ports { gtPllClkP[0] }]  
+create_clock -period 5.952 -name gtPllClkP1  [get_ports { gtPllClkP[1] }]
+
+# LVDS OSC 156.25MHz
 create_clock -period 6.400 -name gtRefClkP0  [get_ports { gtRefClkP[0] }]
 create_clock -period 6.400 -name gtRefClkP1  [get_ports { gtRefClkP[1] }]
-create_clock -period 4.000 -name fpgaClkInP  [get_ports { fpgaClkInP }]
+
+# SILAB PORT 4 (168MHz)
+create_clock -period 5.952 -name fpgaClkInP  [get_ports { fpgaClkInP }]
+
+# LVDS OSC 371.428571MHZ
 create_clock -period 2.691 -name gtLclsIITimingClkP  [get_ports { gtLclsIITimingClkP }]
+
+# From AD9249 350MHz
 create_clock -period 2.857 -name adcMonClkP0 [get_ports { adcMonDataClkP[0] }]
 create_clock -period 2.857 -name adcMonClkP1 [get_ports { adcMonDataClkP[1] }]
 
