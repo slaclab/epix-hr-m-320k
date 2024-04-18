@@ -577,14 +577,8 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        frames = 2500
-        rate = 5000
-        self.hwTrigger(frames, rate)
-                
-        # Wait necessary to lock lanes
-        time.sleep(3)
-        #if not self.sim :
-        #    self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
+        if not self.sim :
+            self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
 
 
@@ -670,7 +664,7 @@ class Root(pr.Root):
     def dumpCounters(self, dev,cmd,arg):
         self.getPKREGCounters(arg)
 
-    def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False) :
+    def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False, cleanRun=False) :
 
         self.disableAndCleanAllFullRateDataRcv()
         self.enableDataRcv(False)
@@ -693,8 +687,10 @@ class Root(pr.Root):
         time.sleep(3)
         
         # Should be 0 unless forced to 1 by file
-        for asicIndex in range(4):
-            disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+        if cleanRun == False :
+            for asicIndex in range(4):
+                disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+
 
         # loop a number of times 
         for loop in range(loops):
@@ -845,7 +841,7 @@ class Root(pr.Root):
                     if(DataOvfLane[i]> 0) :
                         print("ASIC {} Lane {} had overflow of {}".format(asicIndex, i, DataOvfLane[i]))
 
-                    FillOnFailCnt[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").fillOnFailCntLane[i].get()
+                    FillOnFailCnt[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FillOnFailCntLane[i].get()
                     if(FillOnFailCnt[i]> 0) :
                         print("ASIC {} Lane {} had FillOnFailCnt of {}".format(asicIndex, i, FillOnFailCnt[i]))
                         
