@@ -54,7 +54,8 @@ ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/Axi
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_EventBuilders[0].U_EventBuilder/mAxisSlave[tReady]}
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/eventTrigMsgCtrl[1][pause]}
 ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/GEN_PGP_DATA[0].U_TX_FIFO/axisSlave[tReady]}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/startRdout}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/sro}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/daqTrigger}
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/daqTrigPause}
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/runTrigger}
 ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/daqTrigger}

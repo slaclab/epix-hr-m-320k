@@ -208,7 +208,8 @@ class Root(pr.Root):
                 if(self.fullRateDataReceiverEn == True):
                     self.add(fullRateDataReceiver(
                         name = f"fullRateDataReceiver[{asicIndex}]",
-                        hidden = True
+                        hidden = True,
+                        enableOnStart = False
                         ))
                     self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
@@ -281,6 +282,7 @@ class Root(pr.Root):
                         clockT = 6.4e-9, 
                         rawToData = lambda raw: (2.5 * float(raw & 0xffffff)) / 16777216, 
                         name = f"EnvData[{vc}]",
+                        enableOnStart = False,
                         payloadElementSize = 8
                     )
                 )
@@ -290,7 +292,7 @@ class Root(pr.Root):
             if (not self.sim):
                 for vc in range(4):
                     self.oscopeStream[vc] >> self.dataWriter.getChannel(vc+13)
-                    self.add(ScopeDataReceiver(name = f"ScopeData{vc}"))
+                    self.add(ScopeDataReceiver(name = f"ScopeData{vc}", enableOnStart = False))
                     self.oscopeStream[vc] >> getattr(self, f"ScopeData{vc}")
                     
 
@@ -309,7 +311,7 @@ class Root(pr.Root):
 
 
             for lane in range(self.numOfAsics):
-                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}"))
+                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", enableOnStart = False))
                 self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()
@@ -395,20 +397,6 @@ class Root(pr.Root):
         # Check if not simulation and not PROM programming
         if not self.sim and not self.promProg:
             self.CountReset()
-
-        if (self.justCtrl == False) :
-            if(self.fullRateDataReceiverEn == True):
-                for asicIndex in range(self.numOfAsics):    
-                    getattr(self, f"fullRateDataReceiver[{asicIndex}]").RxEnable.set(False)
-            for asicIndex in range(self.numOfAsics):    
-                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(False)
-
-            for vc in range(5): 
-                self.EnvData[vc].RxEnable.set(False)
-            if (not self.sim) : 
-                for vc in range(4):             
-                    getattr(self, f"ScopeData{vc}").RxEnable.set(False)
-
 
     def enableAllAsics(self, enable) :
         for batcherIndex in range(self.numOfAsics) :
@@ -577,14 +565,8 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
-        frames = 2500
-        rate = 5000
-        self.hwTrigger(frames, rate)
-                
-        # Wait necessary to lock lanes
-        time.sleep(3)
-        #if not self.sim :
-        #    self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
+        if not self.sim :
+            self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
 
 
@@ -670,7 +652,7 @@ class Root(pr.Root):
     def dumpCounters(self, dev,cmd,arg):
         self.getPKREGCounters(arg)
 
-    def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False) :
+    def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False, cleanRun=False) :
 
         self.disableAndCleanAllFullRateDataRcv()
         self.enableDataRcv(False)
@@ -693,8 +675,10 @@ class Root(pr.Root):
         time.sleep(3)
         
         # Should be 0 unless forced to 1 by file
-        for asicIndex in range(4):
-            disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+        if cleanRun == False :
+            for asicIndex in range(4):
+                disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+
 
         # loop a number of times 
         for loop in range(loops):
@@ -845,7 +829,7 @@ class Root(pr.Root):
                     if(DataOvfLane[i]> 0) :
                         print("ASIC {} Lane {} had overflow of {}".format(asicIndex, i, DataOvfLane[i]))
 
-                    FillOnFailCnt[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").fillOnFailCntLane[i].get()
+                    FillOnFailCnt[i] = getattr(self.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FillOnFailCntLane[i].get()
                     if(FillOnFailCnt[i]> 0) :
                         print("ASIC {} Lane {} had FillOnFailCnt of {}".format(asicIndex, i, FillOnFailCnt[i]))
                         
