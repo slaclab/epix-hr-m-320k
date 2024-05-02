@@ -118,7 +118,7 @@ class Root(pr.Root):
             # Create configuration stream
             stream = pyrogue.interfaces.stream.Variable(root=self)
 
-            # Create StreamWriter with the configuration stream included as channel 1
+            # Create StreamWriter with the configuration stream included as channel 5
             self.dataWriter = pyrogue.utilities.fileio.StreamWriter(configStream={5: stream})
             self.add(self.dataWriter)               
 
