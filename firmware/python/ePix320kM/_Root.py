@@ -401,6 +401,8 @@ class Root(pr.Root):
     def enableAllAsics(self, enable) :
         for batcherIndex in range(self.numOfAsics) :
             self.enableAsic(batcherIndex, enable)
+        time.sleep(0.1)
+
 
     def enableAsic(self, batcherIndex, enable) :
         getattr(self.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(not enable)
