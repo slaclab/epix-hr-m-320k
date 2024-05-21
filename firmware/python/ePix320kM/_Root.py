@@ -203,6 +203,7 @@ class Root(pr.Root):
         if (self.justCtrl == False) :
             if (not self.sim):
                 # Data comes only on stream 0 due to batching in pcie
+                self.dataStream[0] >> self.dataWriter.getChannel(0)
                 self.pcieUnbatcherDebug = rogue.protocols.batcher.SplitterV1()
                 self.debugFilters =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
                 self.dataStream[0] >> self.pcieUnbatcherDebug
@@ -308,13 +309,14 @@ class Root(pr.Root):
             # Read file stream. 
             self.readerReceiver = [dataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
             self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
+            self.channel0filter =  rogue.interfaces.stream.Filter(False, 0)
             self.dataReceiverDataFilter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
             self.fread = rogue.utilities.fileio.StreamReader()
             self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
 
-
+            self.channel0filter << self.fread
             for i in range(self.numOfAsics):
-                self.readerReceiver[i] << self.readUnbatcher[i] << self.filter[i] << self.fread
+                self.readerReceiver[i] << self.filter[i] << self.readUnbatcher[i] <<  self.channel0filter
                 self.readerReceiver[i].enableDataDebug(True)
                 self.readerReceiver[i].enableDebugPrint(True)
 
