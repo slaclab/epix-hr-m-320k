@@ -131,8 +131,8 @@ class Root(pr.Root):
 
             # # Map the DMA streams
             if (self.justCtrl == False) :
-                for lane in range(self.numOfAsics):
-                    self.dataStream[lane] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
+                lane = 0
+                self.dataStream[0] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
             
             self.srpStream = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * 5 + 0, 1)
             
@@ -200,9 +200,16 @@ class Root(pr.Root):
         # Connect dataStream to data writer
 
         if (self.justCtrl == False) :
+            if (not self.sim):
+                for asicIndex in range(self.numOfAsics):
+                    self.debugFilters =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
+                    self.dataStream[0] >> self.debugFilters[lane] >> self.streamUnbatchers[asicIndex]
+            else :
+                for asicIndex in range(self.numOfAsics):
+                    self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
+                    self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
+
             for asicIndex in range(self.numOfAsics):
-                self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
-                self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
                 self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
 
                 if(self.fullRateDataReceiverEn == True):
@@ -212,8 +219,6 @@ class Root(pr.Root):
                         enableOnStart = False
                         ))
                     self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
-
-
             # Check if not VCS simulation
             envConf = [
                 [
@@ -300,6 +305,7 @@ class Root(pr.Root):
             self.readerReceiver = [dataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
             self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
             self.dataReceiverFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
+            self.dataReceiverDataFilter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
             self.fread = rogue.utilities.fileio.StreamReader()
             self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
 
@@ -312,7 +318,7 @@ class Root(pr.Root):
 
             for lane in range(self.numOfAsics):
                 self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", enableOnStart = False))
-                self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
+                self.dataStream[0] >> self.rate[0] >> self.dataReceiverDataFilter[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
 
         @self.command()
         def DisplayViewer0():
