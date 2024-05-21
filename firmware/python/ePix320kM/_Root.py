@@ -131,6 +131,7 @@ class Root(pr.Root):
 
             # # Map the DMA streams
             if (self.justCtrl == False) :
+                # batching in pcie sends data only on lane 0
                 lane = 0
                 self.dataStream[0] = rogue.hardware.axi.AxiStreamDma(dev, 0x100 * lane + 0, 1)
             
@@ -201,9 +202,11 @@ class Root(pr.Root):
 
         if (self.justCtrl == False) :
             if (not self.sim):
+                self.pcieUnbatcherDebug = rogue.protocols.batcher.SplitterV1()
+                self.debugFilters =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
+                self.dataStream[0] >> self.pcieUnbatcherDebug
                 for asicIndex in range(self.numOfAsics):
-                    self.debugFilters =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
-                    self.dataStream[0] >> self.debugFilters[lane] >> self.streamUnbatchers[asicIndex]
+                    self.pcieUnbatcherDebug >> self.debugFilters[lane] >> self.streamUnbatchers[asicIndex]
             else :
                 for asicIndex in range(self.numOfAsics):
                     self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
@@ -315,11 +318,16 @@ class Root(pr.Root):
                 self.readerReceiver[i].enableDataDebug(True)
                 self.readerReceiver[i].enableDebugPrint(True)
 
-
-            for lane in range(self.numOfAsics):
-                self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", enableOnStart = False))
-                self.dataStream[0] >> self.rate[0] >> self.dataReceiverDataFilter[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
-
+            if (not self.sim):
+                self.pcieUnbatcher = rogue.protocols.batcher.SplitterV1()
+                self.dataStream[0] >> self.rate[0] >> self.pcieUnbatcher
+                for lane in range(self.numOfAsics):
+                    self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", enableOnStart = False))
+                    self.pcieUnbatcher >> self.dataReceiverDataFilter[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
+                else : 
+                    for lane in range(self.numOfAsics):
+                        self.add(ePixHrMv2.DataReceiverEpixHrMv2(name = f"DataReceiver{lane}", enableOnStart = False))
+                        self.dataStream[lane] >> self.rate[lane] >> self.unbatchers[lane] >>  self.dataReceiverFilter[lane] >> getattr(self, f"DataReceiver{lane}")
         @self.command()
         def DisplayViewer0():
             subprocess.Popen(["python", self.top_level+"/../firmware/submodules/ePixViewer/python/ePixViewer/runLiveDisplay.py", "--dataReceiver", "rogue://0/root.DataReceiver0", "image", "--title", "DataReceiver0", "--sizeY", "192", "--sizeX", "384", "--serverList","localhost:{}".format(self.zmqServer.port()) ], shell=False)
