@@ -670,6 +670,11 @@ class Root(pr.Root):
         asicDone       = [False] * 4
         done           = 0x0
 
+        # disable unused batchers
+        for batcherIndex, enable in enumerate(asicEnable):
+            self.enableAsic(batcherIndex, enable)
+            print("Enabling batcher {}".format(batcherIndex))
+
         #empty run
         frames = 2500
         rate = 5000
@@ -680,6 +685,7 @@ class Root(pr.Root):
         if cleanRun == False :
             for asicIndex in range(4):
                 disable[asicIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()
+
 
 
         # loop a number of times 
