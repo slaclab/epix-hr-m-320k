@@ -42,4 +42,4 @@ Root:
         AsicPwrManualAna: False
         AsicPwrManualIo: False
         AsicPwrManualFpga: False
-        DebugSel0: AsicDM0
+        DebugSel0: AsicAcq

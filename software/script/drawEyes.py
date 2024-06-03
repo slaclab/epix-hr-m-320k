@@ -12,14 +12,15 @@ asicLane2ViewerMapping = [None] * 24
 for x,y in enumerate(asicLaneLayout) : 
     asicLane2ViewerMapping[y] = x
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 3:
     sys.exit(0)
 
 all_errors=np.loadtxt("all_errors{}.csv".format(sys.argv[1]), delimiter=',')
+taps=int(sys.argv[2])
 
 shape=np.shape(all_errors)
 
-x = [ i for i in range(shape[1]) ]
+x = [ i*1024/taps for i in range(shape[1]) ]
 
 for i in range(24) :
     plt.subplot(4,6,asicLane2ViewerMapping[i]+1)
