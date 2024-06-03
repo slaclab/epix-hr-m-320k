@@ -673,7 +673,10 @@ class Root(pr.Root):
         # disable unused batchers
         for batcherIndex, enable in enumerate(asicEnable):
             self.enableAsic(batcherIndex, enable)
-            print("Enabling batcher {}".format(batcherIndex))
+            if (enable == True) : 
+                print("Enabling batcher {}".format(batcherIndex))
+            else : 
+                print("Disabling batcher {}".format(batcherIndex))
 
         #empty run
         frames = 2500
