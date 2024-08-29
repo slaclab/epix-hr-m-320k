@@ -13,7 +13,7 @@ Root:
         FillOnFailEn: 0x1
         FillOnFailPersistantDisable: 0x0
         SroToSofTimeout: 270
-        DataTimeout: 3
+        DataTimeout: 700
       DigAsicStrmRegisters1:
         enable: True
         asicDataReq: 3071
@@ -22,7 +22,7 @@ Root:
         FillOnFailEn: 0x1
         FillOnFailPersistantDisable: 0x0
         SroToSofTimeout: 270
-        DataTimeout: 3    
+        DataTimeout: 700
       DigAsicStrmRegisters2:
         enable: True
         asicDataReq: 3071
@@ -31,7 +31,7 @@ Root:
         FillOnFailEn: 0x1
         FillOnFailPersistantDisable: 0x0
         SroToSofTimeout: 270
-        DataTimeout: 3      
+        DataTimeout: 700      
       DigAsicStrmRegisters3:
         enable: True
         asicDataReq: 3071
@@ -40,4 +40,4 @@ Root:
         FillOnFailEn: 0x1
         FillOnFailPersistantDisable: 0x0
         SroToSofTimeout: 270
-        DataTimeout: 3    
+        DataTimeout: 700    
