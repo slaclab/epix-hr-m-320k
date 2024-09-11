@@ -5,7 +5,7 @@ Root:
     enable: True
     Mv2Asic[1]:
       enable: True
-      shvc_DAC: 0x17
+      shvc_DAC: 30
       fastPP_enable: False
       PulserSync: False
       Pll_RO_Reset: True
@@ -24,7 +24,7 @@ Root:
       DigMon2: 0x1
       PulserDac: 0x3
       MonostPulser: 0x0
-      RefGenB: 0x3
+      RefGenB: 0x1
       Dm1En: True
       Dm2En: False
       emph_bd: 0x0
@@ -69,21 +69,21 @@ Root:
       Debug_bit: 0x3
       OSRsel: False
       SecondOrder: False
-      DHg: False
-      RefGenC: 0x2
+      DHg: True
+      RefGenC: 0x1
       dbus_del_sel: False
       SDclk_b: 0x0
       SDrst_b: 0x8
       Filter_DAC: 0x26
-      Ref_gen_d: 0x2
+      Ref_gen_d: 0x3
       CompEn: 0x7
       Pixel_CB: 0x4
       InjEn_ePixM: False
       ClkInj_ePixM: False
       rowCK2matrix_delay: 0x4
-      RefinN: 0x6
+      RefinN: 0x0
       RefinCompN: 0x3
-      RefinP: 0x2
+      RefinP: 0x0
       ro_mode_i: 0x0
       SDclk1_b: 0x0
       SDrst1_b: 0x8
@@ -91,8 +91,8 @@ Root:
       SDrst2_b: 0x8
       SDclk3_b: 0x0
       SDrst3_b: 0x8
-      CompTH_ePixM: 0x14
-      Precharge_DAC_ePixM: 0x20
+      CompTH_ePixM: 0x0
+      Precharge_DAC_ePixM: 45
       FE_CLK_dly: 0x4
       FE_CLK_cnt_en: True
       FE_ACQ2GR_en: True
@@ -100,3 +100,7 @@ Root:
       FE_ACQ2InjEn: False
       # To disable banks
       #DigRO_disable2: 0xe
+      pipoclk_delay_row0: 15
+      pipoclk_delay_row1: 8
+      pipoclk_delay_row2: 8
+      pipoclk_delay_row3: 8
