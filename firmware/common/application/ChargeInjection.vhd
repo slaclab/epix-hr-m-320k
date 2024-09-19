@@ -29,7 +29,6 @@ use surf.SsiPkg.all;
 entity ChargeInjection is 
    generic (
       TPD_G           	   : time := 1 ns;
-      ASIC_NO_G            : slv(2 downto 0)  := "000"
    );
    port ( 
      
@@ -48,11 +47,6 @@ entity ChargeInjection is
       mAxilReadMaster   : in  AxiLiteReadMasterType;
       mAxilReadSlave    : out AxiLiteReadSlaveType;
       
-      
-      
-      -- acquisition number input to the header
-      acqNo             : in  slv(31 downto 0);
-      
       -- Daq trigger and start readout request input
       forceTrigger        : out  sl;
       
@@ -62,6 +56,9 @@ end ChargeInjection;
 
 -- Define architecture
 architecture RTL of ChargeInjection is
+
+   type asicAddressOffsetType is array (3 downto 0) of slv(31 downto 0);
+   constant addresses : asicAddressOffsetType := (0, x"40000", x"80000", x"C0000");
 
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, TEST_STOP_S , ERROR_S);
@@ -90,7 +87,8 @@ architecture RTL of ChargeInjection is
       forceTrigger                : sl;
       triggerWaitCycles           : slv(31 downto 0);
       cycleCounter                : slv(31 downto 0);
-      status                      : chargeInjectionStatusType;             
+      status                      : chargeInjectionStatusType;
+      currentAsic                 : integer;
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -111,7 +109,8 @@ architecture RTL of ChargeInjection is
       forceTrigger                => '0',
       triggerWaitCycles           => 16#31250#,
       cycleCounter                => (others=>'0'),
-      status                      => IDLE_S
+      status                      => IDLE_S,
+      currentAsic                 => 0
    );
    
    
@@ -225,6 +224,8 @@ begin
       axiSlaveRegister (regCon, x"008",  0, v.step);
       axiSlaveRegister (regCon, x"00C",  0, v.start);
       axiSlaveRegister (regCon, x"010",  0, v.triggerWaitCycles);
+      axiSlaveRegister (regCon, x"014",  0, v.currentAsic);
+      
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.activated);
@@ -232,7 +233,7 @@ begin
 
       
       axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
-      
+      -- Do this for all enabled asics
       -- CHARGE INJECTION ALGORITHM
       -- Setting charge injection necessary registers in the relevant ASIC
          -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
@@ -264,18 +265,23 @@ begin
             -- Setting charge injection necessary registers in the relevant ASIC
             -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
             -- FE_sync2GR_en = False     0x00001023*addrSize, bitSize=1, bitOffset=6         
-            axiLRead(16#408C#, r, v, ack);
-            axiLWrite(16#408C#, r.rdData(31 downto 7) & "01" & r.rdData(4 downto 0), r, v, ack); 
+            axiLRead(x"408C"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"408C"+addresses(currentAsic), r.rdData(31 downto 7) & "01" & r.rdData(4 downto 0), r, v, ack); 
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
-               v.state = TEST_START_S;
+               if (asicEn(r.currentAsic) ) then
+                  v.state = TEST_START_S;
+               else
+                  -- next asic
+                  v.currentAsic = r.currentAsic + 1;
+               end if;
             end if;
 
          when TEST_START_S =>
             -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
-            axiLRead(16#400C#, r, v, ack);
-            axiLWrite(16#400C#, r.rdData(31 downto 13) & "1" & r.rdData(11 downto 0), r, v, ack);          
+            axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 13) & "1" & r.rdData(11 downto 0), r, v, ack);          
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
@@ -289,8 +295,8 @@ begin
             if (r.pulser >= 1024) then
                v.state := TEST_STOP_S;
             else
-               axiLRead(16#400C#, r, v, ack);
-               axiLWrite(16#400C#, r.rdData(31 downto 10) & r.pulser, r, v, ack);     
+               axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
+               axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 10) & r.pulser, r, v, ack);     
 
                -- check end case
                if (axiLEndOfWrite(r, ack) = True) then
@@ -309,8 +315,8 @@ begin
                else
                   chargeCol := '0';
                end if;
-               axiLRead(16#4068#, r, v, ack);
-               axiLWrite(16#4068#, r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
+               axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
+               axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
                if (axiLEndOfWrite(r, ack) = True) then
                   v.state = SHIFT_S;
                   -- increment currentCol
@@ -320,8 +326,8 @@ begin
             
          when CLK_NEGEDGE_S =>
             -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
-            axiLRead(16#4068#, r, v, ack);
-            axiLWrite(16#4068#, r.rdData(31 downto 8) & '0' & r.rdData(6 downto 0), r, v, ack);
+            axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 8) & '0' & r.rdData(6 downto 0), r, v, ack);
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
@@ -331,8 +337,8 @@ begin
 
          when CLK_POSEDGE_S =>
             -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
-            axiLRead(16#4068#, r, v, ack);
-            axiLWrite(16#4068#, r.rdData(31 downto 8) & '1' & r.rdData(6 downto 0), r, v, ack);
+            axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 8) & '1' & r.rdData(6 downto 0), r, v, ack);
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
@@ -357,8 +363,8 @@ begin
 
          when TEST_STOP_S =>
             -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
-            axiLRead(16#400C#, r, v, ack);
-            axiLWrite(16#400C#, r.rdData(31 downto 13) & "0" & r.rdData(11 downto 0), r, v, ack);          
+            axiLRead(xx"400C"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 13) & "0" & r.rdData(11 downto 0), r, v, ack);          
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then

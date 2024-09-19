@@ -194,7 +194,8 @@ architecture rtl of Application is
    constant ADC_INDEX_C          : natural  := 7;
    constant DAC_INDEX_C          : natural  := 8;
    constant TIMING_INDEX_C       : natural  := 9;
-   constant NUM_AXIL_MASTERS_C   : positive := 10;
+   constant CHARGEINJ_INDEX_C    : natural  := 10;
+   constant NUM_AXIL_MASTERS_C   : positive := 11;
 
    constant AXI_BASE_ADDR_C      : slv(31 downto 0) := X"80000000"; --0
 
@@ -248,6 +249,16 @@ architecture rtl of Application is
    signal axilWriteSlaves        : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
    signal axilReadMasters        : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilReadSlaves         : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+
+   signal CEAxilWriteMaster      : AxiLiteWriteMasterType;
+   signal CEAxilWriteSlave       : AxiLiteWriteSlaveType;
+   signal CEAxilReadMaster       : AxiLiteReadMasterType;
+   signal CEAxilReadSlave        : AxiLiteReadSlaveType;
+
+   signal SACIAxilWriteMaster      : AxiLiteWriteMasterType;
+   signal SACIAxilWriteSlave       : AxiLiteWriteSlaveType;
+   signal SACIAxilReadMaster       : AxiLiteReadMasterType;
+   signal SACIAxilReadSlave        : AxiLiteReadSlaveType;
 
    signal clk156                 : sl;
    signal rst156                 : sl;
@@ -317,6 +328,7 @@ architecture rtl of Application is
    signal biasDacCsbSig          : sl;
    signal biasDacClrbSig         : sl;
 
+   signal chargeInjectionTrigger : sl;
 
    signal slowAdcMastersDemuxed  : AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
    signal slowAdcSlavesDemuxed   : AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
@@ -535,9 +547,57 @@ begin
 
          digOut(0)            => fpgaTtlOutSig,
          digOut(1)            => '0',
-         pwrGood              => '0'
+         pwrGood              => '0',
+
+         chargeInjTrigger     => chargeInjectionTrigger
       );
-   
+
+
+      U_ChargeInjection : entity surf.ChargeInjection
+      port map( 
+        
+         
+         -- AXI lite slave port for register access
+         axilClk           => axilClk;
+         axilRst           => axilRst;
+         sAxilWriteMaster  => axilReadMasters(CHARGEINJ_INDEX_C),
+         sAxilWriteSlave   => axilReadSlaves(CHARGEINJ_INDEX_C),
+         sAxilReadMaster   => axilWriteMasters(CHARGEINJ_INDEX_C),
+         sAxilReadSlave    => axilWriteSlaves(CHARGEINJ_INDEX_C),
+
+         -- AXI lite master port for asic register writes
+         mAxilWriteMaster  => CEAxilWriteMaster;
+         mAxilWriteSlave   => CEAxilWriteSlave;
+         mAxilReadMaster   => CEAxilReadMaster;
+         mAxilReadSlave    => CEAxilReadSlave;
+         
+         -- Charge injection forced trigger
+         forceTrigger      => chargeInjectionTrigger;
+         
+      );      
+
+      U_XBAR : entity surf.AxiLiteCrossbar
+      generic map (
+         TPD_G              => TPD_G,
+         NUM_SLAVE_SLOTS_G  => 2,
+         NUM_MASTER_SLOTS_G => 1,
+         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
+      port map (
+         axiClk           => axilClk,
+         axiClkRst        => axilRst,
+         sAxiWriteMasters(0) => axilReadMasters(SACI_INDEX_C),
+         sAxiWriteSlaves(0)  => axilReadSlaves(SACI_INDEX_C),
+         sAxiReadMasters(0)  => axilWriteMasters(SACI_INDEX_C),
+         sAxiReadSlaves(0)   => axilWriteSlaves(SACI_INDEX_C),
+         sAxiWriteMasters(1) => CEAxilWriteMaster,
+         sAxiWriteSlaves(1)  => CEAxilWriteSlave,
+         sAxiReadMasters(1)  => CEAxilReadMaster,
+         sAxiReadSlaves(1)   => CEAxilReadSlave,         
+         mAxiWriteMasters(0) => SACIAxilWriteMaster,
+         mAxiWriteSlaves(0)  => SACIAxilWriteSlave,
+         mAxiReadMasters(0)  => SACIAxilReadMaster,
+         mAxiReadSlaves(0)   => SACIAxilReadSlave  );
+
    ----------------------------
    -- SACI Interface Controller
    ----------------------------
@@ -558,10 +618,10 @@ begin
          -- AXI-Lite Register Interface
          axilClk         => axilClk,
          axilRst         => axilRst,
-         axilReadMaster  => axilReadMasters(SACI_INDEX_C),
-         axilReadSlave   => axilReadSlaves(SACI_INDEX_C),
-         axilWriteMaster => axilWriteMasters(SACI_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(SACI_INDEX_C)
+         axilReadMaster  => SACIAxilWriteMaster,
+         axilReadSlave   => SACIAxilWriteSlave,
+         axilWriteMaster => SACIAxilReadMaster,
+         axilWriteSlave  => SACIAxilReadSlave
          );
 
 
