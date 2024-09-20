@@ -15,7 +15,6 @@
 
 LIBRARY ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_misc.all;
 use IEEE.numeric_std.all;
@@ -23,12 +22,12 @@ use IEEE.numeric_std.all;
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
-use surf.AxiStreamPkg.all;
 use surf.SsiPkg.all;
 
 entity ChargeInjection is 
    generic (
       TPD_G           	   : time := 1 ns;
+      AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
    );
    port ( 
      
@@ -42,10 +41,10 @@ entity ChargeInjection is
       sAxilReadSlave    : out AxiLiteReadSlaveType;
 
       -- AXI lite master port for asic register writes
-      mAxilWriteMaster  : in  AxiLiteWriteMasterType;
-      mAxilWriteSlave   : out AxiLiteWriteSlaveType;
-      mAxilReadMaster   : in  AxiLiteReadMasterType;
-      mAxilReadSlave    : out AxiLiteReadSlaveType;
+      mAxilWriteMaster  : out  AxiLiteWriteMasterType;
+      mAxilWriteSlave   : in   AxiLiteWriteSlaveType;
+      mAxilReadMaster   : out  AxiLiteReadMasterType;
+      mAxilReadSlave    : in   AxiLiteReadSlaveType;
       
       -- Daq trigger and start readout request input
       forceTrigger        : out  sl;
@@ -58,7 +57,7 @@ end ChargeInjection;
 architecture RTL of ChargeInjection is
 
    type asicAddressOffsetType is array (3 downto 0) of slv(31 downto 0);
-   constant addresses : asicAddressOffsetType := (0, x"40000", x"80000", x"C0000");
+   constant addresses : asicAddressOffsetType := (x"00000000", x"00040000", x"00080000", x"000C0000");
 
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, TEST_STOP_S , ERROR_S);
@@ -87,8 +86,8 @@ architecture RTL of ChargeInjection is
       forceTrigger                : sl;
       triggerWaitCycles           : slv(31 downto 0);
       cycleCounter                : slv(31 downto 0);
-      status                      : chargeInjectionStatusType;
-      currentAsic                 : integer;
+      status                      : slv(7 downto 0);
+      currentAsic                 : slv(9 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -107,10 +106,10 @@ architecture RTL of ChargeInjection is
       charge                      => '0',
       rdData                      => (others=>'0'),
       forceTrigger                => '0',
-      triggerWaitCycles           => 16#31250#,
+      triggerWaitCycles           => x"00007A12",
       cycleCounter                => (others=>'0'),
-      status                      => IDLE_S,
-      currentAsic                 => 0
+      status                      => (others=>'0'),
+      currentAsic                 => (others=>'0')
    );
    
    
@@ -123,7 +122,7 @@ architecture RTL of ChargeInjection is
 
 
    procedure axiLRead(
-         address : in slv(15 downto 0);
+         address : in slv(31 downto 0);
          r       : in RegType;
          v       : inout RegType;
          ack     : in AxiLiteAckType;
@@ -136,7 +135,7 @@ architecture RTL of ChargeInjection is
             v.req.rnw := '1'; -- READ
             v.req.request := '0'; -- initiate request
             v.regAccessState := READ_ACK_WAIT_S;
-         when READ_ACK_WAIT =>
+         when READ_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp = AXI_RESP_OK_C) then
                   v.rdData := ack.rdData;
@@ -152,8 +151,8 @@ architecture RTL of ChargeInjection is
    end procedure;
 
    procedure axiLWrite(
-         address : in slv(15 downto 0);
-         wrData  : in slv(32 downto 0);
+         address : in slv(31 downto 0);
+         wrData  : in slv(31 downto 0);
          r       : in RegType;
          v       : inout RegType;
          ack     : in AxiLiteAckType;
@@ -167,7 +166,7 @@ architecture RTL of ChargeInjection is
             v.req.wrData := wrData; 
             v.req.request := '0'; -- initiate request
             v.regAccessState := READ_ACK_WAIT_S;               
-         when WRITE_ACK_WAIT =>
+         when WRITE_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp /= AXI_RESP_OK_C) then
                   v.state := ERROR_S;
@@ -209,10 +208,12 @@ begin
 
 
   
-   comb : process (deserRst, sAxilWriteMaster, r, ack) is
+   comb : process (axilRst, sAxilWriteMaster, r, ack) is
       variable v             : RegType;
       variable regCon        : AxiLiteEndPointType;
       variable chargeCol     : sl;
+      variable currentAsic   : integer;
+      variable status        : chargeInjectionStatusType;
    begin
       v := r;
       
@@ -225,7 +226,6 @@ begin
       axiSlaveRegister (regCon, x"00C",  0, v.start);
       axiSlaveRegister (regCon, x"010",  0, v.triggerWaitCycles);
       axiSlaveRegister (regCon, x"014",  0, v.currentAsic);
-      
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.activated);
@@ -233,6 +233,9 @@ begin
 
       
       axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
+
+      currentAsic :=  to_integer(signed(r.currentAsic));
+
       -- Do this for all enabled asics
       -- CHARGE INJECTION ALGORITHM
       -- Setting charge injection necessary registers in the relevant ASIC
@@ -270,12 +273,7 @@ begin
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
-               if (asicEn(r.currentAsic) ) then
-                  v.state := TEST_START_S;
-               else
-                  -- next asic
-                  v.currentAsic := r.currentAsic + 1;
-               end if;
+               v.state := TEST_START_S;
             end if;
 
          when TEST_START_S =>
@@ -287,7 +285,7 @@ begin
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := PULSER_S;
             end if;
-            v.status := RUNNING_S;
+            status := RUNNING_S;
 
          when PULSER_S =>
             -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
@@ -296,7 +294,7 @@ begin
                v.state := TEST_STOP_S;
             else
                axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
-               axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 10) & r.pulser, r, v, ack);     
+               axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 10) & r.pulser(9 downto 0), r, v, ack);     
 
                -- check end case
                if (axiLEndOfWrite(r, ack) = True) then
@@ -318,7 +316,7 @@ begin
                axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
                axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
                if (axiLEndOfWrite(r, ack) = True) then
-                  v.state := SHIFT_S;
+                  v.state := CLK_NEGEDGE_S;
                   -- increment currentCol
                   v.currentCol := r.currentCol + 1;
                end if;
@@ -370,15 +368,16 @@ begin
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := WAIT_START_S;
             end if;
-            v.status := SUCCESS_S;
+            status := SUCCESS_S;
 
          when ERROR_S =>   
             v.state := WAIT_START_S;
-            v.status := ERROR_S;
+            status := ERROR_S;
 
       end case;
       
   
+      v.status := std_logic_vector(to_unsigned(chargeInjectionStatusType'POS(status), 8)) ; 
 
       -- reset logic      
       if (axilClk = '1') then

@@ -200,7 +200,7 @@ architecture rtl of Application is
    constant AXI_BASE_ADDR_C      : slv(31 downto 0) := X"80000000"; --0
 
    constant XBAR_CONFIG_C        : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXI_BASE_ADDR_C, 28, 24);
-
+   constant U_2S1MXBAR_CONFIG_C  : AxiLiteCrossbarMasterConfigArray(0 downto 0) := genAxiLiteConfig(1, x"00000000", 32, 0);
    constant TTLOUT_WIDTH_C         : natural  := 6;
 
    constant DIGMON0_INDEX_C         : natural  := 0;
@@ -250,16 +250,17 @@ architecture rtl of Application is
    signal axilReadMasters        : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilReadSlaves         : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal CEAxilWriteMaster      : AxiLiteWriteMasterType;
-   signal CEAxilWriteSlave       : AxiLiteWriteSlaveType;
-   signal CEAxilReadMaster       : AxiLiteReadMasterType;
-   signal CEAxilReadSlave        : AxiLiteReadSlaveType;
+   -- AXI-Lite Signals
+   signal axilSaciInWriteMasters       : AxiLiteWriteMasterArray(1 downto 0); 
+   signal axilSaciInWriteSlaves        : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
+   signal axilSaciInReadMasters        : AxiLiteReadMasterArray(1 downto 0); 
+   signal axilSaciInReadSlaves         : AxiLiteReadSlaveArray(1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal SACIAxilWriteMaster      : AxiLiteWriteMasterType;
-   signal SACIAxilWriteSlave       : AxiLiteWriteSlaveType;
-   signal SACIAxilReadMaster       : AxiLiteReadMasterType;
-   signal SACIAxilReadSlave        : AxiLiteReadSlaveType;
-
+   signal axilSaciOutWriteMaster      :  AxiLiteWriteMasterType;
+   signal axilSaciOutWriteSlave       :  AxiLiteWriteSlaveType;
+   signal axilSaciOutReadMaster       :  AxiLiteReadMasterType;
+   signal axilSaciOutReadSlave        :  AxiLiteReadSlaveType;
+      
    signal clk156                 : sl;
    signal rst156                 : sl;
    signal clk250                 : sl;
@@ -365,6 +366,12 @@ begin
    biasDacSclk   <= biasDacSclkSig;
    biasDacCsb    <= biasDacCsbSig;
    biasDacClrb   <= biasDacClrbSig;
+
+
+   axilSaciInWriteMasters(1) <= axilWriteMasters(SACI_INDEX_C);
+   axilReadSlaves(SACI_INDEX_C) <= axilSaciInReadSlaves(1);
+   axilSaciInReadMasters(1) <= axilReadMasters(SACI_INDEX_C);
+   axilWriteSlaves(SACI_INDEX_C) <= axilSaciInWriteSlaves(1);
 
 
    fpgaTtlOutSig <= 
@@ -553,50 +560,49 @@ begin
       );
 
 
-      U_ChargeInjection : entity surf.ChargeInjection
+      U_ChargeInjection : entity work.ChargeInjection
       port map( 
         
          
          -- AXI lite slave port for register access
          axilClk           => axilClk,
          axilRst           => axilRst,
-         sAxilWriteMaster  => axilReadMasters(CHARGEINJ_INDEX_C),
-         sAxilWriteSlave   => axilReadSlaves(CHARGEINJ_INDEX_C),
-         sAxilReadMaster   => axilWriteMasters(CHARGEINJ_INDEX_C),
-         sAxilReadSlave    => axilWriteSlaves(CHARGEINJ_INDEX_C),
+         sAxilWriteMaster  => axilWriteMasters(CHARGEINJ_INDEX_C),
+         sAxilWriteSlave   => axilWriteSlaves(CHARGEINJ_INDEX_C),
+         sAxilReadMaster   => axilReadMasters(CHARGEINJ_INDEX_C),
+         sAxilReadSlave    => axilReadSlaves(CHARGEINJ_INDEX_C),
 
          -- AXI lite master port for asic register writes
-         mAxilWriteMaster  => CEAxilWriteMaster,
-         mAxilWriteSlave   => CEAxilWriteSlave,
-         mAxilReadMaster   => CEAxilReadMaster,
-         mAxilReadSlave    => CEAxilReadSlave,
+         mAxilWriteMaster  => axilSaciInWriteMasters(0),
+         mAxilWriteSlave   => axilSaciInWriteSlaves(0),
+         mAxilReadMaster   => axilSaciInReadMasters(0),
+         mAxilReadSlave    => axilSaciInReadSlaves(0),
          
          -- Charge injection forced trigger
          forceTrigger      => chargeInjectionTrigger
          
       );      
 
-      U_XBAR : entity surf.AxiLiteCrossbar
+
+      
+      U_2S1MXBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
          NUM_SLAVE_SLOTS_G  => 2,
          NUM_MASTER_SLOTS_G => 1,
-         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
+         MASTERS_CONFIG_G   => U_2S1MXBAR_CONFIG_C)
       port map (
          axiClk           => axilClk,
          axiClkRst        => axilRst,
-         sAxiWriteMasters(0) => axilReadMasters(SACI_INDEX_C),
-         sAxiWriteSlaves(0)  => axilReadSlaves(SACI_INDEX_C),
-         sAxiReadMasters(0)  => axilWriteMasters(SACI_INDEX_C),
-         sAxiReadSlaves(0)   => axilWriteSlaves(SACI_INDEX_C),
-         sAxiWriteMasters(1) => CEAxilWriteMaster,
-         sAxiWriteSlaves(1)  => CEAxilWriteSlave,
-         sAxiReadMasters(1)  => CEAxilReadMaster,
-         sAxiReadSlaves(1)   => CEAxilReadSlave,         
-         mAxiWriteMasters(0) => SACIAxilWriteMaster,
-         mAxiWriteSlaves(0)  => SACIAxilWriteSlave,
-         mAxiReadMasters(0)  => SACIAxilReadMaster,
-         mAxiReadSlaves(0)   => SACIAxilReadSlave  );
+         sAxiWriteMasters => axilSaciInWriteMasters,
+         sAxiWriteSlaves  => axilSaciInWriteSlaves,
+         sAxiReadMasters  => axilSaciInReadMasters,
+         sAxiReadSlaves   => axilSaciInReadSlaves,
+       
+         mAxiWriteMasters(0) => axilSaciOutWriteMaster,
+         mAxiWriteSlaves(0)  => axilSaciOutWriteSlave,
+         mAxiReadMasters(0)  => axilSaciOutReadMaster,
+         mAxiReadSlaves(0)   => axilSaciOutReadSlave  );
 
    ----------------------------
    -- SACI Interface Controller
@@ -618,10 +624,10 @@ begin
          -- AXI-Lite Register Interface
          axilClk         => axilClk,
          axilRst         => axilRst,
-         axilReadMaster  => SACIAxilWriteMaster,
-         axilReadSlave   => SACIAxilWriteSlave,
-         axilWriteMaster => SACIAxilReadMaster,
-         axilWriteSlave  => SACIAxilReadSlave
+         axilReadMaster  => axilSaciOutReadMaster,
+         axilReadSlave   => axilSaciOutReadSlave,
+         axilWriteMaster => axilSaciOutWriteMaster,
+         axilWriteSlave  => axilSaciOutWriteSlave
          );
 
 
