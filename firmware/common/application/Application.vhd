@@ -558,21 +558,21 @@ begin
         
          
          -- AXI lite slave port for register access
-         axilClk           => axilClk;
-         axilRst           => axilRst;
+         axilClk           => axilClk,
+         axilRst           => axilRst,
          sAxilWriteMaster  => axilReadMasters(CHARGEINJ_INDEX_C),
          sAxilWriteSlave   => axilReadSlaves(CHARGEINJ_INDEX_C),
          sAxilReadMaster   => axilWriteMasters(CHARGEINJ_INDEX_C),
          sAxilReadSlave    => axilWriteSlaves(CHARGEINJ_INDEX_C),
 
          -- AXI lite master port for asic register writes
-         mAxilWriteMaster  => CEAxilWriteMaster;
-         mAxilWriteSlave   => CEAxilWriteSlave;
-         mAxilReadMaster   => CEAxilReadMaster;
-         mAxilReadSlave    => CEAxilReadSlave;
+         mAxilWriteMaster  => CEAxilWriteMaster,
+         mAxilWriteSlave   => CEAxilWriteSlave,
+         mAxilReadMaster   => CEAxilReadMaster,
+         mAxilReadSlave    => CEAxilReadSlave,
          
          -- Charge injection forced trigger
-         forceTrigger      => chargeInjectionTrigger;
+         forceTrigger      => chargeInjectionTrigger
          
       );      
 

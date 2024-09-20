@@ -123,28 +123,28 @@ architecture RTL of ChargeInjection is
 
 
    procedure axiLRead(
-      signal address : in slv(15 downto 0);
-      signal r       : in RegType;
-      signal v       : inout RegType;
-      signal ack     : in AxiLiteAckType;
+         address : in slv(15 downto 0);
+         r       : in RegType;
+         v       : inout RegType;
+         ack     : in AxiLiteAckType;
       ) is
    begin
 
       case r.regAccessState is
          when READ_S =>
-            v.req.address  = address; 
-            v.req.rnw = '1'; -- READ
-            v.req.request = '0'; -- initiate request
-            v.regAccessState = READ_ACK_WAIT_S;
+            v.req.address  := address; 
+            v.req.rnw := '1'; -- READ
+            v.req.request := '0'; -- initiate request
+            v.regAccessState := READ_ACK_WAIT_S;
          when READ_ACK_WAIT =>
             if (ack.done = '1') then
                if (ack.resp = AXI_RESP_OK_C) then
-                  v.rdData = ack.rdData;
-                  v.regAccessState = WRITE_S;
+                  v.rdData := ack.rdData;
+                  v.regAccessState := WRITE_S;
                else 
-                  v.state = ERROR_S;
+                  v.state := ERROR_S;
                end if;
-               v.req.request = '1';
+               v.req.request := '1';
             end if;
          when others =>
          -- do nothing
@@ -152,27 +152,27 @@ architecture RTL of ChargeInjection is
    end procedure;
 
    procedure axiLWrite(
-      signal address : in slv(15 downto 0);
-      signal wrData  : in slv(32 downto 0);
-      signal r       : in RegType;
-      signal v       : inout RegType;
-      signal ack     : in AxiLiteAckType;
+         address : in slv(15 downto 0);
+         wrData  : in slv(32 downto 0);
+         r       : in RegType;
+         v       : inout RegType;
+         ack     : in AxiLiteAckType;
       ) is
    begin
 
       case r.regAccessState is
          when WRITE_S =>
-            v.req.address  = address;
-            v.req.rnw = '0'; -- WRITE
-            v.req.wrData = wrData; 
-            v.req.request = '0'; -- initiate request
-            v.regAccessState = READ_ACK_WAIT_S;               
+            v.req.address  := address;
+            v.req.rnw := '0'; -- WRITE
+            v.req.wrData := wrData; 
+            v.req.request := '0'; -- initiate request
+            v.regAccessState := READ_ACK_WAIT_S;               
          when WRITE_ACK_WAIT =>
             if (ack.done = '1') then
-               if (ack.resp != AXI_RESP_OK_C) then
-                  v.state = ERROR_S;
+               if (ack.resp /= AXI_RESP_OK_C) then
+                  v.state := ERROR_S;
                end if; 
-               v.req.request = '1';   
+               v.req.request := '1';   
             end if;  
          when others =>
          -- do nothing              
@@ -180,8 +180,8 @@ architecture RTL of ChargeInjection is
    end procedure;
 
    function axiLEndOfWrite(
-      signal r       : in RegType;
-      signal ack     : in AxiLiteAckType;
+         r       : in RegType;
+         ack     : in AxiLiteAckType;
       ) return boolean is variable endOfWrite : boolean;
    begin
       if (ack.done = '1' and r.req.rnw = '0') then
@@ -257,8 +257,8 @@ begin
             if r.start = '1' then
                v.state := FE_XX2GR_S;
                v.regAccessState := READ_S;
-               v.pulser = (others => '0');
-               v.start = '0';
+               v.pulser := (others => '0');
+               v.start := '0';
             end if;
 
          when FE_XX2GR_S =>
@@ -271,10 +271,10 @@ begin
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
                if (asicEn(r.currentAsic) ) then
-                  v.state = TEST_START_S;
+                  v.state := TEST_START_S;
                else
                   -- next asic
-                  v.currentAsic = r.currentAsic + 1;
+                  v.currentAsic := r.currentAsic + 1;
                end if;
             end if;
 
@@ -285,7 +285,7 @@ begin
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
-               v.state = PULSER_S;
+               v.state := PULSER_S;
             end if;
             v.status := RUNNING_S;
 
@@ -318,9 +318,9 @@ begin
                axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
                axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
                if (axiLEndOfWrite(r, ack) = True) then
-                  v.state = SHIFT_S;
+                  v.state := SHIFT_S;
                   -- increment currentCol
-                  v.currentCol = r.currentCol + 1;
+                  v.currentCol := r.currentCol + 1;
                end if;
             end if;
             
@@ -352,23 +352,23 @@ begin
 
          when TRIGGER_S =>
             -- set trigger and wait triggerWaitCycles (default 200 us)
-            v.forceTrigger = '1';
+            v.forceTrigger := '1';
             if (r.cycleCounter <= r.triggerWaitCycles) then
-               v.cycleCounter = r.cycleCounter + 1;
+               v.cycleCounter := r.cycleCounter + 1;
             else
-               v.cycleCounter = (others => '0');
+               v.cycleCounter := (others => '0');
                v.state := PULSER_S;
-               v.currentCol = (others => '0');
+               v.currentCol := (others => '0');
             end if;
 
          when TEST_STOP_S =>
             -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
-            axiLRead(xx"400C"+addresses(currentAsic), r, v, ack);
+            axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
             axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 13) & "0" & r.rdData(11 downto 0), r, v, ack);          
 
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
-               v.state = WAIT_START_S;
+               v.state := WAIT_START_S;
             end if;
             v.status := SUCCESS_S;
 
