@@ -106,7 +106,7 @@ architecture RTL of ChargeInjection is
       start                       => '0',
       pulser                      => (others=>'0'),
       currentCol                  => (others=>'0'),
-      failingRegister             => '0',
+      failingRegister             => (others=>'0'),
       charge                      => '0',
       rdData                      => (others=>'0'),
       forceTrigger                => '0',
@@ -281,7 +281,7 @@ begin
                v.state := TEST_START_S;
             end if;
             status := RUNNING_S;
-            
+
          when TEST_START_S =>
             -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
             axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
