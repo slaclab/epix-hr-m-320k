@@ -264,7 +264,6 @@ begin
             if r.start = '1' then
                v.state := FE_XX2GR_S;
                v.regAccessState := READ_S;
-               v.pulser := (others => '0');
                v.start := '0';
             end if;
 
@@ -290,41 +289,38 @@ begin
                v.state := PULSER_S;
             end if;
             status := RUNNING_S;
+            v.pulser := (others => '0');
 
          when PULSER_S =>
             -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
             -- exit state condition
-            if (r.pulser >= 1024) then
-               v.state := TEST_STOP_S;
-            else
-               axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
-               axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 10) & r.pulser(9 downto 0), r, v, ack);     
+            axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"400C"+addresses(currentAsic), r.rdData(31 downto 10) & r.pulser(9 downto 0), r, v, ack);     
 
-               -- check end case
-               if (axiLEndOfWrite(r, ack) = True) then
-                  -- increment pulser
-                  v.pulser := r.pulser + r.step;
-                  v.state := CHARGE_COL_S;
-               end if;
-            end if;  
+            -- check end case
+            if (axiLEndOfWrite(r, ack) = True) then
+               -- increment pulser
+               v.pulser := r.pulser + r.step;
+               v.state := CHARGE_COL_S;
+            end if;
+            v.currentCol := (others => '0');
 
          when CHARGE_COL_S =>
             -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
             -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
-            if (r.currentCol < 384) then
-               if (r.currentCol >= r.startCol and r.currentCol <= r.endCol) then
-                  chargeCol := '1';
-               else
-                  chargeCol := '0';
-               end if;
-               axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
-               axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
-               if (axiLEndOfWrite(r, ack) = True) then
-                  v.state := CLK_NEGEDGE_S;
-                  -- increment currentCol
-                  v.currentCol := r.currentCol + 1;
-               end if;
+            if (r.currentCol >= r.startCol and r.currentCol <= r.endCol) then
+               chargeCol := '1';
+            else
+               chargeCol := '0';
             end if;
+            axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
+            axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
+            if (axiLEndOfWrite(r, ack) = True) then
+               v.state := CLK_NEGEDGE_S;
+               -- increment currentCol
+               v.currentCol := r.currentCol + 1;
+            end if;
+
             
          when CLK_NEGEDGE_S =>
             -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
@@ -359,8 +355,11 @@ begin
                v.cycleCounter := r.cycleCounter + 1;
             else
                v.cycleCounter := (others => '0');
-               v.state := PULSER_S;
-               v.currentCol := (others => '0');
+               if (r.pulser < 1024) then
+                  v.state := PULSER_S;
+               else               
+                  v.state := TEST_STOP_S;
+               end if;
             end if;
 
          when TEST_STOP_S =>
