@@ -73,9 +73,9 @@ class ChargeInjection(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'activated',
+            name         = 'failingRegister',
             offset       = 0x28,
-            bitSize      = 1,
+            bitSize      = 32,
             mode         = 'RO',
             bitOffset    = 0,
             pollInterval = 1,
