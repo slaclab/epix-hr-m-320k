@@ -234,7 +234,7 @@ begin
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.activated);
       axiSlaveRegisterR(regCon, x"02C",  0, r.status);
-
+      axiSlaveRegisterR(regCon, x"030",  0, std_logic_vector(to_unsigned(StateType'pos(r.state), 8))); 
       
       axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
 
