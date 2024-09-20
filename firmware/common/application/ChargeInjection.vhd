@@ -84,7 +84,7 @@ architecture RTL of ChargeInjection is
       start                       : sl;
       pulser                      : slv(10 downto 0);
       currentCol                  : slv(8 downto 0);
-      activated                   : sl;
+      failingRegister             : slv(31 downto 0);
       charge                      : sl;
       rdData                      : slv(31 downto 0);
       forceTrigger                : sl;
@@ -106,7 +106,7 @@ architecture RTL of ChargeInjection is
       start                       => '0',
       pulser                      => (others=>'0'),
       currentCol                  => (others=>'0'),
-      activated                   => '0',
+      failingRegister             => '0',
       charge                      => '0',
       rdData                      => (others=>'0'),
       forceTrigger                => '0',
@@ -146,6 +146,7 @@ architecture RTL of ChargeInjection is
                   v.regAccessState := WRITE_S;
                else 
                   v.state := ERROR_S;
+                  v.failingRegister := address;
                end if;
                v.req.request := '0';
             end if;
@@ -174,6 +175,7 @@ architecture RTL of ChargeInjection is
             if (ack.done = '1') then
                if (ack.resp /= AXI_RESP_OK_C) then
                   v.state := ERROR_S;
+                  v.failingRegister := address;
                end if; 
                v.req.request := '0';   
             end if;  
@@ -232,7 +234,7 @@ begin
       axiSlaveRegister (regCon, x"014",  0, v.currentAsic);
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser(9 downto 0));
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
-      axiSlaveRegisterR(regCon, x"028",  0, r.activated);
+      axiSlaveRegisterR(regCon, x"028",  0, r.failingRegister);
       axiSlaveRegisterR(regCon, x"02C",  0, r.status);
       axiSlaveRegisterR(regCon, x"030",  0, std_logic_vector(to_unsigned(StateType'pos(r.state), 8))); 
       
@@ -264,20 +266,22 @@ begin
             if r.start = '1' then
                v.state := FE_XX2GR_S;
                v.regAccessState := READ_S;
+               v.failingRegister := (others => '0');
             end if;
-
+            
          when FE_XX2GR_S =>
             -- Setting charge injection necessary registers in the relevant ASIC
             -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
             -- FE_sync2GR_en = False     0x00001023*addrSize, bitSize=1, bitOffset=6         
             axiLRead(x"408C"+addresses(currentAsic), r, v, ack);
             axiLWrite(x"408C"+addresses(currentAsic), r.rdData(31 downto 7) & "01" & r.rdData(4 downto 0), r, v, ack); 
-
+            
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := TEST_START_S;
             end if;
-
+            status := RUNNING_S;
+            
          when TEST_START_S =>
             -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
             axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
@@ -287,7 +291,7 @@ begin
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := PULSER_S;
             end if;
-            status := RUNNING_S;
+            
             v.pulser := (others => '0');
 
          when PULSER_S =>
