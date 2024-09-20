@@ -264,7 +264,6 @@ begin
             if r.start = '1' then
                v.state := FE_XX2GR_S;
                v.regAccessState := READ_S;
-               v.start := '0';
             end if;
 
          when FE_XX2GR_S =>
@@ -370,11 +369,13 @@ begin
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := WAIT_START_S;
+               v.start := '0';
             end if;
             status := SUCCESS_S;
 
          when ERROR_S =>   
             v.state := WAIT_START_S;
+            v.start := '0';
             status := ERROR_S;
 
       end case;
