@@ -200,7 +200,12 @@ architecture rtl of Application is
    constant AXI_BASE_ADDR_C      : slv(31 downto 0) := X"80000000"; --0
 
    constant XBAR_CONFIG_C        : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXI_BASE_ADDR_C, 28, 24);
-   constant U_2S1MXBAR_CONFIG_C  : AxiLiteCrossbarMasterConfigArray(0 downto 0) := genAxiLiteConfig(1, x"00000000", 32, 0);
+   constant U_2S1MXBAR_CONFIG_C  : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
+                     0                => (   baseAddr     => x"0000_0000",
+                                             addrBits     => 31,
+                                             connectivity => x"FFFF")
+                                             );
+
    constant TTLOUT_WIDTH_C         : natural  := 6;
 
    constant DIGMON0_INDEX_C         : natural  := 0;

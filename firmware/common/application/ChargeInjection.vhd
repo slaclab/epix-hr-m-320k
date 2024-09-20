@@ -27,7 +27,7 @@ use surf.SsiPkg.all;
 entity ChargeInjection is 
    generic (
       TPD_G           	   : time := 1 ns;
-      AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
+      AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C
    );
    port ( 
      
@@ -47,7 +47,7 @@ entity ChargeInjection is
       mAxilReadSlave    : in   AxiLiteReadSlaveType;
       
       -- Daq trigger and start readout request input
-      forceTrigger        : out  sl;
+      forceTrigger        : out  sl
       
    );
 end ChargeInjection;
@@ -125,7 +125,7 @@ architecture RTL of ChargeInjection is
          address : in slv(31 downto 0);
          r       : in RegType;
          v       : inout RegType;
-         ack     : in AxiLiteAckType;
+         ack     : in AxiLiteAckType
       ) is
    begin
 
@@ -155,7 +155,7 @@ architecture RTL of ChargeInjection is
          wrData  : in slv(31 downto 0);
          r       : in RegType;
          v       : inout RegType;
-         ack     : in AxiLiteAckType;
+         ack     : in AxiLiteAckType
       ) is
    begin
 
@@ -180,7 +180,7 @@ architecture RTL of ChargeInjection is
 
    function axiLEndOfWrite(
          r       : in RegType;
-         ack     : in AxiLiteAckType;
+         ack     : in AxiLiteAckType
       ) return boolean is variable endOfWrite : boolean;
    begin
       if (ack.done = '1' and r.req.rnw = '0') then
