@@ -279,6 +279,7 @@ begin
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := TEST_START_S;
+               v.regAccessState := READ_S;
             end if;
             status := RUNNING_S;
 
@@ -290,6 +291,7 @@ begin
             -- check end case
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := PULSER_S;
+               v.regAccessState := READ_S;
             end if;
             
             v.pulser := (others => '0');
@@ -305,6 +307,7 @@ begin
                -- increment pulser
                v.pulser := r.pulser + r.step;
                v.state := CHARGE_COL_S;
+               v.regAccessState := READ_S;
             end if;
             v.currentCol := (others => '0');
 
@@ -320,6 +323,7 @@ begin
             axiLWrite(x"4068"+addresses(currentAsic), r.rdData(31 downto 7) & chargeCol & r.rdData(5 downto 0), r, v, ack);    
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := CLK_NEGEDGE_S;
+               v.regAccessState := READ_S;
                -- increment currentCol
                v.currentCol := r.currentCol + 1;
             end if;
@@ -334,6 +338,7 @@ begin
             if (axiLEndOfWrite(r, ack) = True) then
                -- increment pulser
                v.state := CLK_POSEDGE_S;
+               v.regAccessState := READ_S;
             end if;
 
          when CLK_POSEDGE_S =>
@@ -346,8 +351,10 @@ begin
                -- increment pulser
                if (r.currentCol < 384) then
                   v.state := CHARGE_COL_S;
+                  v.regAccessState := READ_S;
                else
                   v.state := TRIGGER_S;
+                  v.regAccessState := READ_S;
                end if;
             end if;
 
@@ -360,8 +367,10 @@ begin
                v.cycleCounter := (others => '0');
                if (r.pulser < 1024) then
                   v.state := PULSER_S;
+                  v.regAccessState := READ_S;
                else               
                   v.state := TEST_STOP_S;
+                  v.regAccessState := READ_S;
                end if;
             end if;
 
@@ -374,6 +383,7 @@ begin
             if (axiLEndOfWrite(r, ack) = True) then
                v.state := WAIT_START_S;
                v.start := '0';
+               v.regAccessState := READ_S;
             end if;
             status := SUCCESS_S;
 
@@ -381,6 +391,7 @@ begin
             v.state := WAIT_START_S;
             v.start := '0';
             status := ERROR_S;
+            v.regAccessState := READ_S;
 
       end case;
       
