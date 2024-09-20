@@ -312,7 +312,7 @@ begin
             -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
             -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
             if (r.currentCol < 384) then
-               if (r.currentCol > r.startCol and r.currentCol < r.endCol) then
+               if (r.currentCol >= r.startCol and r.currentCol <= r.endCol) then
                   chargeCol := '1';
                else
                   chargeCol := '0';
