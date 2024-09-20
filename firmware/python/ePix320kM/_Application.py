@@ -127,6 +127,15 @@ class App(pr.Device):
                                  description='Manual serdes eye training',
                                  function=self.fnSweepDelaysPrintEyes))
 
+        self.add(
+            fpga.ChargeInjection(
+                name='FPGAChargeInjection',
+                offset=0x0A00_0000,
+                expand=True,
+                enabled=True
+            )
+        )
+
         for asicIdx in range(num_of_asics):
             self.add(
                 EpixHrMv2.EpixHrMv2Asic(

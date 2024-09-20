@@ -27,7 +27,8 @@ use surf.SsiPkg.all;
 entity ChargeInjection is 
    generic (
       TPD_G           	   : time := 1 ns;
-      AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C
+      AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
+      AXI_BASE_ADDR_C      : slv(31 downto 0)
    );
    port ( 
      
@@ -56,8 +57,11 @@ end ChargeInjection;
 -- Define architecture
 architecture RTL of ChargeInjection is
 
-   type asicAddressOffsetType is array (3 downto 0) of slv(31 downto 0);
-   constant addresses : asicAddressOffsetType := (x"00000000", x"00040000", x"00080000", x"000C0000");
+   type asicAddressOffsetType is array (0 to 3) of slv(31 downto 0);
+   constant addresses : asicAddressOffsetType := (x"00000000"+AXI_BASE_ADDR_C, 
+                                                  x"00040000"+AXI_BASE_ADDR_C, 
+                                                  x"00080000"+AXI_BASE_ADDR_C, 
+                                                  x"000C0000"+AXI_BASE_ADDR_C);
 
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, TEST_STOP_S , ERROR_S);
@@ -87,7 +91,7 @@ architecture RTL of ChargeInjection is
       triggerWaitCycles           : slv(31 downto 0);
       cycleCounter                : slv(31 downto 0);
       status                      : slv(7 downto 0);
-      currentAsic                 : slv(9 downto 0);
+      currentAsic                 : slv(1 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -98,7 +102,7 @@ architecture RTL of ChargeInjection is
       req                         => AXI_LITE_REQ_INIT_C,
       startCol                    => (others=>'0'),
       endCol                      => (others=>'0'),
-      step                        => (others=>'0'),
+      step                        => x"00" & '1',
       start                       => '0',
       pulser                      => (others=>'0'),
       currentCol                  => (others=>'0'),
@@ -133,7 +137,7 @@ architecture RTL of ChargeInjection is
          when READ_S =>
             v.req.address  := address; 
             v.req.rnw := '1'; -- READ
-            v.req.request := '0'; -- initiate request
+            v.req.request := '1'; -- initiate request
             v.regAccessState := READ_ACK_WAIT_S;
          when READ_ACK_WAIT_S =>
             if (ack.done = '1') then
@@ -143,7 +147,7 @@ architecture RTL of ChargeInjection is
                else 
                   v.state := ERROR_S;
                end if;
-               v.req.request := '1';
+               v.req.request := '0';
             end if;
          when others =>
          -- do nothing
@@ -164,14 +168,14 @@ architecture RTL of ChargeInjection is
             v.req.address  := address;
             v.req.rnw := '0'; -- WRITE
             v.req.wrData := wrData; 
-            v.req.request := '0'; -- initiate request
+            v.req.request := '1'; -- initiate request
             v.regAccessState := READ_ACK_WAIT_S;               
          when WRITE_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp /= AXI_RESP_OK_C) then
                   v.state := ERROR_S;
                end if; 
-               v.req.request := '1';   
+               v.req.request := '0';   
             end if;  
          when others =>
          -- do nothing              
@@ -208,7 +212,7 @@ begin
 
 
   
-   comb : process (axilRst, sAxilWriteMaster, r, ack) is
+   comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, ack) is
       variable v             : RegType;
       variable regCon        : AxiLiteEndPointType;
       variable chargeCol     : sl;
@@ -226,7 +230,7 @@ begin
       axiSlaveRegister (regCon, x"00C",  0, v.start);
       axiSlaveRegister (regCon, x"010",  0, v.triggerWaitCycles);
       axiSlaveRegister (regCon, x"014",  0, v.currentAsic);
-      axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
+      axiSlaveRegisterR(regCon, x"020",  0, r.pulser(9 downto 0));
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.activated);
       axiSlaveRegisterR(regCon, x"02C",  0, r.status);
@@ -234,7 +238,7 @@ begin
       
       axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
 
-      currentAsic :=  to_integer(signed(r.currentAsic));
+      currentAsic :=  to_integer(unsigned(r.currentAsic));
 
       -- Do this for all enabled asics
       -- CHARGE INJECTION ALGORITHM
@@ -380,7 +384,7 @@ begin
       v.status := std_logic_vector(to_unsigned(chargeInjectionStatusType'POS(status), 8)) ; 
 
       -- reset logic      
-      if (axilClk = '1') then
+      if (axilRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -390,6 +394,7 @@ begin
 
       sAxilWriteSlave <= r.sAxilWriteSlave;
       sAxilReadSlave  <= r.sAxilReadSlave;
+      forceTrigger <= r.forceTrigger;
 
    end process comb;
 
