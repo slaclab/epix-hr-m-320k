@@ -340,7 +340,7 @@ begin
      saciCmd         => asicSaciCmd,              -- [in]
      saciSelL        => asicSaciSelAndReduced,          -- [in]
      saciRsp         => asicSaciRsp,           -- [out]
-     axilClk         => Clk250P,              -- [in]
+     axilClk         => Clk156P,              -- [in]
      axilRst         => asicGlblRstL,          -- [in]
      axilReadMaster  => axilReadMaster,   -- [in]
      axilReadSlave   => axilReadSlave,    -- [out]
@@ -354,7 +354,7 @@ begin
         DATA_WIDTH_G => 32)
   port map (
      -- Axi Port
-     axiClk         => Clk250P,
+     axiClk         => Clk156P,
      axiRst         => asicGlblRstL,
      axiReadMaster  => axilReadMaster,
      axiReadSlave   => axilReadSlave,

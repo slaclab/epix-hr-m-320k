@@ -28,7 +28,7 @@ entity ChargeInjection is
    generic (
       TPD_G           	   : time := 1 ns;
       AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
-      AXI_BASE_ADDR_C      : slv(31 downto 0)
+      AXI_BASE_ADDR_C      : slv(31 downto 0) := x"00000000"
    );
    port ( 
      
