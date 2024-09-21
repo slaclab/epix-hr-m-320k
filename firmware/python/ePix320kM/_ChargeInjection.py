@@ -101,3 +101,13 @@ class ChargeInjection(pr.Device):
             pollInterval = 1,
             enum         = stateEnum,
         ))       
+
+        self.add(pr.RemoteVariable(
+            name         = 'stateLast',
+            offset       = 0x34,
+            bitSize      = 8,
+            mode         = 'RO',
+            bitOffset    = 0,
+            pollInterval = 1,
+            enum         = stateEnum,
+        ))  
