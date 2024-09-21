@@ -66,7 +66,7 @@ architecture RTL of ChargeInjection is
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, TEST_STOP_S , ERROR_S);
 
-   type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S );
+   type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S);
 
    type chargeInjectionStatusType is ( IDLE_S, RUNNING_S, SUCCESS_S, ERROR_S );
 
@@ -135,10 +135,12 @@ architecture RTL of ChargeInjection is
 
       case r.regAccessState is
          when READ_S =>
-            v.req.address  := address; 
-            v.req.rnw := '1'; -- READ
-            v.req.request := '1'; -- initiate request
-            v.regAccessState := READ_ACK_WAIT_S;
+            if (ack.done = '0') then
+               v.req.address  := address; 
+               v.req.rnw := '1'; -- READ
+               v.req.request := '1'; -- initiate request
+               v.regAccessState := READ_ACK_WAIT_S;
+            end if;
          when READ_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp = AXI_RESP_OK_C) then
@@ -149,7 +151,9 @@ architecture RTL of ChargeInjection is
                   v.failingRegister := address;
                end if;
                v.req.request := '0';
+               v.regAccessState := WRITE_S;
             end if;
+
          when others =>
          -- do nothing
        end case;    
@@ -166,18 +170,20 @@ architecture RTL of ChargeInjection is
 
       case r.regAccessState is
          when WRITE_S =>
-            v.req.address  := address;
-            v.req.rnw := '0'; -- WRITE
-            v.req.wrData := wrData; 
-            v.req.request := '1'; -- initiate request
-            v.regAccessState := READ_ACK_WAIT_S;               
+            if (ack.done = '0') then
+               v.req.address  := address;
+               v.req.rnw := '0'; -- WRITE
+               v.req.wrData := wrData; 
+               v.req.request := '1'; -- initiate request
+               v.regAccessState := READ_ACK_WAIT_S; 
+            end if;              
          when WRITE_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp /= AXI_RESP_OK_C) then
                   v.state := ERROR_S;
                   v.failingRegister := address;
                end if; 
-               v.req.request := '0';   
+               v.req.request := '0';    
             end if;  
          when others =>
          -- do nothing              
