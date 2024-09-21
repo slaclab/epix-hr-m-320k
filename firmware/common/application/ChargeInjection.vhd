@@ -147,7 +147,6 @@ architecture RTL of ChargeInjection is
             if (ack.done = '1') then
                if (ack.resp = AXI_RESP_OK_C) then
                   v.rdData := ack.rdData;
-                  v.regAccessState := WRITE_S;
                else 
                   v.state := ERROR_S;
                   v.failingRegister := address;
@@ -177,7 +176,7 @@ architecture RTL of ChargeInjection is
                v.req.rnw := '0'; -- WRITE
                v.req.wrData := wrData; 
                v.req.request := '1'; -- initiate request
-               v.regAccessState := READ_ACK_WAIT_S; 
+               v.regAccessState := WRITE_ACK_WAIT_S; 
             end if;              
          when WRITE_ACK_WAIT_S =>
             if (ack.done = '1') then
