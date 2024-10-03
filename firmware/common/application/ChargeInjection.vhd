@@ -474,7 +474,7 @@ begin
                      v.regAccessState := READ_S;
                   end if;
                   v.stateLast := TRIGGER_S;
-                  v.triggerStateCounter = r.triggerStateCounter + 1;
+                  v.triggerStateCounter := r.triggerStateCounter + 1;
                end if;
             end if;
          when TEST_END_S =>
