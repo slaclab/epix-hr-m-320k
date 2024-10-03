@@ -4,18 +4,19 @@ class ChargeInjection(pr.Device):
     def __init__(self, **kwargs):      
         super().__init__(**kwargs)
 
-        statusEnum = {0: "IDLE_S", 1: "RUNNING_S", 2: "SUCCESS_S", 3: "AXI_ERROR_S",
-                      4: "COL_ERROR_S", 5: "STEP_ERROR_S"}
+        statusEnum = {0: "IDLE_S", 1: "SUCCESS_S", 2: "RUNNING_S", 3: "AXI_ERROR_S",
+                      4: "COL_ERROR_S", 5: "STEP_ERROR_S", 6: "STOP_S"}
         stateEnum  = { 0: "WAIT_START_S", 1: "FE_XX2GR_S", 2: "TEST_START_S", 3: "PULSER_S", 
                    4: "CHARGE_COL_S", 5: "CLK_NEGEDGE_S", 6: "CLK_POSEDGE_S", 7: "TRIGGER_S",
-                   8: "TEST_STOP_S" , 9: "ERROR_S", 10: "INIT_S"}
-
+                   8: "TEST_END_S" , 9: "ERROR_S", 10: "INIT_S"}
 
         self.add(pr.RemoteVariable(
             name         = 'startCol',
             offset       = 0x0,
             bitSize      = 9,
             mode         = 'RW',
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
@@ -23,6 +24,8 @@ class ChargeInjection(pr.Device):
             offset       = 0x4,
             bitSize      = 9,
             mode         = 'RW',
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
@@ -30,13 +33,17 @@ class ChargeInjection(pr.Device):
             offset       = 0x8,
             bitSize      = 9,
             mode         = 'RW',
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'start',
             offset       = 0xC,
             bitSize      = 1,
+            base         = pr.UInt,
             mode         = 'RW',
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
@@ -44,6 +51,8 @@ class ChargeInjection(pr.Device):
             offset       = 0x10,
             bitSize      = 1,
             mode         = 'RW',
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
@@ -51,7 +60,8 @@ class ChargeInjection(pr.Device):
             offset       = 0x14,
             bitSize      = 32,
             mode         = 'RW',
-            base         = pr.UInt
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
 
@@ -60,6 +70,8 @@ class ChargeInjection(pr.Device):
             offset       = 0x18,
             bitSize      = 2,
             mode         = 'RW',
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
 
@@ -79,6 +91,8 @@ class ChargeInjection(pr.Device):
             mode         = 'RO',
             bitOffset    = 0,
             pollInterval = 1,
+            base         = pr.UInt,
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
@@ -119,4 +133,15 @@ class ChargeInjection(pr.Device):
             bitOffset    = 0,
             pollInterval = 1,
             enum         = stateEnum,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'triggerStateCounter',
+            offset       = 0x38,
+            bitSize      = 32,
+            mode         = 'RO',
+            bitOffset    = 0,
+            pollInterval = 1,
+            base         = pr.UInt,
+            disp         = '{}',
         ))

@@ -94,6 +94,7 @@ architecture RTL of ChargeInjection is
       cycleCounter                : slv(31 downto 0);
       status                      : slv(7 downto 0);
       currentAsic                 : slv(1 downto 0);
+      triggerStateCounter         : slv(31 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -117,7 +118,8 @@ architecture RTL of ChargeInjection is
       triggerWaitCycles           => x"00007A12",
       cycleCounter                => (others=>'0'),
       status                      => (others=>'0'),
-      currentAsic                 => (others=>'0')
+      currentAsic                 => (others=>'0'),
+      triggerStateCounter         => (others=>'0')
    );
    
    
@@ -261,6 +263,7 @@ begin
       axiSlaveRegisterR(regCon, x"02C",  0, r.status);
       axiSlaveRegisterR(regCon, x"030",  0, std_logic_vector(to_unsigned(StateType'pos(r.state), 8))); 
       axiSlaveRegisterR(regCon, x"034",  0, std_logic_vector(to_unsigned(StateType'pos(r.stateLast), 8))); 
+      axiSlaveRegisterR(regCon, x"038",  0, r.triggerStateCounter);
       
       axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
 
@@ -297,6 +300,7 @@ begin
                v.stateLast := WAIT_START_S;
                v.regAccessState := READ_S;
                v.failingRegister := (others => '0');
+               v.triggerStateCounter := (others => '0');
             end if;
 
          when FE_XX2GR_S =>
@@ -470,6 +474,7 @@ begin
                      v.regAccessState := READ_S;
                   end if;
                   v.stateLast := TRIGGER_S;
+                  v.triggerStateCounter = r.triggerStateCounter + 1;
                end if;
             end if;
          when TEST_END_S =>
@@ -503,6 +508,7 @@ begin
             v.start := '0';
             v.stop  := '0';
             v.req  := AXI_LITE_REQ_INIT_C;
+            v.forceTrigger := '0';
       end case;
       
   
