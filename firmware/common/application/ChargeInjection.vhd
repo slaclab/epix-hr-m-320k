@@ -287,7 +287,7 @@ begin
       -- RegAccessStateType is ( READ_S, READ_ACK_WAIT, WRITE_S, WRITE_ACK_WAIT );
       case r.state is
          when WAIT_START_S =>
-            v.stop = '0';
+            v.stop := '0';
             if (r.startCol >= r.endCol) then
                status := COL_ERROR_S;
             elsif (r.step = '0' & x"00") then
