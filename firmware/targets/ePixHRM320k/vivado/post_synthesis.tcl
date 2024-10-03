@@ -42,37 +42,50 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # #################################
 # ## Set the clock for the ILA core
 # #################################
-SetDebugCoreClk ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/axilClk}
-
+SetDebugCoreClk ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/sspClk}
 # #######################
 # ## Set the debug Probes
 #######################
 
 #156.25 clock domain
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/DeserAxisDualClockFifo_U/mAxisSlave[tReady]}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/AxisResize48to16_U/mAxisSlave[tReady]}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_EventBuilders[0].U_EventBuilder/mAxisSlave[tReady]}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/eventTrigMsgCtrl[1][pause]}
-ConfigProbe ${ila0Name} {U_Core/GEN_PGP.U_Pgp/GEN_PGP_DATA[0].U_TX_FIFO/axisSlave[tReady]}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/sro}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/daqTrigger}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/daqTrigPause}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/runTrigger}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/daqTrigger}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/timingRunTrigger}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/timingDaqTrigger}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/acqStart}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/dataSend}
-
-
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/U_AutoTrig/iDaqTrigPause}
-ConfigProbe ${ila0Name} {U_App/U_AsicTop/U_TrigControl/U_AutoTrig/iDaqTrigOut}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[0][*]} {0} {7}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[0][*]} {0} {15}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[0]}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[0].U_Lane/U_Gearbox/masterData[*]} {0} {19}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[0].U_Lane/U_Gearbox/masterValid}
 
 
 
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[2][*]} {0} {7}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[2][*]} {0} {15}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[2]}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[2].U_Lane/U_Gearbox/masterData[*]} {0} {19}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[2].U_Lane/U_Gearbox/masterValid}
 
 
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[8][*]} {0} {7}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[8][*]} {0} {15}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[8]}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[8].U_Lane/U_Gearbox/masterData[*]} {0} {19}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[8].U_Lane/U_Gearbox/masterValid}
 
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[20][*]} {0} {7}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[20][*]} {0} {15}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[20]}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[20].U_Lane/U_Gearbox/masterData[*]} {0} {19}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[20].U_Lane/U_Gearbox/masterValid}
+
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[18][*]} {0} {7}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[18][*]} {0} {15}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[18]}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[18].U_Lane/U_Gearbox/masterData[*]} {0} {19}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[18].U_Lane/U_Gearbox/masterValid}
+
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[16][*]} {0} {7}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[16][*]} {0} {15}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[16]}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[16].U_Lane/U_Gearbox/masterData[*]} {0} {19}
+ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[16].U_Lane/U_Gearbox/masterValid}
 
 # 42 MHz clk domain
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[state]*} 0 2

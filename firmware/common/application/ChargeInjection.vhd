@@ -64,11 +64,11 @@ architecture RTL of ChargeInjection is
                                                   x"000C0000"+AXI_BASE_ADDR_C);
 
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
-                      CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, TEST_STOP_S , ERROR_S, INIT_S);
+                      CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, TEST_END_S , ERROR_S, INIT_S);
 
    type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S, WAIT_WRITE_DONE_S);
 
-   type chargeInjectionStatusType is ( IDLE_S, RUNNING_S, SUCCESS_S, AXI_ERROR_S, COL_ERROR_S, STEP_ERROR_S );
+   type chargeInjectionStatusType is ( IDLE_S, RUNNING_S, SUCCESS_S, AXI_ERROR_S, COL_ERROR_S, STEP_ERROR_S, STOP_S );
 
 
 
@@ -282,11 +282,12 @@ begin
       -- Once done disable charge injection by setting test register to 0      
 
       -- WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
-      -- CHARGE_COL_S, SHIFT_S, TRIGGER_S, TEST_STOP_S, ERROR_S,
+      -- CHARGE_COL_S, SHIFT_S, TRIGGER_S, TEST_END_S, ERROR_S,
 
       -- RegAccessStateType is ( READ_S, READ_ACK_WAIT, WRITE_S, WRITE_ACK_WAIT );
       case r.state is
          when WAIT_START_S =>
+            v.stop = '0';
             if (r.startCol >= r.endCol) then
                status := COL_ERROR_S;
             elsif (r.step = '0' & x"00") then
@@ -302,6 +303,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := FE_XX2GR_S;
+               status := STOP_S;
             else
                -- Setting charge injection necessary registers in the relevant ASIC
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
@@ -325,6 +327,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := TEST_START_S;
+               status := STOP_S;
             else         
                -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
                axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
@@ -346,6 +349,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := PULSER_S;
+               status := STOP_S;
             else           
                -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
                -- exit state condition
@@ -369,6 +373,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := CHARGE_COL_S;
+               status := STOP_S;
             else              
                -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
                -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
@@ -397,6 +402,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := CLK_NEGEDGE_S;
+               status := STOP_S;
             else              
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
@@ -417,6 +423,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := CLK_POSEDGE_S;
+               status := STOP_S;
             else            
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
@@ -443,28 +450,33 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := TRIGGER_S;
+               status := STOP_S;
             else          
                -- set trigger and wait triggerWaitCycles (default 200 us)
-               v.forceTrigger := '1';
+               if (r.cycleCounter <= 10) then               
+                  v.forceTrigger := '1';
+               else
+                  v.forceTrigger := '0';
+               end if;
                if (r.cycleCounter <= r.triggerWaitCycles) then
                   v.cycleCounter := r.cycleCounter + 1;
                else
                   v.cycleCounter := (others => '0');
-                  v.forceTrigger := '0';
                   if (r.pulser < 1024) then
                      v.state := PULSER_S;
                      v.regAccessState := READ_S;
                   else               
-                     v.state := TEST_STOP_S;
+                     v.state := TEST_END_S;
                      v.regAccessState := READ_S;
                   end if;
                   v.stateLast := TRIGGER_S;
                end if;
             end if;
-         when TEST_STOP_S =>
+         when TEST_END_S =>
             if (r.stop = '1') then
                v.state := INIT_S;
-               v.stateLast := TEST_STOP_S;
+               v.stateLast := TEST_END_S;
+               status := STOP_S;
             else              
                -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
                axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
@@ -473,10 +485,10 @@ begin
                -- check end case
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := TEST_STOP_S;
+                  v.stateLast := TEST_END_S;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   v.state := INIT_S;
-                  v.stateLast := TEST_STOP_S;
+                  v.stateLast := TEST_END_S;
                end if;
                status := SUCCESS_S;
             end if;
