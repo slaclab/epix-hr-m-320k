@@ -119,13 +119,9 @@ class App(pr.Device):
                    4: 'DigIDLow', 5: 'DigIDHigh'}
 
 
-        self.add(chargeInjection(name='TestChargeInjection',
+        self.add(chargeInjection(name='SoftwareChargeInjection',
                                  description="[lower, upper, 'debug']from power 0 to 2^10-1, in steps of 2",
                                  function=self.fnChargeInjection))
-
-        self.add(SweepDelaysPrintEyes(name='TuneManualSERDESEyeTraining',
-                                 description='Manual serdes eye training',
-                                 function=self.fnSweepDelaysPrintEyes))
 
         self.add(
             fpga.ChargeInjection(
@@ -135,6 +131,12 @@ class App(pr.Device):
                 enabled=True
             )
         )
+
+        self.add(SweepDelaysPrintEyes(name='TuneManualSERDESEyeTraining',
+                                 description='Manual serdes eye training',
+                                 function=self.fnSweepDelaysPrintEyes))
+
+
 
         for asicIdx in range(num_of_asics):
             self.add(
@@ -309,12 +311,12 @@ class App(pr.Device):
             One time set reg
             """
             self.AsicTop.RegisterControlDualClock.SyncDelay.set(0)
-            if (self.TestChargeInjection.ASIC.get() == -1) :
+            if (self.SoftwareChargeInjection.ASIC.get() == -1) :
                 startAsic = 0
                 endAsic = 4
             else :
-                startAsic = self.TestChargeInjection.ASIC.get()
-                endAsic = self.TestChargeInjection.ASIC.get() + 1         
+                startAsic = self.SoftwareChargeInjection.ASIC.get()
+                endAsic = self.SoftwareChargeInjection.ASIC.get() + 1         
 
             for asicIndex in range(startAsic, endAsic, 1) :
                 print("Enabling ASIC {}".format(asicIndex))
@@ -325,7 +327,7 @@ class App(pr.Device):
 
             # Hard coding the first adc column group
             lane_selected = np.zeros(384)
-            lane_selected[self.TestChargeInjection.FirstColumn.get() : self.TestChargeInjection.LastColumn.get() + 1] = 1
+            lane_selected[self.SoftwareChargeInjection.FirstColumn.get() : self.SoftwareChargeInjection.LastColumn.get() + 1] = 1
             # lane_selected[0:63] = 1
 
             for asicIndex in range(startAsic, endAsic, 1) :
@@ -335,15 +337,15 @@ class App(pr.Device):
             self.root.runControl.runState.set(0x0)
 
             for pulse_value in range(1, 1023, 2):
-                self.TestChargeInjection.Progress.set(pulse_value/1023) 
+                self.SoftwareChargeInjection.Progress.set(pulse_value/1023) 
 
                 for asicIndex in range(startAsic, endAsic, 1) :
                     self.Mv2Asic[asicIndex].Pulser.set(int(pulse_value))
 
-                self.TestChargeInjection.PulserValue.set(self.Mv2Asic[asicIndex].Pulser.get())
+                self.SoftwareChargeInjection.PulserValue.set(self.Mv2Asic[asicIndex].Pulser.get())
 
                 for column in lane_selected:
-                    if self.TestChargeInjection._runEn == False :
+                    if self.SoftwareChargeInjection._runEn == False :
                         for asicIndex in range(startAsic, endAsic, 1) :
                             self.Mv2Asic[asicIndex].test.set(0)                        
                         return
