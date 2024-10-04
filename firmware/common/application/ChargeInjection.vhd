@@ -311,7 +311,7 @@ begin
             elsif (r.step = '0' & x"00") then
                v.status := STEP_ERROR_S;
             elsif r.start = '1' then
-               v.state := FE_XX2GR_S;
+               v.state := CACHE408C_S;
                v.stateLast := WAIT_START_S;
                v.regAccessState := READ_S;
                v.failingRegister := (others => '0');
