@@ -363,8 +363,9 @@ begin
             else
                -- Setting charge injection necessary registers in the relevant ASIC
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
-               -- FE_sync2GR_en = False     0x00001023*addrSize, bitSize=1, bitOffset=6         
-               axiLWrite(x"408C"+addresses(currentAsic), r.cache408C(31 downto 7) & "01" & r.cache408C(4 downto 0), r, v, ack); 
+               -- FE_sync2GR_en = False     0x00001023*addrSize, bitSize=1, bitOffset=6   
+               v.cache408C := r.cache408C(31 downto 7) & "01" & r.cache408C(4 downto 0);
+               axiLWrite(x"408C"+addresses(currentAsic), v.cache408C, r, v, ack); 
                
                -- check end case
                if(checkError(r, ack) = True) then
@@ -385,7 +386,8 @@ begin
                v.status := STOP_S;
             else         
                -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
-               axiLWrite(x"400C"+addresses(currentAsic), r.cache400C(31 downto 13) & "1" & r.cache400C(11 downto 0), r, v, ack);          
+               v.cache400C := r.cache400C(31 downto 13) & "1" & r.cache400C(11 downto 0);
+               axiLWrite(x"400C"+addresses(currentAsic), v.cache400C, r, v, ack);          
 
                -- check end case
                if(checkError(r, ack) = True) then
@@ -407,7 +409,8 @@ begin
             else           
                -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
                -- exit state condition
-               axiLWrite(x"400C"+addresses(currentAsic), r.cache400C(31 downto 10) & r.pulser(9 downto 0), r, v, ack);     
+               v.cache400C := r.cache400C(31 downto 10) & r.pulser(9 downto 0);
+               axiLWrite(x"400C"+addresses(currentAsic), v.cache400C, r, v, ack);     
 
                -- check end case
                if(checkError(r, ack) = True) then
@@ -436,7 +439,8 @@ begin
                   chargeCol := '0';
                end if;
                v.chargeCol := chargeCol;
-               axiLWrite(x"4068"+addresses(currentAsic), r.cache4068(31 downto 7) & chargeCol & r.cache4068(5 downto 0), r, v, ack);    
+               v.cache4068 := r.cache4068(31 downto 7) & chargeCol & r.cache4068(5 downto 0);
+               axiLWrite(x"4068"+addresses(currentAsic), v.cache4068, r, v, ack);    
                
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
@@ -457,7 +461,8 @@ begin
                v.status := STOP_S;
             else              
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
-               axiLWrite(x"4068"+addresses(currentAsic), r.cache4068(31 downto 8) & '0' & r.cache4068(6 downto 0), r, v, ack);
+               v.cache4068 := r.cache4068(31 downto 8) & '0' & r.cache4068(6 downto 0);
+               axiLWrite(x"4068"+addresses(currentAsic), v.cache4068, r, v, ack);
 
                -- check end case
                if(checkError(r, ack) = True) then
@@ -477,7 +482,8 @@ begin
                v.status := STOP_S;
             else            
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
-               axiLWrite(x"4068"+addresses(currentAsic), r.cache4068(31 downto 8) & '1' & r.cache4068(6 downto 0), r, v, ack);
+               v.cache4068 := r.cache4068(31 downto 8) & '1' & r.cache4068(6 downto 0);
+               axiLWrite(x"4068"+addresses(currentAsic), v.cache4068, r, v, ack);
 
                -- check end case
                if(checkError(r, ack) = True) then
@@ -530,7 +536,8 @@ begin
                v.status := STOP_S;
             else              
                -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
-               axiLWrite(x"400C"+addresses(currentAsic), r.cache400C(31 downto 13) & "0" & r.cache400C(11 downto 0), r, v, ack);          
+               v.cache400C := r.cache400C(31 downto 13) & "0" & r.cache400C(11 downto 0);
+               axiLWrite(x"400C"+addresses(currentAsic), v.cache400C, r, v, ack);          
 
                -- check end case
                if(checkError(r, ack) = True) then
