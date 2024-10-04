@@ -361,7 +361,7 @@ begin
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
                -- FE_sync2GR_en = False     0x00001023*addrSize, bitSize=1, bitOffset=6   
                v.cache408C := r.cache408C(31 downto 7) & "01" & r.cache408C(4 downto 0);
-               axiLWrite(x"408C"+addresses(currentAsic), , r, v, ack); 
+               axiLWrite(x"408C"+addresses(currentAsic), v.cache408C, r, v, ack); 
                
                -- check end case
                if(checkError(r, ack) = True) then
