@@ -349,7 +349,7 @@ begin
                v.state := FE_XX2GR_S;
                v.stateLast := CACHE4068_S;
                v.regAccessState := WRITE_S;
-               v.cache400C := ack.rdData;
+               v.cache4068 := ack.rdData;
             end if;          
          when FE_XX2GR_S =>
             if (r.stop = '1') then
