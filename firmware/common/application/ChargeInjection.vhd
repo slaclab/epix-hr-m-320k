@@ -457,7 +457,7 @@ begin
                status := STOP_S;
             else          
                -- set trigger and wait triggerWaitCycles (default 200 us)
-               if (r.cycleCounter <= 10) then               
+               if (r.cycleCounter = 0) then               
                   v.forceTrigger := '1';
                else
                   v.forceTrigger := '0';
