@@ -59,9 +59,9 @@ architecture RTL of ChargeInjection is
 
    type asicAddressOffsetType is array (0 to 3) of slv(31 downto 0);
    constant addresses : asicAddressOffsetType := (x"00000000"+AXI_BASE_ADDR_C, 
-                                                  x"00040000"+AXI_BASE_ADDR_C, 
-                                                  x"00080000"+AXI_BASE_ADDR_C, 
-                                                  x"000C0000"+AXI_BASE_ADDR_C);
+                                                  x"00400000"+AXI_BASE_ADDR_C, 
+                                                  x"00800000"+AXI_BASE_ADDR_C, 
+                                                  x"00C00000"+AXI_BASE_ADDR_C);
 
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, 
