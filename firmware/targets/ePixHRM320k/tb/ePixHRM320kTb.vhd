@@ -20,6 +20,8 @@ use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
 
+use ieee.std_logic_misc.all;
+
 library ruckus;
 use ruckus.BuildInfoPkg.all;
 
@@ -155,6 +157,22 @@ architecture testbench of ePixHRM320kTb is
 
     signal asicDigRst : sl := '0';
     signal asicClkSyncEn : sl := '0';
+
+    signal exec   : sl;
+    signal ack    : sl;
+    signal readL  : sl;
+    signal cmd    : slv(6 downto 0);
+    signal addr   : slv(11 downto 0);
+    signal wrData : slv(31 downto 0);
+    signal rdData : slv(31 downto 0) := (others => '1') ;
+
+    signal axilReadMaster    : AxiLiteReadMasterType;
+    signal axilReadSlave     : AxiLiteReadSlaveType;
+    signal axilWriteMaster   : AxiLiteWriteMasterType;
+    signal axilWriteSlave    : AxiLiteWriteSlaveType;
+
+    signal asicSaciSelAndReduced : sl;
+    signal asicGlblRstL : sl;
 
     constant GET_BUILD_INFO_C : BuildInfoRetType := toBuildInfo(BUILD_INFO_C);
     constant MOD_BUILD_INFO_C : BuildInfoRetType := (
@@ -309,6 +327,41 @@ begin
         vPIn => vPIn, 
         vNIn => vNIn
    );
+
+   asicSaciSelAndReduced <=  AND_REDUCE(asicSaciSel);
+   asicGlblRstL <= not asicGlblRst;
+
+  U_SaciAxiLiteMaster_1 : entity surf.SaciAxiLiteMaster
+  generic map (
+     TPD_G => 1 ns)
+  port map (
+     rstL            => asicGlblRst,                 -- [in]
+     saciClk         => asicSaciClk,              -- [in]
+     saciCmd         => asicSaciCmd,              -- [in]
+     saciSelL        => asicSaciSelAndReduced,          -- [in]
+     saciRsp         => asicSaciRsp,           -- [out]
+     axilClk         => Clk156P,              -- [in]
+     axilRst         => asicGlblRstL,          -- [in]
+     axilReadMaster  => axilReadMaster,   -- [in]
+     axilReadSlave   => axilReadSlave,    -- [out]
+     axilWriteMaster => axilWriteMaster,  -- [in]
+     axilWriteSlave  => axilWriteSlave);  -- [out]
+
+
+    U_MEM : entity surf.AxiDualPortRam
+    generic map (
+        ADDR_WIDTH_G => 22,
+        DATA_WIDTH_G => 32)
+  port map (
+     -- Axi Port
+     axiClk         => Clk156P,
+     axiRst         => asicGlblRstL,
+     axiReadMaster  => axilReadMaster,
+     axiReadSlave   => axilReadSlave,
+     axiWriteMaster => axilWriteMaster,
+     axiWriteSlave  => axilWriteSlave);
+
+
 
    G_EPIXHRM320KMODELS : for i in 0 to 3 generate
     U_Model : entity work.ePixHRM320kModel
