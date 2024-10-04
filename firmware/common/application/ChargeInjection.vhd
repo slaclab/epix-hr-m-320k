@@ -92,7 +92,7 @@ architecture RTL of ChargeInjection is
       forceTrigger                : sl;
       triggerWaitCycles           : slv(31 downto 0);
       cycleCounter                : slv(31 downto 0);
-      status                      : slv(7 downto 0);
+      status                      : chargeInjectionStatusType;
       currentAsic                 : slv(1 downto 0);
       triggerStateCounter         : slv(31 downto 0);
    end record;
@@ -117,7 +117,7 @@ architecture RTL of ChargeInjection is
       forceTrigger                => '0',
       triggerWaitCycles           => x"00007A12",
       cycleCounter                => (others=>'0'),
-      status                      => (others=>'0'),
+      status                      => IDLE_S,
       currentAsic                 => (others=>'0'),
       triggerStateCounter         => (others=>'0')
    );
@@ -243,7 +243,7 @@ begin
       variable regCon        : AxiLiteEndPointType;
       variable chargeCol     : sl;
       variable currentAsic   : integer;
-      variable status        : chargeInjectionStatusType;
+
    begin
       v := r;
       
@@ -260,7 +260,7 @@ begin
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.failingRegister);
-      axiSlaveRegisterR(regCon, x"02C",  0, r.status);
+      axiSlaveRegisterR(regCon, x"02C",  0, std_logic_vector(to_unsigned(chargeInjectionStatusType'POS(r.status), 8)) );
       axiSlaveRegisterR(regCon, x"030",  0, std_logic_vector(to_unsigned(StateType'pos(r.state), 8))); 
       axiSlaveRegisterR(regCon, x"034",  0, std_logic_vector(to_unsigned(StateType'pos(r.stateLast), 8))); 
       axiSlaveRegisterR(regCon, x"038",  0, r.triggerStateCounter);
@@ -292,9 +292,9 @@ begin
          when WAIT_START_S =>
             v.stop := '0';
             if (r.startCol >= r.endCol) then
-               status := COL_ERROR_S;
+               v.status := COL_ERROR_S;
             elsif (r.step = '0' & x"00") then
-               status := STEP_ERROR_S;
+               v.status := STEP_ERROR_S;
             elsif r.start = '1' then
                v.state := FE_XX2GR_S;
                v.stateLast := WAIT_START_S;
@@ -307,7 +307,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := FE_XX2GR_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else
                -- Setting charge injection necessary registers in the relevant ASIC
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
@@ -325,13 +325,13 @@ begin
                   v.regAccessState := READ_S;
                end if;
 
-               status := RUNNING_S;
+               v.status := RUNNING_S;
             end if;
          when TEST_START_S =>
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := TEST_START_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else         
                -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
                axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
@@ -353,7 +353,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := PULSER_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else           
                -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
                -- exit state condition
@@ -377,7 +377,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := CHARGE_COL_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else              
                -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
                -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
@@ -406,7 +406,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := CLK_NEGEDGE_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else              
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
@@ -427,7 +427,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := CLK_POSEDGE_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else            
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
@@ -454,7 +454,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := TRIGGER_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else          
                -- set trigger and wait triggerWaitCycles (default 200 us)
                if (r.cycleCounter = 0) then               
@@ -481,7 +481,7 @@ begin
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := TEST_END_S;
-               status := STOP_S;
+               v.status := STOP_S;
             else              
                -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
                axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
@@ -495,12 +495,12 @@ begin
                   v.state := INIT_S;
                   v.stateLast := TEST_END_S;
                end if;
-               status := SUCCESS_S;
+               v.status := SUCCESS_S;
             end if;
          when ERROR_S =>   
             v.state := INIT_S;
             v.stateLast := ERROR_S;
-            status := AXI_ERROR_S;
+            v.status := AXI_ERROR_S;
             
          when INIT_S =>
             v.state := WAIT_START_S;
@@ -511,8 +511,6 @@ begin
             v.forceTrigger := '0';
       end case;
       
-  
-      v.status := std_logic_vector(to_unsigned(chargeInjectionStatusType'POS(status), 8)) ; 
 
       -- reset logic      
       if (axilRst = '1') then

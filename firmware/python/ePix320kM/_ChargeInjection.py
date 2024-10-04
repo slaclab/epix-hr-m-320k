@@ -4,7 +4,7 @@ class ChargeInjection(pr.Device):
     def __init__(self, **kwargs):      
         super().__init__(**kwargs)
 
-        statusEnum = {0: "IDLE_S", 1: "SUCCESS_S", 2: "RUNNING_S", 3: "AXI_ERROR_S",
+        statusEnum = {0: "IDLE_S", 1: "RUNNING_S", 2: "SUCCESS_S", 3: "AXI_ERROR_S",
                       4: "COL_ERROR_S", 5: "STEP_ERROR_S", 6: "STOP_S"}
         stateEnum  = { 0: "WAIT_START_S", 1: "FE_XX2GR_S", 2: "TEST_START_S", 3: "PULSER_S", 
                    4: "CHARGE_COL_S", 5: "CLK_NEGEDGE_S", 6: "CLK_POSEDGE_S", 7: "TRIGGER_S",
@@ -37,22 +37,20 @@ class ChargeInjection(pr.Device):
             disp         = '{}',
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'start',
+        self.add(pr.RemoteCommand(
+            name         = 'Start',
             offset       = 0xC,
             bitSize      = 1,
-            base         = pr.UInt,
-            mode         = 'RW',
-            disp         = '{}',
+            bitOffset    = 0,
+            function     = pr.Command.touchOne
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'stop',
+        self.add(pr.RemoteCommand(
+            name         = 'Stop',
             offset       = 0x10,
             bitSize      = 1,
-            mode         = 'RW',
-            base         = pr.UInt,
-            disp         = '{}',
+            bitOffset    = 0,
+            function     = pr.Command.touchOne
         ))
 
         self.add(pr.RemoteVariable(
@@ -82,6 +80,8 @@ class ChargeInjection(pr.Device):
             mode         = 'RO',
             bitOffset    = 0,
             pollInterval = 1,
+            base         = pr.UInt,
+            disp         = '{}',            
         ))
 
         self.add(pr.RemoteVariable(
