@@ -8,7 +8,8 @@ class ChargeInjection(pr.Device):
                       4: "COL_ERROR_S", 5: "STEP_ERROR_S", 6: "STOP_S"}
         stateEnum  = { 0: "WAIT_START_S", 1: "FE_XX2GR_S", 2: "TEST_START_S", 3: "PULSER_S", 
                    4: "CHARGE_COL_S", 5: "CLK_NEGEDGE_S", 6: "CLK_POSEDGE_S", 7: "TRIGGER_S",
-                   8: "TEST_END_S" , 9: "ERROR_S", 10: "INIT_S"}
+                   8: "TEST_END_S" , 9: "ERROR_S", 10: "INIT_S", 11: "CACHE408C_S",
+                    12 : "CACHE400C_S", 13: "CACHE4068_S"}
 
         self.add(pr.RemoteVariable(
             name         = 'startCol',

@@ -90,7 +90,6 @@ architecture RTL of ChargeInjection is
       currentCol                  : slv(8 downto 0);
       failingRegister             : slv(31 downto 0);
       chargeCol                   : sl;
-      rdData                      : slv(31 downto 0);
       forceTrigger                : sl;
       triggerWaitCycles           : slv(31 downto 0);
       cycleCounter                : slv(31 downto 0);
@@ -118,7 +117,6 @@ architecture RTL of ChargeInjection is
       currentCol                  => (others=>'0'),
       failingRegister             => (others=>'0'),
       chargeCol                   => '0',
-      rdData                      => (others=>'0'),
       forceTrigger                => '0',
       triggerWaitCycles           => x"00007A12",
       cycleCounter                => (others=>'0'),
@@ -157,9 +155,7 @@ architecture RTL of ChargeInjection is
             end if;
          when READ_ACK_WAIT_S =>
             if (ack.done = '1') then
-               if (ack.resp = AXI_RESP_OK_C) then
-                  v.rdData := ack.rdData;
-               else 
+               if (ack.resp /= AXI_RESP_OK_C) then
                   v.failingRegister := address;
                end if;
                v.req.request := '0';
@@ -330,7 +326,7 @@ begin
                v.state := CACHE400C_S;
                v.stateLast := CACHE408C_S;
                v.regAccessState := READ_S;
-               v.cache408C := r.rdData;
+               v.cache408C := ack.rdData;
             end if;            
             v.status := RUNNING_S;
          when CACHE400C_S =>
@@ -342,7 +338,7 @@ begin
                v.state := CACHE4068_S;
                v.stateLast := CACHE400C_S;
                v.regAccessState := READ_S;
-               v.cache400C := r.rdData;
+               v.cache400C := ack.rdData;
             end if;          
          when CACHE4068_S =>
             axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
@@ -353,7 +349,7 @@ begin
                v.state := FE_XX2GR_S;
                v.stateLast := CACHE4068_S;
                v.regAccessState := WRITE_S;
-               v.cache400C := r.rdData;
+               v.cache400C := ack.rdData;
             end if;          
          when FE_XX2GR_S =>
             if (r.stop = '1') then
@@ -365,7 +361,7 @@ begin
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
                -- FE_sync2GR_en = False     0x00001023*addrSize, bitSize=1, bitOffset=6   
                v.cache408C := r.cache408C(31 downto 7) & "01" & r.cache408C(4 downto 0);
-               axiLWrite(x"408C"+addresses(currentAsic), v.cache408C, r, v, ack); 
+               axiLWrite(x"408C"+addresses(currentAsic), , r, v, ack); 
                
                -- check end case
                if(checkError(r, ack) = True) then
