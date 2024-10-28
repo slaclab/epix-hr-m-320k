@@ -394,43 +394,55 @@ class App(pr.Device):
 
         lane_adj_eyes_all = []
 
+        # Disable batchers
         for i in range(4) :
             getattr(self.root.App.AsicTop, f"BatcherEventBuilder{i}").Blowoff.set(True)
 
+        # number of lanes x sweep count
         all_errors = np.zeros((24, sweep_cnt)) # incase need to subtract
 
         self.SspMonGrp[asicIndex].enable.set(1)
 
         self.stop_capture()
+
         idle_lock_array = np.empty(24)
 
         # store automatic delay in idle_lock_array
         for i in range(24):
             idle_lock_array[i] = self.SspMonGrp[asicIndex].DlyConfig[i].get()
 
+        # enable manual delay
         self.SspMonGrp[asicIndex].EnUsrDlyCfg.set(0x1)
 
-        # generate a list of delays based on sweep_cnt start 0 end 511.
+        # generate a list of delays based on sweep_cnt start 0, end 511, hop sweep count.
         delay_space = (np.linspace(0,sweep_max,sweep_cnt))
         
+
         idle_results = np.zeros((24,sweep_cnt))
+
+
         for idx, delay in enumerate(delay_space):
             if self.TuneManualSERDESEyeTraining._runEn == False :
                 return                    
 
-            # try all delays
+            # try one delay at a time for all lanes
             for lane in range(24):
                 self.SspMonGrp[asicIndex].UsrDlyCfg[lane].set(int(delay))
 
+            # reset counters
             self.SspMonGrp[asicIndex].CntRst.set(1)
+
+            # send trigger
             self.start_capture()
             self.stop_capture()
             time.sleep(time_per_sweep)
+
+            # Reset counters
             self.SspMonGrp[asicIndex].CntRst.set(1)
             time.sleep(time_per_sweep)
             self.stop_capture()
 
-            # get Error det cnt for each lane @delay
+            # get Error det cnt for each lane when idle and not sending images
             for lane in range(24):
                 idle_results[lane][idx] = self.SspMonGrp[asicIndex].ErrorDetCnt[lane].get()
 
