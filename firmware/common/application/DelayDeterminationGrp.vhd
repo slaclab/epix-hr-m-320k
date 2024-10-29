@@ -1,0 +1,198 @@
+-------------------------------------------------------------------------------
+-- File       : DelayDeterminationGrp.vhd
+-- Company    : SLAC National Accelerator Laboratory
+-------------------------------------------------------------------------------
+-- Description:
+-------------------------------------------------------------------------------
+-- This file is part of 'EPIX HR Firmware'.
+-- It is subject to the license terms in the LICENSE.txt file found in the 
+-- top-level directory of this distribution and at: 
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
+-- No part of 'EPIX HR Firmware', including this file, 
+-- may be copied, modified, propagated, or distributed except according to 
+-- the terms contained in the LICENSE.txt file.
+-------------------------------------------------------------------------------
+
+LIBRARY ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_misc.all;
+use IEEE.numeric_std.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.SsiPkg.all;
+
+entity DelayDeterminationGrp is 
+   generic (
+      TPD_G           	   : time := 1 ns;
+      AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
+      AXI_BASE_ADDR_G      : slv(31 downto 0) := x"00000000";
+      NUM_DRIVERS_G        : natural range 1 to 5 := 4;
+   );
+   port ( 
+     
+      
+      -- AXI lite slave port for register access
+      axilClk           : in  sl;
+      axilRst           : in  sl;
+
+      -- local registers
+      sAxilReadMaster    : in  AxiLiteReadMasterType;
+      sAxilReadSlave     : out AxiLiteReadSlaveType;
+      sAxilWriteMaster   : in  AxiLiteWriteMasterType;
+      sAxilWriteSlave    : out AxiLiteWriteSlaveType;
+
+      -- Master Slots (Connect to AXI Slaves)
+      mAxiWriteMasters : out AxiLiteWriteMasterArray(NUM_DRIVERS_G-1 downto 0);
+      mAxiWriteSlaves  : in  AxiLiteWriteSlaveArray(NUM_DRIVERS_G-1 downto 0);
+      mAxiReadMasters  : out AxiLiteReadMasterArray(NUM_DRIVERS_G-1 downto 0);
+      mAxiReadSlaves   : in  AxiLiteReadSlaveArray(NUM_DRIVERS_G-1 downto 0)
+      
+      -- Daq trigger and start readout request input
+      forceTrigger        : out  sl
+      
+   );
+end DelayDeterminationGrp;
+
+
+-- Define architecture
+architecture RTL of DelayDeterminationGrp is
+
+   type RegType is record
+      sAxilWriteSlave             : AxiLiteWriteSlaveType;
+      sAxilReadSlave              : AxiLiteReadSlaveType;
+      forceTrigger                : sl;
+      increment                   : slv(8 downto 0);
+      asicEn                      : slv(NUM_DRIVERS_G-1 downto 0);
+      start                       : sl;
+      stop                        : sl;
+      startCounter                : slv(3 downto 0);
+      stopCounter                 : slv(3 downto 0);      
+   end record;
+
+   constant REG_INIT_C : RegType := (
+      sAxilWriteSlave             => AXI_LITE_WRITE_SLAVE_INIT_C,
+      sAxilReadSlave              => AXI_LITE_READ_SLAVE_INIT_C,
+      forceTrigger                => '0',
+      increment                   => (others => '0') & '1',
+      asicEn                      => (others => '1'),
+      start                       => '0',
+      stop                        => '0',
+      startCounter                => (others => '0'),
+      stopCounter                 => (others => '0')
+   );
+   
+   
+   signal ack : AxiLiteAckType;
+
+   signal r             : RegType := REG_INIT_C;
+   signal rin           : RegType := REG_INIT_C;
+   
+   signal readyForTrig  : slv(3 downto 0);
+
+  
+   comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, readyForTrig) is
+      variable v             : RegType;
+      variable regCon        : AxiLiteEndPointType;
+
+   begin
+      v := r;
+      
+      axiSlaveWaitTxn(regCon, sAxilWriteMaster, sAxilReadMaster, v.sAxilWriteSlave, v.sAxilReadSlave);
+      
+
+      axiSlaveRegister (regCon, x"000",  0, v.increment);
+      axiSlaveRegister (regCon, x"004",  0, v.triggerTimeout);
+      axiSlaveRegister (regCon, x"008",  0, v.asicEn);
+      axiSlaveRegister (regCon, x"00C",  0, v.start);
+      axiSlaveRegister (regCon, x"010",  0, v.stop);
+
+      
+      axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
+      
+      if (readyForTrig = x"f") then
+         v.readyForTrigAck = '1';
+      else
+         v.readyForTrigAck = '0';
+      end if;
+
+
+      if (r.readyForTrigAck = '1') then
+         v.forceTrigger = '1';
+      else
+         v.forceTrigger = '0';
+      end if;
+
+      if (r.start = '1') then
+         v.startCounter := r.startCounter + 1;
+         if (r.startCounter = (others => '1')) then
+            v.start = '0';
+         end if;         
+      else
+         v.startCounter := (others => '0');
+      end if;
+
+      if (r.stop = '1') then
+         v.stopCounter := r.stopCounter + 1;
+         if (r.stopCounter = (others => '1')) then
+            v.stop = '0';
+         end if;
+      else
+         v.stopCounter := (others => '0');
+      end if;
+
+
+      -- reset logic      
+      if (axilRst = '1') then
+         v := REG_INIT_C;
+      end if;
+
+      -- outputs
+      
+      rin <= v;
+
+      sAxilWriteSlave <= r.sAxilWriteSlave;
+      sAxilReadSlave  <= r.sAxilReadSlave;
+
+   end process comb;
+
+   forceTrigger <= r.forceTrigger;
+
+   seq : process (axilClk) is
+   begin
+      if (rising_edge(axilClk)) then
+         r <= rin after TPD_G;             
+      end if;
+   end process seq;
+   
+   G_DELAYDETERMINATION : for i in 0 to NUM_DRIVERS_G-1 generate
+      U_DelayDetermination : entity work.DelayDetermination
+      generic map (
+         TPD_G                  => TPD_G,
+         AXIL_ERR_RESP_G        => AXIL_ERR_RESP_G,
+         AXI_BASE_ADDR_G        => AXI_BASE_ADDR_G
+         )
+      port map (
+         axilClk           => axilClk,
+         axilRst           => axilRst,
+         
+         start             => r.start,
+         stop              => r.stop,
+         enable            => r.asicEn(i),
+         triggerTimeout    => r.triggerTimeout,
+         increment         => r.increment,
+         readyForTrig      => readyForTrig(i),
+         readyForTrigAck   => r.readyForTrigAck,
+
+         mAxiWriteMasters  => mAxiWriteMasters, 
+         mAxiWriteSlaves   => mAxiWriteSlaves,  
+         mAxiReadMasters   => mAxiReadMasters,  
+         mAxiReadSlaves    => mAxiReadSlaves,
+
+      );
+   end generate;
+
+
+end RTL;
