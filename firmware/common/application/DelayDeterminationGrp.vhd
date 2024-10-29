@@ -89,7 +89,7 @@ architecture RTL of DelayDeterminationGrp is
 
    signal r             : RegType := REG_INIT_C;
    signal rin           : RegType := REG_INIT_C;
-   
+
    signal readyForTrig  : slv(3 downto 0);
 
   
@@ -170,9 +170,7 @@ architecture RTL of DelayDeterminationGrp is
    G_DELAYDETERMINATION : for i in 0 to NUM_DRIVERS_G-1 generate
       U_DelayDetermination : entity work.DelayDetermination
       generic map (
-         TPD_G                  => TPD_G,
-         AXIL_ERR_RESP_G        => AXIL_ERR_RESP_G,
-         AXI_BASE_ADDR_G        => AXI_BASE_ADDR_G
+         TPD_G                  => TPD_G
          )
       port map (
          axilClk           => axilClk,
