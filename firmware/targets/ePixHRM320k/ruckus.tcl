@@ -22,6 +22,7 @@ loadConstraints -dir  "$::DIR_PATH/hdl/"
 
 # Load local SIM source Code
 loadSource -sim_only -dir "$::DIR_PATH/tb"
-set_property top {ePixHRM320kTb} [get_filesets sim_1]
+#set_property top {ePixHRM320kTb} [get_filesets sim_1]
 #set_property top {chargeInjectionTb} [get_filesets sim_1]
+set_property top {DelayDeterminationGrpTb} [get_filesets sim_1]
 
