@@ -59,7 +59,10 @@ end DelayDeterminationGrp;
 -- Define architecture
 architecture RTL of DelayDeterminationGrp is
 
+   type StateType is (WAIT_START_S, WAIT_STOPCOUNT_S, SEND_TRIGGER_S, ACK_S);
+
    type RegType is record
+      state                       : StateType;
       sAxilWriteSlave             : AxiLiteWriteSlaveType;
       sAxilReadSlave              : AxiLiteReadSlaveType;
       forceTrigger                : sl;
@@ -69,35 +72,41 @@ architecture RTL of DelayDeterminationGrp is
       stop                        : sl;
       startCounter                : slv(3 downto 0);
       stopCounter                 : slv(3 downto 0);  
+      timeoutCounter              : slv(31 downto 0);  
       triggerTimeout              : slv(31 downto 0);  
       readyForTrigAck             : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
+      state                       => WAIT_START_S,
       sAxilWriteSlave             => AXI_LITE_WRITE_SLAVE_INIT_C,
       sAxilReadSlave              => AXI_LITE_READ_SLAVE_INIT_C,
       forceTrigger                => '0',
-      increment                   => (others => '0'),
+      increment                   => '0' & x"01",
       asicEn                      => (others => '1'),
       start                       => '0',
       stop                        => '0',
       startCounter                => (others => '0'),
       stopCounter                 => (others => '0'),
-      triggerTimeout              => (others => '0'),
+      timeoutCounter              => (others => '0'),
+      triggerTimeout              => x"00007A12", -- 200us on a 156.25MHz clock
       readyForTrigAck             => '0'
    );
    
    
+
+
    signal ack : AxiLiteAckType;
 
    signal r             : RegType := REG_INIT_C;
    signal rin           : RegType := REG_INIT_C;
 
-   signal readyForTrig  : slv(3 downto 0);
+   signal readyForTrig  : slv(NUM_DRIVERS_G-1 downto 0);
+   signal allReady      : slv(NUM_DRIVERS_G-1 downto 0);
 
    begin
 
-      comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, readyForTrig) is
+      comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, allReady) is
          variable v             : RegType;
          variable regCon        : AxiLiteEndPointType;
       begin
@@ -114,19 +123,33 @@ architecture RTL of DelayDeterminationGrp is
 
          
          axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
-         
-         if (readyForTrig = x"f") then
-            v.readyForTrigAck := '1';
-         else
-            v.readyForTrigAck := '0';
-         end if;
 
-
-         if (r.readyForTrigAck = '1') then
-            v.forceTrigger := '1';
-         else
-            v.forceTrigger := '0';
-         end if;
+         case r.state is
+            when WAIT_START_S =>
+               v.forceTrigger := '0';
+               v.readyForTrigAck := '0';
+               if (allReady = (NUM_DRIVERS_G-1 downto 0 => '1') and r.asicEn /= (NUM_DRIVERS_G-1 downto 0 => '0')) then
+                  v.state := SEND_TRIGGER_S;
+                  v.timeoutCounter := (others => '0');
+               end if;
+            when SEND_TRIGGER_S => 
+               v.state := WAIT_STOPCOUNT_S;
+               v.forceTrigger := '1';
+            when WAIT_STOPCOUNT_S =>
+               v.forceTrigger := '0';
+               v.timeoutCounter := r.timeoutCounter + 1;
+               if (r.timeoutCounter >= r.triggerTimeout) then
+                  v.state := ACK_S;
+                  v.timeoutCounter := (others => '0');
+               end if;
+            when ACK_S =>
+                  v.readyForTrigAck := '1';
+                  v.timeoutCounter := r.timeoutCounter + 1;
+                  if (r.timeoutCounter >= x"0000000f") then
+                     v.state := WAIT_START_S;
+                     v.timeoutCounter := (others => '0');
+                  end if;
+         end case;
 
          if (r.start = '1') then
             v.startCounter := r.startCounter + 1;
@@ -171,6 +194,9 @@ architecture RTL of DelayDeterminationGrp is
       end process seq;
       
       G_DELAYDETERMINATION : for i in 0 to NUM_DRIVERS_G-1 generate
+
+         allReady(i) <= r.asicEn(i) and readyForTrig(i);
+
          U_DelayDetermination : entity work.DelayDetermination
          generic map (
             TPD_G                  => TPD_G
@@ -182,7 +208,6 @@ architecture RTL of DelayDeterminationGrp is
             start             => r.start,
             stop              => r.stop,
             enable            => r.asicEn(i),
-            triggerTimeout    => r.triggerTimeout,
             increment         => r.increment,
             readyForTrig      => readyForTrig(i),
             readyForTrigAck   => r.readyForTrigAck,

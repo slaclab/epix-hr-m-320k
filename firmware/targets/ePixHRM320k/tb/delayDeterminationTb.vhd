@@ -81,7 +81,7 @@ begin
 
 
 
-    U_ChargeInjection : entity work.DelayDeterminationGrp
+    U_DelayDeterminationGrp : entity work.DelayDeterminationGrp
     generic map(
         NUM_DRIVERS_G        => 1
     )
@@ -96,10 +96,10 @@ begin
        sAxilReadSlave    => sAxilReadSlave,
 
        -- AXI lite master port for asic register writes
-       mAxilWriteMaster  => mAxilWriteMaster,
-       mAxilWriteSlave   => mAxilWriteSlave,
-       mAxilReadMaster   => mAxilReadMaster,
-       mAxilReadSlave    => mAxilReadSlave,
+       mAxilWriteMasters(0)  => mAxilWriteMaster,
+       mAxilWriteSlaves(0)   => mAxilWriteSlave,
+       mAxilReadMasters(0)   => mAxilReadMaster,
+       mAxilReadSlaves(0)    => mAxilReadSlave,
        
        -- Charge injection forced trigger
        forceTrigger      => forceTrigger
