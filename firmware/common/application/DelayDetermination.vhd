@@ -26,7 +26,8 @@ use surf.SsiPkg.all;
 
 entity DelayDetermination is 
    generic (
-      TPD_G           	   : time := 1 ns
+      TPD_G           	   : time := 1 ns;
+      AXIL_BASE_ADDR_G      : slv(31 downto 0) := x"00000000"
    );
    port ( 
      
@@ -90,23 +91,35 @@ architecture RTL of DelayDetermination is
 
    type registerAddressOffsetType is array (0 to 23) of slv(31 downto 0);
    constant detErrCntAddresses : registerAddressOffsetType := 
-         (x"000000C0", x"000000C4", x"000000C8", x"000000CC",
-          x"000000D0", x"000000D4", x"000000D8", x"000000DC",
-          x"000000E0", x"000000E4", x"000000E8", x"000000EC",
-          x"000000F0", x"000000F4", x"000000F8", x"000000FC",
-          x"00000100", x"00000104", x"00000108", x"0000010C",
-          x"00000110", x"00000114", x"00000118", x"0000011C");
+         (x"000000C0"+AXIL_BASE_ADDR_G, x"000000C4"+AXIL_BASE_ADDR_G, 
+          x"000000C8"+AXIL_BASE_ADDR_G, x"000000CC"+AXIL_BASE_ADDR_G,
+          x"000000D0"+AXIL_BASE_ADDR_G, x"000000D4"+AXIL_BASE_ADDR_G,
+          x"000000D8"+AXIL_BASE_ADDR_G, x"000000DC"+AXIL_BASE_ADDR_G,
+          x"000000E0"+AXIL_BASE_ADDR_G, x"000000E4"+AXIL_BASE_ADDR_G,
+          x"000000E8"+AXIL_BASE_ADDR_G, x"000000EC"+AXIL_BASE_ADDR_G,
+          x"000000F0"+AXIL_BASE_ADDR_G, x"000000F4"+AXIL_BASE_ADDR_G,
+          x"000000F8"+AXIL_BASE_ADDR_G, x"000000FC"+AXIL_BASE_ADDR_G,
+          x"00000100"+AXIL_BASE_ADDR_G, x"00000104"+AXIL_BASE_ADDR_G,
+          x"00000108"+AXIL_BASE_ADDR_G, x"0000010C"+AXIL_BASE_ADDR_G,
+          x"00000110"+AXIL_BASE_ADDR_G, x"00000114"+AXIL_BASE_ADDR_G,
+          x"00000118"+AXIL_BASE_ADDR_G, x"0000011C"+AXIL_BASE_ADDR_G);
 
-   constant cntRstAddress    : slv(31 downto 0) := x"00000FFC";
-   constant enDlyCfgAddress  : slv(31 downto 0) := x"00000800";
+   constant cntRstAddress    : slv(31 downto 0) := x"00000FFC"+AXIL_BASE_ADDR_G;
+   constant enDlyCfgAddress  : slv(31 downto 0) := x"00000800"+AXIL_BASE_ADDR_G;
 
    constant usrDlyCfgAddress : registerAddressOffsetType := 
-         (x"00000500", x"00000504", x"00000508", x"0000050C",
-          x"00000510", x"00000514", x"00000518", x"0000051C",
-          x"00000520", x"00000524", x"00000528", x"0000052C",
-          x"00000530", x"00000534", x"00000538", x"0000053C",
-          x"00000540", x"00000544", x"00000548", x"0000054C",
-          x"00000550", x"00000554", x"00000558", x"0000055C");
+         (x"00000500"+AXIL_BASE_ADDR_G, x"00000504"+AXIL_BASE_ADDR_G,
+          x"00000508"+AXIL_BASE_ADDR_G, x"0000050C"+AXIL_BASE_ADDR_G,
+          x"00000510"+AXIL_BASE_ADDR_G, x"00000514"+AXIL_BASE_ADDR_G,
+          x"00000518"+AXIL_BASE_ADDR_G, x"0000051C"+AXIL_BASE_ADDR_G,
+          x"00000520"+AXIL_BASE_ADDR_G, x"00000524"+AXIL_BASE_ADDR_G, 
+          x"00000528"+AXIL_BASE_ADDR_G, x"0000052C"+AXIL_BASE_ADDR_G,
+          x"00000530"+AXIL_BASE_ADDR_G, x"00000534"+AXIL_BASE_ADDR_G, 
+          x"00000538"+AXIL_BASE_ADDR_G, x"0000053C"+AXIL_BASE_ADDR_G,
+          x"00000540"+AXIL_BASE_ADDR_G, x"00000544"+AXIL_BASE_ADDR_G, 
+          x"00000548"+AXIL_BASE_ADDR_G, x"0000054C"+AXIL_BASE_ADDR_G,
+          x"00000550"+AXIL_BASE_ADDR_G, x"00000554"+AXIL_BASE_ADDR_G, 
+          x"00000558"+AXIL_BASE_ADDR_G, x"0000055C"+AXIL_BASE_ADDR_G);
 
    procedure axiLRead(
          address : in slv(31 downto 0);

@@ -207,6 +207,12 @@ architecture rtl of Application is
                                              connectivity => x"FFFF")
                                              );
 
+   constant U_2S1MXBARDESER_CONFIG_C  : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
+      0                => (   baseAddr     => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr,
+                              addrBits     => 24,
+                              connectivity => x"FFFF")
+                              );
+                              
    constant TTLOUT_WIDTH_C         : natural  := 6;
 
    constant DIGMON0_INDEX_C         : natural  := 0;
@@ -683,7 +689,8 @@ begin
       U_DelayDeterminationGrp: entity work.DelayDeterminationGrp
       generic map (
          TPD_G           	   => TPD_G,
-         NUM_DRIVERS_G        => NUM_OF_ASICS_G
+         NUM_DRIVERS_G        => NUM_OF_ASICS_G,
+         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
       )
       port map( 
         
@@ -733,7 +740,7 @@ begin
             TPD_G              => TPD_G,
             NUM_SLAVE_SLOTS_G  => 2,
             NUM_MASTER_SLOTS_G => 1,
-            MASTERS_CONFIG_G   => U_2S1MXBAR_CONFIG_C)
+            MASTERS_CONFIG_G   => U_2S1MXBARDESER_CONFIG_C)
          port map (
             axiClk               => axilClk,
             axiClkRst            => axilRst,

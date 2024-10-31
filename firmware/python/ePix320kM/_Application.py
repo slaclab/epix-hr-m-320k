@@ -132,10 +132,19 @@ class App(pr.Device):
             )
         )
 
-        self.add(SweepDelaysPrintEyes(name='TuneManualSERDESEyeTraining',
+        self.add(SweepDelaysPrintEyes(name='SoftwareDelayDetermination',
                                  description='Manual serdes eye training',
                                  function=self.fnSweepDelaysPrintEyes))
 
+        self.add(
+            fpga.DelayDetermination(
+                name='FPGADelayDetermination',
+                offset=0x0B00_0000,
+                numAsics = num_of_asics,
+                expand=True,
+                enabled=True
+            )
+        )
 
 
         for asicIdx in range(num_of_asics):

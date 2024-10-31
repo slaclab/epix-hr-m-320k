@@ -28,7 +28,8 @@ entity DelayDeterminationGrp is
    generic (
       TPD_G           	   : time := 1 ns;
       AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
-      NUM_DRIVERS_G        : natural range 1 to 5 := 4
+      NUM_DRIVERS_G        : natural range 1 to 5 := 4;
+      AXIL_BASE_ADDR_G     : slv(31 downto 0) := x"00000000"
    );
    port ( 
      
@@ -199,7 +200,8 @@ architecture RTL of DelayDeterminationGrp is
 
          U_DelayDetermination : entity work.DelayDetermination
          generic map (
-            TPD_G                  => TPD_G
+            TPD_G                  => TPD_G,
+            AXIL_BASE_ADDR_G        => AXIL_BASE_ADDR_G
             )
          port map (
             axilClk           => axilClk,
