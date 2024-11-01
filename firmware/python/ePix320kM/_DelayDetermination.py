@@ -16,7 +16,7 @@ class DelayDetermination(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'triggerTimeout',
+            name         = 'preTriggerTimeout',
             offset       = 0x4,
             bitSize      = 32,
             mode         = 'RW',
@@ -24,17 +24,25 @@ class DelayDetermination(pr.Device):
             disp         = '{}',
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'postTriggerTimeout',
+            offset       = 0x8,
+            bitSize      = 32,
+            mode         = 'RW',
+            base         = pr.UInt,
+            disp         = '{}',
+        ))
 
         self.add(pr.RemoteVariable(
             name         = 'asicEn',
-            offset       = 0x8,
+            offset       = 0xC,
             bitSize      = numAsics,
             mode         = 'RW'
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'state',
-            offset       = 0x14,
+            offset       = 0x18,
             bitSize      = numAsics,
             mode         = 'RO',
             bitOffset    = 0,
@@ -44,7 +52,7 @@ class DelayDetermination(pr.Device):
         
         self.add(pr.RemoteCommand(
             name         = 'Start',
-            offset       = 0xC,
+            offset       = 0x10,
             bitSize      = 1,
             bitOffset    = 0,
             function     = pr.Command.touchOne
@@ -52,7 +60,7 @@ class DelayDetermination(pr.Device):
 
         self.add(pr.RemoteCommand(
             name         = 'Stop',
-            offset       = 0x10,
+            offset       = 0x14,
             bitSize      = 1,
             bitOffset    = 0,
             function     = pr.Command.touchOne

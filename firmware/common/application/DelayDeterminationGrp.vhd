@@ -60,7 +60,7 @@ end DelayDeterminationGrp;
 -- Define architecture
 architecture RTL of DelayDeterminationGrp is
 
-   type StateType is (WAIT_START_S, WAIT_STOPCOUNT_S, SEND_TRIGGER_S, ACK_S);
+   type StateType is (WAIT_START_S, PRETRIGTIMEOUT_S, SEND_TRIGGER_S, PRETRIGTIMEOUT_S. ACK_S);
 
    type RegType is record
       state                       : StateType;
@@ -117,11 +117,12 @@ architecture RTL of DelayDeterminationGrp is
          
 
          axiSlaveRegister (regCon, x"000",  0, v.step);
-         axiSlaveRegister (regCon, x"004",  0, v.triggerTimeout);
-         axiSlaveRegister (regCon, x"008",  0, v.asicEn);
-         axiSlaveRegister (regCon, x"00C",  0, v.start);
-         axiSlaveRegister (regCon, x"010",  0, v.stop);
-         axiSlaveRegisterR(regCon, x"014",  0, busy);
+         axiSlaveRegister (regCon, x"004",  0, v.preTriggerTimeout);
+         axiSlaveRegister (regCon, x"008",  0, v.postTriggerTimeout);
+         axiSlaveRegister (regCon, x"00C",  0, v.asicEn);
+         axiSlaveRegister (regCon, x"010",  0, v.start);
+         axiSlaveRegister (regCon, x"014",  0, v.stop);
+         axiSlaveRegisterR(regCon, x"018",  0, busy);
 
          
          axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
@@ -134,13 +135,21 @@ architecture RTL of DelayDeterminationGrp is
                   v.state := SEND_TRIGGER_S;
                   v.timeoutCounter := (others => '0');
                end if;
-            when SEND_TRIGGER_S => 
-               v.state := WAIT_STOPCOUNT_S;
-               v.forceTrigger := '1';
-            when WAIT_STOPCOUNT_S =>
+            when PRETRIGTIMEOUT_S =>
                v.forceTrigger := '0';
                v.timeoutCounter := r.timeoutCounter + 1;
-               if (r.timeoutCounter >= r.triggerTimeout) then
+               if (r.timeoutCounter >= r.preTriggerTimeout) then
+                  v.state := SEND_TRIGGER_S;
+                  v.timeoutCounter := (others => '0');
+               end if;               
+            when SEND_TRIGGER_S => 
+               v.state := POSTTRIGTIMEOUT_S;
+               v.forceTrigger := '1';
+               v.timeoutCounter := (others => '0');
+            when POSTTRIGTIMEOUT_S =>
+               v.forceTrigger := '0';
+               v.timeoutCounter := r.timeoutCounter + 1;
+               if (r.timeoutCounter >= r.postTriggerTimeout) then
                   v.state := ACK_S;
                   v.timeoutCounter := (others => '0');
                end if;
@@ -212,6 +221,7 @@ architecture RTL of DelayDeterminationGrp is
             stop              => r.stop,
             enable            => r.asicEn(i),
             step              => r.step,
+            triggerTimeout    «: r.triggerTimeout,
             readyForTrig      => readyForTrig(i),
             readyForTrigAck   => r.readyForTrigAck,
             busy              => busy(i),

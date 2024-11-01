@@ -497,7 +497,7 @@ class App(pr.Device):
         np.savetxt('idle_lock_array{}.csv'.format(asicIndex), idle_lock_array, delimiter=',')
         np.savetxt('all_errors{}.csv'.format(asicIndex), run_results + idle_results, delimiter=',')
 
-        all_errors = run_results + idle_results
+        all_errors = run_results
         lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, False)
         self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
         print(" ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
