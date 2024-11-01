@@ -378,6 +378,7 @@ begin
                            if (r.fstRangeStarted(regIndex) = '0') then
                               v.fstRangeStarted(regIndex) := '1';
                               v.fstRangeStart(regIndex) := r.usrDelayCfg;
+                              v.fstRangeEnd(regIndex) := r.usrDelayCfg;
                            else
                               v.fstRangeEnd(regIndex) := r.usrDelayCfg;
                            end if;
@@ -391,6 +392,7 @@ begin
                            if (r.scndRangeStarted(regIndex) = '0') then
                               v.scndRangeStarted(regIndex) := '1';
                               v.scndRangeStart(regIndex) := r.usrDelayCfg;
+                              v.scndRangeEnd(regIndex) := r.usrDelayCfg;
                            else
                               v.scndRangeEnd(regIndex) := r.usrDelayCfg;
                            end if;

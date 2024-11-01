@@ -197,7 +197,7 @@ architecture RTL of DelayDeterminationGrp is
       
       G_DELAYDETERMINATION : for i in 0 to NUM_DRIVERS_G-1 generate
 
-         allReady(i) <= r.asicEn(i) and readyForTrig(i);
+         allReady(i) <= (not r.asicEn(i)) or readyForTrig(i);
 
          U_DelayDetermination : entity work.DelayDetermination
          generic map (

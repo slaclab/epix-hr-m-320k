@@ -136,15 +136,15 @@ class App(pr.Device):
                                  description='Manual serdes eye training',
                                  function=self.fnSweepDelaysPrintEyes))
 
-        #self.add(
-        #    fpga.DelayDetermination(
-        #        name='FPGADelayDetermination',
-        #        offset=0x0B00_0000,
-        #        numAsics = num_of_asics,
-        #        expand=True,
-        #        enabled=True
-        #    )
-        #)
+        self.add(
+            fpga.DelayDetermination(
+                name='FPGADelayDetermination',
+                offset=0x0B00_0000,
+                numAsics = num_of_asics,
+                expand=True,
+                enabled=True
+            )
+        )
 
 
         for asicIdx in range(num_of_asics):
@@ -498,7 +498,7 @@ class App(pr.Device):
         np.savetxt('all_errors{}.csv'.format(asicIndex), run_results + idle_results, delimiter=',')
 
         all_errors = run_results + idle_results
-        lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, True)
+        lane_adj_eyes = self.F_FIND_EYES(delay_space, all_errors, False)
         self.F_SET_DELAYS(lane_adj_eyes, asicIndex)
         print(" ASIC {} manual delay is {}".format(asicIndex, lane_adj_eyes))
 
@@ -513,7 +513,7 @@ class App(pr.Device):
         num_of_lanes,num_of_delay_steps = lane_errors.shape
         num_eye_info = 3 # returning lane, delay center, width of each eye
         lane_eyes = np.zeros((num_of_lanes,num_eye_info), dtype='uint16')
-        for lane in range(1):
+        for lane in range(num_of_lanes):
             cntr, wdth = self.F_FIND_EYE(delay_vec,lane_errors[lane][0:num_of_delay_steps],TROUBLE_SHOOT_FIND_EYES)
             lane_eyes[lane][:] = (np.array([lane, cntr, wdth])).flatten()
         #end-for

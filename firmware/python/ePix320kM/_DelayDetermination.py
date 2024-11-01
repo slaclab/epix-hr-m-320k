@@ -32,6 +32,16 @@ class DelayDetermination(pr.Device):
             mode         = 'RW'
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'state',
+            offset       = 0x14,
+            bitSize      = numAsics,
+            mode         = 'RO',
+            bitOffset    = 0,
+            pollInterval = 1,
+            #enum         = stateEnum,
+        ))   
+        
         self.add(pr.RemoteCommand(
             name         = 'Start',
             offset       = 0xC,
@@ -48,12 +58,3 @@ class DelayDetermination(pr.Device):
             function     = pr.Command.touchOne
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'state',
-            offset       = 0x14,
-            bitSize      = numAsics,
-            mode         = 'RO',
-            bitOffset    = 0,
-            pollInterval = 1,
-            #enum         = stateEnum,
-        ))   
