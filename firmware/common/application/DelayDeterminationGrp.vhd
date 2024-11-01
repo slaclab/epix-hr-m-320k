@@ -104,7 +104,7 @@ architecture RTL of DelayDeterminationGrp is
 
    signal readyForTrig  : slv(NUM_DRIVERS_G-1 downto 0);
    signal allReady      : slv(NUM_DRIVERS_G-1 downto 0);
-
+   signal busy          : slv(NUM_DRIVERS_G-1 downto 0);
    begin
 
       comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, allReady, busy) is
@@ -214,7 +214,7 @@ architecture RTL of DelayDeterminationGrp is
             step              => r.step,
             readyForTrig      => readyForTrig(i),
             readyForTrigAck   => r.readyForTrigAck,
-            busy              => busy,
+            busy              => busy(i),
 
             mAxilWriteMaster  => mAxilWriteMasters(i), 
             mAxilWriteSlave   => mAxilWriteSlaves(i),  

@@ -51,9 +51,9 @@ class DelayDetermination(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'state',
             offset       = 0x14,
-            bitSize      = 1,
+            bitSize      = numAsics,
             mode         = 'RO',
             bitOffset    = 0,
             pollInterval = 1,
-            enum         = stateEnum,
+            #enum         = stateEnum,
         ))   
