@@ -47,7 +47,7 @@ entity DelayDetermination is
       step        : in  slv(8 downto 0);
       readyForTrig     : out sl;
       readyForTrigAck  : in  sl;
-      busy             : in  sl
+      busy             : out sl
       
    );
 end DelayDetermination;
