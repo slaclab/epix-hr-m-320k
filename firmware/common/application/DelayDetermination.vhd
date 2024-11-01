@@ -44,7 +44,8 @@ entity DelayDetermination is
       start            : in  sl;
       stop             : in  sl;
       enable           : in  sl;
-      step        : in  slv(8 downto 0);
+      step             : in  slv(8 downto 0);
+      preResetTimeout  : in  slv(31 downto 0);
       readyForTrig     : out sl;
       readyForTrigAck  : in  sl;
       busy             : out sl
@@ -56,7 +57,7 @@ end DelayDetermination;
 -- Define architecture
 architecture RTL of DelayDetermination is
 
-   type StateType is (WAIT_START_S, ENDLYCFG_S, SETDLY_S, CNTRST_S, READ_ERRDETCNT_S, READY4TRIG_S, WRITE_OPT_S);
+   type StateType is (WAIT_START_S, ENDLYCFG_S, SETDLY_S, CNTPRERST_TIMEOUT_S, CNTRST_S, READ_ERRDETCNT_S, READY4TRIG_S, WRITE_OPT_S);
 
    type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S, WAIT_WRITE_DONE_S);
 
@@ -93,6 +94,7 @@ architecture RTL of DelayDetermination is
       scndOptimumDelay            : slv(31 downto 0);
       scndDiff                    : slv(31 downto 0);
       optimumDelay                : slv(31 downto 0);
+      timeOutCounter              : slv(31 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -118,7 +120,8 @@ architecture RTL of DelayDetermination is
       scndOptimumDelay            => (others => '0'),
       optimumDelay                => (others => '0'),
       fstDiff                     => (others => '0'),
-      scndDiff                    => (others => '0')
+      scndDiff                    => (others => '0'),
+      timeOutCounter              => (others => '0')
    );
    
    
@@ -319,9 +322,8 @@ begin
                v.state := WAIT_START_S;
             elsif (r.regIndex >= 24) then
                v.regIndex := (others => '0');
-               v.state := CNTRST_S;
-               v.regAccessState := WRITE_S;
-               v.regIndex := (others => '0');
+               v.state := CNTPRERST_TIMEOUT_S;
+               v.timeOutCounter := 0;
             else
                axiLWrite(usrDlyCfgAddress(regIndex), r.usrDelayCfg, r, v, ack);
                -- check end case
@@ -330,6 +332,19 @@ begin
                end if;
             end if;        
          -- reset statistics counters
+         when CNTPRERST_TIMEOUT_S =>
+            if (stop = '1') then
+               v.state := WAIT_START_S;
+            else         
+               if(r.timeOutCounter >= preResetTimeout) then
+                  v.state := CNTRST_S;
+                  v.timeOutCounter := 0;
+                  v.regAccessState := WRITE_S;
+                  v.regIndex := (others => '0');                  
+               else
+                  v.timeOutCounter := r.timeOutCounter + 1;
+               end if;
+            end if;         
          when CNTRST_S => 
             if (stop = '1') then
                v.state := WAIT_START_S;

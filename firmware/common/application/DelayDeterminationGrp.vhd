@@ -75,7 +75,8 @@ architecture RTL of DelayDeterminationGrp is
       stopCounter                 : slv(3 downto 0);  
       timeoutCounter              : slv(31 downto 0);  
       preTriggerTimeout           : slv(31 downto 0);  
-      postTriggerTimeout          : slv(31 downto 0);  
+      postTriggerTimeout          : slv(31 downto 0); 
+      preResetTimeout             : slv(31 downto 0); 
       readyForTrigAck             : sl;
    end record;
 
@@ -93,6 +94,7 @@ architecture RTL of DelayDeterminationGrp is
       timeoutCounter              => (others => '0'),
       preTriggerTimeout           => x"00007A12", -- 200us on a 156.25MHz clock
       postTriggerTimeout          => x"00007A12", -- 200us on a 156.25MHz clock
+      preResetTimeout             => x"00007A12", -- 200us on a 156.25MHz clock
       readyForTrigAck             => '0'
    );
    
@@ -121,10 +123,11 @@ architecture RTL of DelayDeterminationGrp is
          axiSlaveRegister (regCon, x"000",  0, v.step);
          axiSlaveRegister (regCon, x"004",  0, v.preTriggerTimeout);
          axiSlaveRegister (regCon, x"008",  0, v.postTriggerTimeout);
-         axiSlaveRegister (regCon, x"00C",  0, v.asicEn);
-         axiSlaveRegister (regCon, x"010",  0, v.start);
-         axiSlaveRegister (regCon, x"014",  0, v.stop);
-         axiSlaveRegisterR(regCon, x"018",  0, busy);
+         axiSlaveRegister (regCon, x"00C",  0, v.preResetTimeout);
+         axiSlaveRegister (regCon, x"020",  0, v.asicEn);
+         axiSlaveRegister (regCon, x"024",  0, v.start);
+         axiSlaveRegister (regCon, x"028",  0, v.stop);
+         axiSlaveRegisterR(regCon, x"02C",  0, busy);
 
          
          axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
@@ -224,6 +227,7 @@ architecture RTL of DelayDeterminationGrp is
             enable            => r.asicEn(i),
             step              => r.step,
             readyForTrig      => readyForTrig(i),
+            preResetTimeout   => r.preResetTimeout,
             readyForTrigAck   => r.readyForTrigAck,
             busy              => busy(i),
 
