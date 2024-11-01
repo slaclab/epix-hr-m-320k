@@ -74,7 +74,8 @@ architecture RTL of DelayDeterminationGrp is
       startCounter                : slv(3 downto 0);
       stopCounter                 : slv(3 downto 0);  
       timeoutCounter              : slv(31 downto 0);  
-      triggerTimeout              : slv(31 downto 0);  
+      preTriggerTimeout           : slv(31 downto 0);  
+      postTriggerTimeout          : slv(31 downto 0);  
       readyForTrigAck             : sl;
    end record;
 
@@ -90,7 +91,8 @@ architecture RTL of DelayDeterminationGrp is
       startCounter                => (others => '0'),
       stopCounter                 => (others => '0'),
       timeoutCounter              => (others => '0'),
-      triggerTimeout              => x"00007A12", -- 200us on a 156.25MHz clock
+      preTriggerTimeout           => x"00007A12", -- 200us on a 156.25MHz clock
+      postTriggerTimeout          => x"00007A12", -- 200us on a 156.25MHz clock
       readyForTrigAck             => '0'
    );
    
@@ -221,7 +223,6 @@ architecture RTL of DelayDeterminationGrp is
             stop              => r.stop,
             enable            => r.asicEn(i),
             step              => r.step,
-            triggerTimeout    «: r.triggerTimeout,
             readyForTrig      => readyForTrig(i),
             readyForTrigAck   => r.readyForTrigAck,
             busy              => busy(i),
