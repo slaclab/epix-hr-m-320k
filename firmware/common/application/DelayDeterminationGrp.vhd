@@ -60,7 +60,7 @@ end DelayDeterminationGrp;
 -- Define architecture
 architecture RTL of DelayDeterminationGrp is
 
-   type StateType is (WAIT_START_S, PRETRIGTIMEOUT_S, SEND_TRIGGER_S, PRETRIGTIMEOUT_S, ACK_S);
+   type StateType is (WAIT_START_S, PRETRIGTIMEOUT_S, SEND_TRIGGER_S, POSTTRIGTIMEOUT_S, ACK_S);
 
    type RegType is record
       state                       : StateType;
