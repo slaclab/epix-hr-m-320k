@@ -56,9 +56,17 @@ end DelayDetermination;
 -- Define architecture
 architecture RTL of DelayDetermination is
 
-   type StateType is (WAIT_START_S, ENDLYCFG_S, SETDLY_S, CNTRST_S, READ_ERRDETCNT_S, READY4TRIG_S);
+   type StateType is (WAIT_START_S, ENDLYCFG_S, SETDLY_S, CNTRST_S, READ_ERRDETCNT_S, READY4TRIG_S, WRITE_OPT_S);
 
    type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S, WAIT_WRITE_DONE_S);
+
+   type RangeStateType is (FIRST_RANGE_S, SECOND_RANGE_S);
+
+   type RangeValueArrayType is array (0 to 23) of slv(31 downto 0);
+
+   type RangeFoundBoolArrayType is array (0 to 23) of sl;
+
+   type RangeStateArrayType is array (0 to 23) of RangeStateType;
 
 
    type RegType is record
@@ -71,7 +79,20 @@ architecture RTL of DelayDetermination is
       readValue                   : slv(31 downto 0);
       readyForTrig                : sl;
       busy                        : sl;
-
+      rangeState                  : RangeStateArrayType;
+      fstRangeStart               : RangeValueArrayType;
+      fstRangeEnd                 : RangeValueArrayType;
+      scndRangeStart              : RangeValueArrayType;
+      scndRangeEnd                : RangeValueArrayType;
+      fstRangeStarted             : RangeFoundBoolArrayType;
+      scndRangeStarted            : RangeFoundBoolArrayType;
+      fstRangeBestValue           : RangeValueArrayType;
+      scndRangeBestValue          : RangeValueArrayType;
+      fstOptimumDelay             : slv(31 downto 0);
+      fstDiff                     : slv(31 downto 0);
+      scndOptimumDelay            : slv(31 downto 0);
+      scndDiff                    : slv(31 downto 0);
+      optimumDelay                : slv(31 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -83,7 +104,21 @@ architecture RTL of DelayDetermination is
       usrDelayCfg                 => (others => '0'),
       readValue                   => (others => '0'),
       readyForTrig                => '0',
-      busy                        => '0'
+      busy                        => '0',
+      rangeState                  => (others => FIRST_RANGE_S),
+      fstRangeStart               => (others => (others => '0')),
+      fstRangeEnd                 => (others => (others => '0')),
+      scndRangeStart              => (others => (others => '0')),
+      scndRangeEnd                => (others => (others => '0')),
+      fstRangeStarted             => (others => '0'),
+      scndRangeStarted            => (others => '0'),
+      fstRangeBestValue           => (others => (others => '0')),
+      scndRangeBestValue          => (others => (others => '0')),
+      fstOptimumDelay             => (others => '0'),
+      scndOptimumDelay            => (others => '0'),
+      optimumDelay                => (others => '0'),
+      fstDiff                     => (others => '0'),
+      scndDiff                    => (others => '0')
    );
    
    
@@ -249,9 +284,19 @@ begin
       case r.state is
          when WAIT_START_S =>
             v.busy := '0';
+            v.readyForTrig        := '0';
+            v.rangeState          := (others => FIRST_RANGE_S);
+            v.fstRangeStart       := (others => (others => '0'));
+            v.fstRangeEnd         := (others => (others => '0'));
+            v.scndRangeStart      := (others => (others => '0'));
+            v.scndRangeEnd        := (others => (others => '0'));
+            v.fstRangeStarted     := (others => '0');
+            v.scndRangeStarted    := (others => '0');
+            v.fstRangeBestValue   := (others => (others => '0'));
+            v.scndRangeBestValue  := (others => (others => '0'));
+            v.regAccessState := WRITE_S;
             if (start = '1' and enable = '1') then
                v.state := ENDLYCFG_S;
-               v.regAccessState := WRITE_S;
             end if;
          -- Enable user delay configuration
          when ENDLYCFG_S =>
@@ -281,7 +326,6 @@ begin
                axiLWrite(usrDlyCfgAddress(regIndex), r.usrDelayCfg, r, v, ack);
                -- check end case
                if (axiLEndOfWrite(r, ack) = True) then
-                  v.regAccessState := WRITE_S;
                   v.regIndex := r.regIndex + 1;
                end if;
             end if;        
@@ -298,6 +342,17 @@ begin
                   v.regIndex := (others => '0');
                end if;
             end if;
+         -- This is where the magic happens
+     
+     
+         --fstRangeEnd         
+         --scndRangeStart      
+         --scndRangeEnd        
+         --fstRangeStarted       
+         --scndRangeStarted      
+         --fstRangeBestValue   
+         --scndRangeBestValue  
+
          when READ_ERRDETCNT_S =>
             if (stop = '1') then
                v.state := WAIT_START_S;
@@ -307,7 +362,7 @@ begin
                v.regAccessState := WRITE_S;
                v.usrDelayCfg := r.usrDelayCfg + step;
                if (r.usrDelayCfg = 511) then
-                  v.state := WAIT_START_S;
+                  v.state := WRITE_OPT_S;
                end if;               
                v.regIndex := (others => '0');
             else
@@ -316,7 +371,31 @@ begin
                if (axiLEndOfRead(r, ack) = True) then
                   v.regAccessState := READ_S;
                   v.regIndex := r.regIndex + 1;
-                  v.readValue := ack.rdData;                  
+                  v.readValue := ack.rdData;
+                  case r.rangeState(regIndex) is
+                     when FIRST_RANGE_S =>
+                        if (ack.rdData = 0) then
+                           if (r.fstRangeStarted(regIndex) = '0') then
+                              v.fstRangeStarted(regIndex) := '1';
+                              v.fstRangeStart(regIndex) := r.usrDelayCfg;
+                           else
+                              v.fstRangeEnd(regIndex) := r.usrDelayCfg;
+                           end if;
+                        else
+                           if (r.fstRangeStarted(regIndex) = '1') then
+                              v.rangeState(regIndex) := SECOND_RANGE_S;
+                           end if;                              
+                        end if;
+                     when SECOND_RANGE_S =>
+                        if (ack.rdData = 0) then
+                           if (r.scndRangeStarted(regIndex) = '0') then
+                              v.scndRangeStarted(regIndex) := '1';
+                              v.scndRangeStart(regIndex) := r.usrDelayCfg;
+                           else
+                              v.scndRangeEnd(regIndex) := r.usrDelayCfg;
+                           end if;
+                        end if;                     
+                  end case;
                end if;
             end if;           
          when READY4TRIG_S =>
@@ -327,9 +406,32 @@ begin
                if(readyForTrigAck = '1') then
                   v.readyForTrig := '0';
                   v.state := READ_ERRDETCNT_S;
+                  v.regAccessState := READ_S;
                end if;
             end if;
-            
+         when WRITE_OPT_S =>
+            if (stop = '1') then
+               v.state := WAIT_START_S;
+            elsif (r.regIndex >= 24) then
+               v.state := WAIT_START_S;
+            else
+               v.fstDiff   := r.fstRangeEnd(regIndex) - r.fstRangeStart(regIndex);
+               v.scndDiff  := r.scndRangeEnd(regIndex) - r.scndRangeStart(regIndex);
+
+               v.fstOptimumDelay   := r.fstRangeStart(regIndex) + r.fstRangeEnd(regIndex);
+               v.scndOptimumDelay  := r.scndRangeStart(regIndex) + r.scndRangeEnd(regIndex);
+
+               if (v.fstDiff > v.scndDiff) then
+                  v.optimumDelay := '0' & v.fstOptimumDelay(31 downto 1);
+               else
+                  v.optimumDelay := '0' & v.scndOptimumDelay(31 downto 1);
+               end if;
+               axiLWrite(usrDlyCfgAddress(regIndex), v.optimumDelay, r, v, ack);
+               -- check end case
+               if (axiLEndOfWrite(r, ack) = True) then
+                  v.regIndex := r.regIndex + 1;
+               end if;
+            end if;
       end case;
       
 
