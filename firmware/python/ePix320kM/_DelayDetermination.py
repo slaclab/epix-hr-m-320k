@@ -3,7 +3,9 @@ import pyrogue as pr
 class DelayDetermination(pr.Device):
     def __init__(self, numAsics, **kwargs):      
         super().__init__(**kwargs)
-        
+
+        stateEnum  = { 0: "Idle", 1: "Running"}
+                
         self.add(pr.RemoteVariable(
             name         = 'Step',
             offset       = 0x0,
@@ -46,3 +48,12 @@ class DelayDetermination(pr.Device):
             function     = pr.Command.touchOne
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'state',
+            offset       = 0x14,
+            bitSize      = 1,
+            mode         = 'RO',
+            bitOffset    = 0,
+            pollInterval = 1,
+            enum         = stateEnum,
+        ))   

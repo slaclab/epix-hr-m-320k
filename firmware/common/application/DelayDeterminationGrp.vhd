@@ -67,7 +67,7 @@ architecture RTL of DelayDeterminationGrp is
       sAxilWriteSlave             : AxiLiteWriteSlaveType;
       sAxilReadSlave              : AxiLiteReadSlaveType;
       forceTrigger                : sl;
-      increment                   : slv(8 downto 0);
+      step                        : slv(8 downto 0);
       asicEn                      : slv(NUM_DRIVERS_G-1 downto 0);
       start                       : sl;
       stop                        : sl;
@@ -83,7 +83,7 @@ architecture RTL of DelayDeterminationGrp is
       sAxilWriteSlave             => AXI_LITE_WRITE_SLAVE_INIT_C,
       sAxilReadSlave              => AXI_LITE_READ_SLAVE_INIT_C,
       forceTrigger                => '0',
-      increment                   => '0' & x"01",
+      step                        => '0' & x"01",
       asicEn                      => (others => '1'),
       start                       => '0',
       stop                        => '0',
@@ -107,7 +107,7 @@ architecture RTL of DelayDeterminationGrp is
 
    begin
 
-      comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, allReady) is
+      comb : process (axilRst, sAxilWriteMaster, sAxilReadMaster, r, allReady, busy) is
          variable v             : RegType;
          variable regCon        : AxiLiteEndPointType;
       begin
@@ -116,11 +116,12 @@ architecture RTL of DelayDeterminationGrp is
          axiSlaveWaitTxn(regCon, sAxilWriteMaster, sAxilReadMaster, v.sAxilWriteSlave, v.sAxilReadSlave);
          
 
-         axiSlaveRegister (regCon, x"000",  0, v.increment);
+         axiSlaveRegister (regCon, x"000",  0, v.step);
          axiSlaveRegister (regCon, x"004",  0, v.triggerTimeout);
          axiSlaveRegister (regCon, x"008",  0, v.asicEn);
          axiSlaveRegister (regCon, x"00C",  0, v.start);
          axiSlaveRegister (regCon, x"010",  0, v.stop);
+         axiSlaveRegisterR(regCon, x"014",  0, busy);
 
          
          axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
@@ -210,9 +211,10 @@ architecture RTL of DelayDeterminationGrp is
             start             => r.start,
             stop              => r.stop,
             enable            => r.asicEn(i),
-            increment         => r.increment,
+            step              => r.step,
             readyForTrig      => readyForTrig(i),
             readyForTrigAck   => r.readyForTrigAck,
+            busy              => busy,
 
             mAxilWriteMaster  => mAxilWriteMasters(i), 
             mAxilWriteSlave   => mAxilWriteSlaves(i),  

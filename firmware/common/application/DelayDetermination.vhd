@@ -44,9 +44,10 @@ entity DelayDetermination is
       start            : in  sl;
       stop             : in  sl;
       enable           : in  sl;
-      increment        : in  slv(8 downto 0);
+      step        : in  slv(8 downto 0);
       readyForTrig     : out sl;
-      readyForTrigAck  : in  sl
+      readyForTrigAck  : in  sl;
+      busy             : in  sl
       
    );
 end DelayDetermination;
@@ -69,6 +70,7 @@ architecture RTL of DelayDetermination is
       usrDelayCfg                 : slv(31 downto 0);
       readValue                   : slv(31 downto 0);
       readyForTrig                : sl;
+      busy                        : sl;
 
    end record;
 
@@ -80,7 +82,8 @@ architecture RTL of DelayDetermination is
       failingRegister             => (others => '0'),
       usrDelayCfg                 => (others => '0'),
       readValue                   => (others => '0'),
-      readyForTrig                => '0'
+      readyForTrig                => '0',
+      busy                        => '0'
    );
    
    
@@ -236,7 +239,7 @@ begin
 
 
    -- Algorithm : https://confluence.slac.stanford.edu/display/ppareg/Delay+determination+in+lanes
-   comb : process (axilRst, r, ack, start, stop, readyForTrigAck, enable, increment) is
+   comb : process (axilRst, r, ack, start, stop, readyForTrigAck, enable, step) is
       variable v             : RegType;
       variable regIndex      : integer;
    begin
@@ -245,12 +248,14 @@ begin
 
       case r.state is
          when WAIT_START_S =>
+            v.busy := '0';
             if (start = '1' and enable = '1') then
                v.state := ENDLYCFG_S;
                v.regAccessState := WRITE_S;
             end if;
          -- Enable user delay configuration
          when ENDLYCFG_S =>
+            v.busy := '1';
             if (stop = '1') then
                v.state := WAIT_START_S;
             else         
@@ -300,7 +305,7 @@ begin
                v.regIndex := (others => '0');
                v.state := SETDLY_S;
                v.regAccessState := WRITE_S;
-               v.usrDelayCfg := r.usrDelayCfg + increment;
+               v.usrDelayCfg := r.usrDelayCfg + step;
                if (r.usrDelayCfg = 511) then
                   v.state := WAIT_START_S;
                end if;               
@@ -338,7 +343,8 @@ begin
       rin <= v;
 
       readyForTrig <= r.readyForTrig;
-
+      busy <= r.busy;
+      
    end process comb;
 
    seq : process (axilClk) is
