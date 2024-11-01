@@ -323,7 +323,7 @@ begin
             elsif (r.regIndex >= 24) then
                v.regIndex := (others => '0');
                v.state := CNTPRERST_TIMEOUT_S;
-               v.timeOutCounter := 0;
+               v.timeOutCounter := (others => '0');
             else
                axiLWrite(usrDlyCfgAddress(regIndex), r.usrDelayCfg, r, v, ack);
                -- check end case
@@ -338,7 +338,7 @@ begin
             else         
                if(r.timeOutCounter >= preResetTimeout) then
                   v.state := CNTRST_S;
-                  v.timeOutCounter := 0;
+                  v.timeOutCounter := (others => '0');
                   v.regAccessState := WRITE_S;
                   v.regIndex := (others => '0');                  
                else
