@@ -475,6 +475,7 @@ begin
                      v.optimumDelay := '0' & v.scndOptimumDelay(31 downto 1);
                   else
                      v.optimumDelay := '0' & v.thirdOptimumDelay(31 downto 1);
+                  end if;
                elsif (v.scndDiff > v.thirdDiff) then
                   v.optimumDelay := '0' & v.scndOptimumDelay(31 downto 1);
                else
