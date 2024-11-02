@@ -206,12 +206,6 @@ architecture rtl of Application is
                                              addrBits     => 31,
                                              connectivity => x"FFFF")
                                              );
-
-   constant U_2S1MXBARDESER_CONFIG_C  : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
-      0                => (   baseAddr     => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr,
-                              addrBits     => 24,
-                              connectivity => x"FFFF")
-                              );
                               
    constant TTLOUT_WIDTH_C         : natural  := 6;
 
@@ -262,22 +256,10 @@ architecture rtl of Application is
    signal axilReadMasters        : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilReadSlaves         : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal axilWriteMastersDDXbar : AxiLiteWriteMasterArray(NUM_OF_ASICS_G-1 downto 0); 
-   signal axilWriteSlavesDDXbar  : AxiLiteWriteSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
-   signal axilReadMastersDDXbar  : AxiLiteReadMasterArray(NUM_OF_ASICS_G-1 downto 0); 
-   signal axilReadSlavesDDXbar   : AxiLiteReadSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
-
-   signal axilWriteMastersXbarAD : AxiLiteWriteMasterArray(NUM_OF_ASICS_G-1 downto 0); 
-   signal axilWriteSlavesXbarAD  : AxiLiteWriteSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
-   signal axilReadMastersXbarAD  : AxiLiteReadMasterArray(NUM_OF_ASICS_G-1 downto 0); 
-   signal axilReadSlavesXbarAD   : AxiLiteReadSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
-
-
-   constant APPDESER_XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_OF_ASICS_G-1 downto 0) := genAxiLiteConfig(NUM_OF_ASICS_G, XBAR_CONFIG_C(DESER_INDEX_C).baseAddr, 16, 12);
-   signal axilWriteMastersAppDeser : AxiLiteWriteMasterArray(NUM_OF_ASICS_G-1 downto 0);
-   signal axilWriteSlavesAppDeser  : AxiLiteWriteSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
-   signal axilReadMastersAppDeser  : AxiLiteReadMasterArray(NUM_OF_ASICS_G-1 downto 0);
-   signal axilReadSlavesAppDeser   : AxiLiteReadSlaveArray(NUM_OF_ASICS_G-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal mAxilWriteMastersDD : AxiLiteWriteMasterArray(NUM_OF_ASICS_G-1 downto 0); 
+   signal mAxilWriteSlavesDD  : AxiLiteWriteSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
+   signal mAxilReadMastersDD  : AxiLiteReadMasterArray(NUM_OF_ASICS_G-1 downto 0); 
+   signal mAxilReadSlavesDD   : AxiLiteReadSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
    -- AXI-Lite Signals
    signal axilSaciInWriteMasters       : AxiLiteWriteMasterArray(1 downto 0); 
@@ -705,66 +687,16 @@ begin
          sAxilWriteMaster  => axilWriteMasters(DELAYDET_INDEX_C),
          sAxilWriteSlave   => axilWriteSlaves(DELAYDET_INDEX_C),
    
-         mAxilWriteMasters  => axilWriteMastersDDXbar,
-         mAxilWriteSlaves   => axilWriteSlavesDDXbar,
-         mAxilReadMasters   => axilReadMastersDDXbar,
-         mAxilReadSlaves    => axilReadSlavesDDXbar,
+         mAxilWriteMasters  => mAxilWriteMastersDD,
+         mAxilWriteSlaves   => mAxilWriteSlavesDD,
+         mAxilReadMasters   => mAxilReadMastersDD,
+         mAxilReadSlaves    => mAxilReadSlavesDD,
          
          forceTrigger     => DelayDeterminationTrigger
          
       );
 
 
-      U_1S4MXBARAPPDESER : entity surf.AxiLiteCrossbar
-         generic map (
-            TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 1,
-            NUM_MASTER_SLOTS_G => NUM_OF_ASICS_G,
-            MASTERS_CONFIG_G   => APPDESER_XBAR_CONFIG_C)
-         port map (
-            sAxiWriteMasters(0) => axilWriteMasters(DESER_INDEX_C),
-            sAxiWriteSlaves(0)  => axilWriteSlaves(DESER_INDEX_C),
-            sAxiReadMasters(0)  => axilReadMasters(DESER_INDEX_C),
-            sAxiReadSlaves(0)   => axilReadSlaves(DESER_INDEX_C),
-            mAxiWriteMasters    => axilWriteMastersAppDeser,
-            mAxiWriteSlaves     => axilWriteSlavesAppDeser,
-            mAxiReadMasters     => axilReadMastersAppDeser,
-            mAxiReadSlaves      => axilReadSlavesAppDeser,
-            axiClk              => axilClk,
-            axiClkRst           => axilRst);
-
-
-      G_2S1MXBARAPPDESER : for i in 0 to NUM_OF_ASICS_G-1 generate
-         U_2S1MXBARAPPDESER : entity surf.AxiLiteCrossbar
-         generic map (
-            TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 2,
-            NUM_MASTER_SLOTS_G => 1,
-            MASTERS_CONFIG_G   => U_2S1MXBARDESER_CONFIG_C)
-         port map (
-            axiClk               => axilClk,
-            axiClkRst            => axilRst,
-
-            sAxiWriteMasters(0)  => axilWriteMastersDDXbar(i),
-            sAxiWriteMasters(1)  => axilWriteMastersAppDeser(i),
-            sAxiWriteSlaves(0)   => axilWriteSlavesDDXbar(i),
-            sAxiWriteSlaves(1)   => axilWriteSlavesAppDeser(i),
-            sAxiReadMasters(0)   => axilReadMastersDDXbar(i),
-            sAxiReadMasters(1)   => axilReadMastersAppDeser(i),
-            sAxiReadSlaves(0)    => axilReadSlavesDDXbar(i),
-            sAxiReadSlaves(1)    => axilReadSlavesAppDeser(i),
-         
-            mAxiWriteMasters(0) => axilWriteMastersXbarAD(i),
-            mAxiWriteSlaves(0)  => axilWriteSlavesXbarAD(i),
-            mAxiReadMasters(0)  => axilReadMastersXbarAD(i),
-            mAxiReadSlaves(0)   => axilReadSlavesXbarAD(i)  
-         );
-      end generate;
-
-
-      
-   
-   
    U_Deser : entity work.AppDeser
       generic map (
          TPD_G             => TPD_G,
@@ -776,10 +708,17 @@ begin
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
-         axilReadMasters => axilReadMastersXbarAD,
-         axilReadSlaves  => axilReadSlavesXbarAD,
-         axilWriteMasters=> axilWriteMastersXbarAD,
-         axilWriteSlaves => axilWriteSlavesXbarAD,
+
+         mAxilReadMasters  => mAxilReadMastersDD,
+         mAxilReadSlaves   => mAxilReadSlavesDD,
+         mAxilWriteMasters => mAxilWriteMastersDD,
+         mAxilWriteSlaves  => mAxilWriteSlavesDD,
+
+         axilReadMaster  => axilReadMasters(DESER_INDEX_C),
+         axilReadSlave   => axilReadSlaves(DESER_INDEX_C),
+         axilWriteMaster => axilWriteMasters(DESER_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(DESER_INDEX_C),
+         
          -- ASIC Ports
          asicDataP       => asicDataP,
          asicDataM       => asicDataM,
