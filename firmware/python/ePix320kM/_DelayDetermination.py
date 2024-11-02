@@ -109,6 +109,11 @@ class DelayDetermination(pr.Device):
             function     = pr.Command.touchOne
         ))
 
+        @self.command(description  = 'Stops the triggers and blows off data in the pipeline')
+        def DisableManualDelay():
+            for i in range(numAsics):
+                self.root.App.SspMonGrp[i].enable.set(True)
+                self.root.App.SspMonGrp[i].EnUsrDlyCfg.set(0x0)
 
     @staticmethod   
     def timeConverter(var, read):
@@ -120,4 +125,4 @@ class DelayDetermination(pr.Device):
         freq = 156.25
         var.dependencies[0].set(value=int(value/(1/freq)), write=write)
         return value
-   
+

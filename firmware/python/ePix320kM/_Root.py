@@ -351,6 +351,12 @@ class Root(pr.Root):
             expand   = False,
         ))
 
+        self.add(pr.LocalCommand(name='Enable DataReceivers',
+                                 description='[asic0, asic1, asic2, asic3]',
+                                 value=[1,1,1,1],
+                                 function=self.enableDataReceivers
+        ))
+
         self.add(pr.LocalCommand(name='InitASIC',
                                  description='[routine, asic0, asic1, asic2, asic3]',
                                  value=[4,1,1,1,1],
@@ -509,6 +515,11 @@ class Root(pr.Root):
             self.fread.open(filename)
             self.fread.closeWait()
 
+    def enableDataReceivers(self, dev,cmd,arg):
+        arguments = np.asarray(arg)
+        if (self.justCtrl == False) :
+            for asicIndex in range(self.numOfAsics) :
+                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(arguments[asicIndex])
         
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""     
