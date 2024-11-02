@@ -49,16 +49,22 @@ SetDebugCoreClk ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[
 #######################
 
 #156.25 clock domain
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[fstRangeEnd][0]__0} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[fstRangeStart][0]__0} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[fstRangeStarted]__0} {0} {23}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[scndRangeEnd][0]__0} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[scndRangeStart][0]__0} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[scndRangeStarted]__0} {0} {23}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[state]__0} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[usrDelayCfg]__0} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[regIndex]__0} {0} {4}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[fstRangeEnd][0]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[fstRangeStart][0]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[fstRangeStarted]} {0} {23}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[scndRangeEnd][0]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[scndRangeStart][0]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[scndRangeStarted]} {0} {23}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[state]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[usrDelayCfg]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r_reg[regIndex]} {0} {4}
 ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v[optimumDelay]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v[fstOptimumDelay]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v[scndOptimumDelay]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v[fstDiff]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v[scndDiff]} {0} {31}
+
+
 
 
 # 42 MHz clk domain

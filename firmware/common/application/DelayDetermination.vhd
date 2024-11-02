@@ -130,6 +130,9 @@ architecture RTL of DelayDetermination is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType := REG_INIT_C;
 
+   attribute keep : string;
+   attribute keep of r           : signal is "true";
+
    type registerAddressOffsetType is array (0 to 23) of slv(31 downto 0);
    constant detErrCntAddresses : registerAddressOffsetType := 
          (x"000000C0"+AXIL_BASE_ADDR_G, x"000000C4"+AXIL_BASE_ADDR_G, 
@@ -277,7 +280,7 @@ begin
 
 
    -- Algorithm : https://confluence.slac.stanford.edu/display/ppareg/Delay+determination+in+lanes
-   comb : process (axilRst, r, ack, start, stop, readyForTrigAck, enable, step) is
+   comb : process (axilRst, r, ack, start, stop, readyForTrigAck, enable, step, preResetTimeout) is
       variable v             : RegType;
       variable regIndex      : integer;
    begin
