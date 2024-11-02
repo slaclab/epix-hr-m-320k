@@ -1,18 +1,5 @@
 import pyrogue as pr
 
-
-
-         axiSlaveRegister (regCon, x"000",  0, v.step);
-         axiSlaveRegister (regCon, x"004",  0, v.preTriggerTimeout);
-         axiSlaveRegister (regCon, x"008",  0, v.postTriggerTimeout);
-         axiSlaveRegister (regCon, x"00C",  0, v.preResetTimeout);
-         axiSlaveRegister (regCon, x"020",  0, v.asicEn);
-         axiSlaveRegister (regCon, x"024",  0, v.start);
-         axiSlaveRegister (regCon, x"028",  0, v.stop);
-         axiSlaveRegisterR(regCon, x"02C",  0, busy);
-
-
-
 class DelayDetermination(pr.Device):
     def __init__(self, numAsics, **kwargs):      
         super().__init__(**kwargs)

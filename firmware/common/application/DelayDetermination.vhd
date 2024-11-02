@@ -358,16 +358,6 @@ begin
                end if;
             end if;
          -- This is where the magic happens
-     
-     
-         --fstRangeEnd         
-         --scndRangeStart      
-         --scndRangeEnd        
-         --fstRangeStarted       
-         --scndRangeStarted      
-         --fstRangeBestValue   
-         --scndRangeBestValue  
-
          when READ_ERRDETCNT_S =>
             if (stop = '1') then
                v.state := WAIT_START_S;
@@ -386,7 +376,6 @@ begin
                if (axiLEndOfRead(r, ack) = True) then
                   v.regAccessState := READ_S;
                   v.regIndex := r.regIndex + 1;
-                  v.readValue := ack.rdData;
                   case r.rangeState(regIndex) is
                      when FIRST_RANGE_S =>
                         if (ack.rdData = 0) then

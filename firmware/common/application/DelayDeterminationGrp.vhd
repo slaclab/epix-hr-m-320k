@@ -137,7 +137,7 @@ architecture RTL of DelayDeterminationGrp is
                v.forceTrigger := '0';
                v.readyForTrigAck := '0';
                if (allReady = (NUM_DRIVERS_G-1 downto 0 => '1') and r.asicEn /= (NUM_DRIVERS_G-1 downto 0 => '0')) then
-                  v.state := SEND_TRIGGER_S;
+                  v.state := PRETRIGTIMEOUT_S;
                   v.timeoutCounter := (others => '0');
                end if;
             when PRETRIGTIMEOUT_S =>
