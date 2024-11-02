@@ -61,7 +61,7 @@ architecture RTL of DelayDetermination is
 
    type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S, WAIT_WRITE_DONE_S);
 
-   type RangeStateType is (FIRST_RANGE_S, SECOND_RANGE_S);
+   type RangeStateType is (FIRST_RANGE_S, SECOND_RANGE_S, THIRD_RANGE_S, DONE_S);
 
    type RangeValueArrayType is array (0 to 23) of slv(31 downto 0);
 
@@ -81,18 +81,25 @@ architecture RTL of DelayDetermination is
       readyForTrig                : sl;
       busy                        : sl;
       rangeState                  : RangeStateArrayType;
+
       fstRangeStart               : RangeValueArrayType;
       fstRangeEnd                 : RangeValueArrayType;
-      scndRangeStart              : RangeValueArrayType;
-      scndRangeEnd                : RangeValueArrayType;
       fstRangeStarted             : RangeFoundBoolArrayType;
-      scndRangeStarted            : RangeFoundBoolArrayType;
-      fstRangeBestValue           : RangeValueArrayType;
-      scndRangeBestValue          : RangeValueArrayType;
       fstOptimumDelay             : slv(31 downto 0);
       fstDiff                     : slv(31 downto 0);
+
+      scndRangeStart              : RangeValueArrayType;
+      scndRangeEnd                : RangeValueArrayType;
+      scndRangeStarted            : RangeFoundBoolArrayType;
       scndOptimumDelay            : slv(31 downto 0);
       scndDiff                    : slv(31 downto 0);
+
+      thirdRangeStart             : RangeValueArrayType;
+      thirdRangeEnd               : RangeValueArrayType;
+      thirdRangeStarted           : RangeFoundBoolArrayType;
+      thirdOptimumDelay           : slv(31 downto 0);
+      thirdDiff                   : slv(31 downto 0);
+
       optimumDelay                : slv(31 downto 0);
       timeOutCounter              : slv(31 downto 0);
    end record;
@@ -108,19 +115,27 @@ architecture RTL of DelayDetermination is
       readyForTrig                => '0',
       busy                        => '0',
       rangeState                  => (others => FIRST_RANGE_S),
+
       fstRangeStart               => (others => (others => '0')),
       fstRangeEnd                 => (others => (others => '0')),
+      fstRangeStarted             => (others => '0'),
+      fstOptimumDelay             => (others => '0'),
+      fstDiff                     => (others => '0'),
+
       scndRangeStart              => (others => (others => '0')),
       scndRangeEnd                => (others => (others => '0')),
-      fstRangeStarted             => (others => '0'),
       scndRangeStarted            => (others => '0'),
-      fstRangeBestValue           => (others => (others => '0')),
-      scndRangeBestValue          => (others => (others => '0')),
-      fstOptimumDelay             => (others => '0'),
       scndOptimumDelay            => (others => '0'),
-      optimumDelay                => (others => '0'),
-      fstDiff                     => (others => '0'),
       scndDiff                    => (others => '0'),
+
+      thirdRangeStart             => (others => (others => '0')),
+      thirdRangeEnd               => (others => (others => '0')),
+      thirdRangeStarted           => (others => '0'),
+      thirdOptimumDelay           => (others => '0'),
+      thirdDiff                   => (others => '0'),
+
+      optimumDelay                => (others => '0'),
+
       timeOutCounter              => (others => '0')
    );
    
@@ -294,12 +309,13 @@ begin
             v.rangeState          := (others => FIRST_RANGE_S);
             v.fstRangeStart       := (others => (others => '0'));
             v.fstRangeEnd         := (others => (others => '0'));
+            v.fstRangeStarted     := (others => '0');
             v.scndRangeStart      := (others => (others => '0'));
             v.scndRangeEnd        := (others => (others => '0'));
-            v.fstRangeStarted     := (others => '0');
             v.scndRangeStarted    := (others => '0');
-            v.fstRangeBestValue   := (others => (others => '0'));
-            v.scndRangeBestValue  := (others => (others => '0'));
+            v.thirdRangeStart     := (others => (others => '0'));
+            v.thirdRangeEnd       := (others => (others => '0'));
+            v.thirdRangeStarted   := (others => '0');            
             v.regAccessState := WRITE_S;
             if (start = '1' and enable = '1') then
                v.state := ENDLYCFG_S;
@@ -403,7 +419,27 @@ begin
                            else
                               v.scndRangeEnd(regIndex) := r.usrDelayCfg;
                            end if;
-                        end if;                     
+                        else
+                           if (r.scndRangeStarted(regIndex) = '1') then
+                              v.rangeState(regIndex) := THIRD_RANGE_S;
+                           end if;                            
+                        end if;     
+                     when THIRD_RANGE_S =>
+                        if (ack.rdData = 0) then
+                           if (r.thirdRangeStarted(regIndex) = '0') then
+                              v.thirdRangeStarted(regIndex) := '1';
+                              v.thirdRangeStart(regIndex) := r.usrDelayCfg;
+                              v.thirdRangeEnd(regIndex) := r.usrDelayCfg;
+                           else
+                              v.thirdRangeEnd(regIndex) := r.usrDelayCfg;
+                           end if;
+                        else
+                           if (r.thirdRangeStarted(regIndex) = '1') then
+                              v.rangeState(regIndex) := DONE_S;
+                           end if;                            
+                        end if;        
+                     when DONE_S =>
+                     -- DO NOTHING
                   end case;
                end if;
             end if;           
@@ -426,14 +462,23 @@ begin
             else
                v.fstDiff   := r.fstRangeEnd(regIndex) - r.fstRangeStart(regIndex);
                v.scndDiff  := r.scndRangeEnd(regIndex) - r.scndRangeStart(regIndex);
+               v.thirdDiff  := r.thirdRangeEnd(regIndex) - r.thirdRangeStart(regIndex);
 
                v.fstOptimumDelay   := r.fstRangeStart(regIndex) + r.fstRangeEnd(regIndex);
                v.scndOptimumDelay  := r.scndRangeStart(regIndex) + r.scndRangeEnd(regIndex);
+               v.thirdOptimumDelay := r.thirdRangeStart(regIndex) + r.thirdRangeEnd(regIndex);
 
                if (v.fstDiff > v.scndDiff) then
-                  v.optimumDelay := '0' & v.fstOptimumDelay(31 downto 1);
-               else
+                  if (v.fstDiff > v.thirdDiff) then
+                     v.optimumDelay := '0' & v.fstOptimumDelay(31 downto 1);
+                  elsif (v.scndDiff > v.thirdDiff) then
+                     v.optimumDelay := '0' & v.scndOptimumDelay(31 downto 1);
+                  else
+                     v.optimumDelay := '0' & v.thirdOptimumDelay(31 downto 1);
+               elsif (v.scndDiff > v.thirdDiff) then
                   v.optimumDelay := '0' & v.scndOptimumDelay(31 downto 1);
+               else
+                  v.optimumDelay := '0' & v.thirdOptimumDelay(31 downto 1);
                end if;
                axiLWrite(usrDlyCfgAddress(regIndex), v.optimumDelay, r, v, ack);
                -- check end case
