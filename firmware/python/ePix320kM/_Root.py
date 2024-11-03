@@ -578,10 +578,13 @@ class Root(pr.Root):
         if arguments[0] != 0:
             self.fnInitAsicScript(dev,cmd,arg)
 
+
         if not self.sim :
             self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
 
-
+        if not self.sim :
+            self.App.FPGADelayDetermination.Start()
+            time.sleep(0.1)
 
         
     def fnInitAsicScript(self, dev,cmd,arg):
@@ -654,6 +657,8 @@ class Root(pr.Root):
                 if arguments[asicIndex] != 0:
                     self.root.LoadConfig(self.filenameASIC[asicIndex-1])
                     print("Loading {}".format(self.filenameASIC[asicIndex-1]))
+
+
 
         print("Initialization routine completed.")
 
