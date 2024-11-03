@@ -110,7 +110,7 @@ class DelayDetermination(pr.Device):
         ))
 
         @self.command(description  = 'Stops the triggers and blows off data in the pipeline')
-        def DisableManualDelay():
+        def DisableUsrDelay():
             for i in range(numAsics):
                 self.root.App.SspMonGrp[i].enable.set(True)
                 self.root.App.SspMonGrp[i].EnUsrDlyCfg.set(0x0)
