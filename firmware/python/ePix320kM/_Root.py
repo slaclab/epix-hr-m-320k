@@ -595,8 +595,42 @@ class Root(pr.Root):
 
         time.sleep(1)
 
+        #print("Warming up ASICs")
+        #self.warmUp(arg[1:5])
+
+        
+        error = 0
+        print("Evaluating optimal delays")
+
+        self.App.FPGADelayDetermination.Start()
+        time.sleep(1)
+        while (self.App.FPGADelayDetermination.Busy.get() != 0) :
+            time.sleep(1)
+
+
+        # Cleanup
         if not self.sim :
-            self.App.FPGADelayDetermination.Start()
+            for loops in range (11):
+                
+                error = 0
+
+                
+                for asicIndex in range (4):
+                    getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
+
+                self.Trigger()
+                time.sleep(0.01)
+
+                for asicIndex in range (4):
+                    FillOnFailCntLane    = [0] * 24
+                    for laneIndex in range (24):
+                        FillOnFailCntLane[laneIndex] = getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").FillOnFailCntLane[laneIndex].get()
+                        if(FillOnFailCntLane[laneIndex] > 0) :
+                            error = 1
+
+                if error == 0:
+                    break                        
+            print("Done")
 
         
     def fnInitAsicScript(self, dev,cmd,arg):
@@ -681,6 +715,21 @@ class Root(pr.Root):
 
     def dumpCounters(self, dev,cmd,arg):
         self.getPKREGCounters(arg)
+
+    def warmUp(self, asicEnable):
+        # disable unused batchers
+        for batcherIndex in range(4):
+            self.enableAsic(batcherIndex, 0)
+
+        #empty run
+        frames = 5000
+        rate = 5000
+        self.hwTrigger(frames, rate)        
+        
+        for batcherIndex in range(4):
+            self.enableAsic(batcherIndex, asicEnable[batcherIndex])
+
+
 
     def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False, cleanRun=False) :
 

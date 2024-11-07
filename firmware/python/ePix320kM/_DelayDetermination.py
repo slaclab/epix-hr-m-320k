@@ -84,7 +84,7 @@ class DelayDetermination(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'state',
+            name         = 'Busy',
             offset       = 0x2C,
             bitSize      = numAsics,
             mode         = 'RO',
