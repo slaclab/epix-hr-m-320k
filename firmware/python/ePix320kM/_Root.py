@@ -717,7 +717,7 @@ class Root(pr.Root):
         self.getPKREGCounters(arg)
 
     def warmUp(self, asicEnable):
-        # disable unused batchers
+        # disable batchers
         for batcherIndex in range(4):
             self.enableAsic(batcherIndex, 0)
 
@@ -749,8 +749,8 @@ class Root(pr.Root):
 
         # disable unused batchers
         for batcherIndex, enable in enumerate(asicEnable):
-            self.enableAsic(batcherIndex, enable)
-            print("Enabling batcher {}".format(batcherIndex))
+            self.enableAsic(batcherIndex, False)
+            print("Disabling batchers")
 
         #empty run
         frames = 2500
@@ -853,6 +853,9 @@ class Root(pr.Root):
             getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
             print(bcolors.BOLD + "Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()))  + bcolors.ENDC)
 
+        # enable batcher of enabled ASIC
+        for batcherIndex, enable in enumerate(asicEnable):
+            self.enableAsic(batcherIndex, enable)
 
     def clearUpStreamPpg(self):
         if (self.pciePgpEn == False) :
