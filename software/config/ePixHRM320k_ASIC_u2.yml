@@ -91,7 +91,7 @@ Root:
       SDrst2_b: 0x8
       SDclk3_b: 0x0
       SDrst3_b: 0x8
-      CompTH_ePixM: 0x0
+      CompTH_ePixM: 24
       Precharge_DAC_ePixM: 45
       FE_CLK_dly: 0x4
       FE_CLK_cnt_en: True

@@ -594,10 +594,6 @@ class Root(pr.Root):
         # do not propagate images to the system/DAQ.
 
         time.sleep(1)
-
-        #print("Warming up ASICs")
-        #self.warmUp(arg[1:5])
-
         
         error = 0
         print("Evaluating optimal delays")
@@ -610,7 +606,7 @@ class Root(pr.Root):
 
         # Cleanup
         if not self.sim :
-            for loops in range (11):
+            for loops in range (20):
                 
                 error = 0
 
@@ -629,8 +625,13 @@ class Root(pr.Root):
                             error = 1
 
                 if error == 0:
-                    break                        
-            print("Done")
+                    break      
+
+        # enable batcher of enabled ASIC
+        for batcherIndex, enable in enumerate(arg[1:5]):
+            self.enableAsic(batcherIndex, enable)
+
+        print("Done")
 
         
     def fnInitAsicScript(self, dev,cmd,arg):
@@ -715,21 +716,6 @@ class Root(pr.Root):
 
     def dumpCounters(self, dev,cmd,arg):
         self.getPKREGCounters(arg)
-
-    def warmUp(self, asicEnable):
-        # disable batchers
-        for batcherIndex in range(4):
-            self.enableAsic(batcherIndex, 0)
-
-        #empty run
-        frames = 5000
-        rate = 5000
-        self.hwTrigger(frames, rate)        
-        
-        for batcherIndex in range(4):
-            self.enableAsic(batcherIndex, asicEnable[batcherIndex])
-
-
 
     def laneDiagnostics(self, asicEnable, threshold=1, loops=5, debugPrint=False, cleanRun=False) :
 
@@ -852,10 +838,6 @@ class Root(pr.Root):
             getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").CountReset()
             getattr(self.root.App, f"SspMonGrp[{asicIndex}]").CntRst()       
             print(bcolors.BOLD + "Disabled lanes of asic {} now is {}".format(asicIndex, hex(getattr(self.root.App.AsicTop, f"DigAsicStrmRegisters{asicIndex}").DisableLane.get()))  + bcolors.ENDC)
-
-        # enable batcher of enabled ASIC
-        for batcherIndex, enable in enumerate(asicEnable):
-            self.enableAsic(batcherIndex, enable)
 
     def clearUpStreamPpg(self):
         if (self.pciePgpEn == False) :
