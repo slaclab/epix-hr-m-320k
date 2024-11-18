@@ -19,9 +19,10 @@ all_errors=np.loadtxt("all_errors{}.csv".format(sys.argv[1]), delimiter=',')
 taps=int(sys.argv[2])
 
 shape=np.shape(all_errors)
-
-x = [ i*1024/taps for i in range(shape[1]) ]
-
+print(taps)
+x = [ i*512/taps for i in range(shape[1]) ]
+print(x)
+print(shape)
 for i in range(24) :
     plt.subplot(4,6,asicLane2ViewerMapping[i]+1)
     plt.xlabel("eye lane {}".format(i))
