@@ -81,9 +81,9 @@ Root:
       InjEn_ePixM: False
       ClkInj_ePixM: False
       rowCK2matrix_delay: 0x4
-      RefinN: 0x0
+      RefinN: 0x7
       RefinCompN: 0x3
-      RefinP: 0x0
+      RefinP: 0x7
       ro_mode_i: 0x0
       SDclk1_b: 0x0
       SDrst1_b: 0x8
@@ -92,7 +92,7 @@ Root:
       SDclk3_b: 0x0
       SDrst3_b: 0x8
       CompTH_ePixM: 24
-      Precharge_DAC_ePixM: 45
+      Precharge_DAC_ePixM: 50
       FE_CLK_dly: 0x4
       FE_CLK_cnt_en: True
       FE_ACQ2GR_en: True
