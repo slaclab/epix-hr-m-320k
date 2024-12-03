@@ -738,6 +738,7 @@ class Root(pr.Root):
             self.enableAsic(batcherIndex, False)
             print("Disabling batchers")
 
+
         #empty run
         frames = 2500
         rate = 5000
