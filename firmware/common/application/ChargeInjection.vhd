@@ -531,7 +531,7 @@ begin
                   else
                      v.forceTrigger := '0';
                   end if;
-               end
+               end if;
                if (r.cycleCounter <= r.triggerWaitCycles) then
                   v.cycleCounter := r.cycleCounter + 1;
                else
