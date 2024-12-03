@@ -48,7 +48,10 @@ entity ChargeInjection is
       mAxilReadSlave    : in   AxiLiteReadSlaveType;
       
       -- Daq trigger and start readout request input
-      forceTrigger        : out  sl
+      forceTrigger        : out  sl;
+
+      -- Timing Daq trigger (TriggerClk Domain = axilClk Domain)
+      timingDaqTrigger    : in   sl;
       
    );
 end ChargeInjection;
@@ -66,7 +69,7 @@ architecture RTL of ChargeInjection is
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, 
                       TEST_END_S , ERROR_S, INIT_S, 
-                      CACHE408C_S, CACHE400C_S, CACHE4068_S);
+                      CACHE408C_S, CACHE400C_S, CACHE4068_S, WAITTIMINGTRIGGER_S);
 
    type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S, WAIT_WRITE_DONE_S);
 
@@ -99,6 +102,7 @@ architecture RTL of ChargeInjection is
       cache408C                   : slv(31 downto 0);
       cache400C                   : slv(31 downto 0);
       cache4068                   : slv(31 downto 0);
+      useTimingTrigger            : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -125,7 +129,8 @@ architecture RTL of ChargeInjection is
       triggerStateCounter         => (others=>'0'),
       cache408C                   => (others=>'0'),
       cache400C                   => (others=>'0'),
-      cache4068                   => (others=>'0')
+      cache4068                   => (others=>'0'),
+      useTimingTrigger            => '0'
    );
    
    
@@ -271,6 +276,7 @@ begin
       axiSlaveRegister (regCon, x"010",  0, v.stop);
       axiSlaveRegister (regCon, x"014",  0, v.triggerWaitCycles);
       axiSlaveRegister (regCon, x"018",  0, v.currentAsic);
+      axiSlaveRegister (regCon, x"01C",  0, r.useTimingTrigger);
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.failingRegister);
@@ -278,6 +284,7 @@ begin
       axiSlaveRegisterR(regCon, x"030",  0, std_logic_vector(to_unsigned(StateType'pos(r.state), 8))); 
       axiSlaveRegisterR(regCon, x"034",  0, std_logic_vector(to_unsigned(StateType'pos(r.stateLast), 8))); 
       axiSlaveRegisterR(regCon, x"038",  0, r.triggerStateCounter);
+      
       
       axiSlaveDefault(regCon, v.sAxilWriteSlave, v.sAxilReadSlave, AXIL_ERR_RESP_G);
 
@@ -491,25 +498,40 @@ begin
                      v.state := CHARGE_COL_S;
                      v.regAccessState := WRITE_S;
                   else
-                     v.state := TRIGGER_S;
+                     if (useTimingTrigger = '0') then
+                        v.state := TRIGGER_S;
+                     else
+                        v.state := WAITTIMINGTRIGGER_S;
+                     end if;
                      v.regAccessState := WRITE_S;
                   end if;
                   v.stateLast := CLK_POSEDGE_S;
                end if;
             end if;
-
+         when WAITTIMINGTRIGGER_S =>
+            if (r.stop = '1') then
+               v.state := INIT_S;
+               v.stateLast := WAITTIMINGTRIGGER_S;
+               v.status := STOP_S;
+            else
+               if (timingDaqTrigger = '1') then
+                  v.state := TRIGGER_S;
+               end if;
+            end if;
          when TRIGGER_S =>
             if (r.stop = '1') then
                v.state := INIT_S;
                v.stateLast := TRIGGER_S;
                v.status := STOP_S;
-            else          
-               -- set trigger and wait triggerWaitCycles (default 200 us)
-               if (r.cycleCounter = 0) then               
-                  v.forceTrigger := '1';
-               else
-                  v.forceTrigger := '0';
-               end if;
+            else
+               if (useTimingTrigger = '0') then    
+                  -- set trigger and wait triggerWaitCycles (default 200 us)
+                  if (r.cycleCounter = 0) then               
+                     v.forceTrigger := '1';
+                  else
+                     v.forceTrigger := '0';
+                  end if;
+               end
                if (r.cycleCounter <= r.triggerWaitCycles) then
                   v.cycleCounter := r.cycleCounter + 1;
                else

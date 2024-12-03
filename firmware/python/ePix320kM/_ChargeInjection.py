@@ -11,6 +11,8 @@ class ChargeInjection(pr.Device):
                    8: "TEST_END_S" , 9: "ERROR_S", 10: "INIT_S", 11: "CACHE408C_S",
                     12 : "CACHE400C_S", 13: "CACHE4068_S"}
 
+        yesNoEnum = { 0: "No", 1: "Yes"}
+
         self.add(pr.RemoteVariable(
             name         = 'startCol',
             offset       = 0x0,
@@ -73,6 +75,16 @@ class ChargeInjection(pr.Device):
             disp         = '{}',
         ))
 
+
+        self.add(pr.RemoteVariable(
+            name         = 'UseTiming',
+            offset       = 0x1C,
+            bitSize      = 1,
+            mode         = 'RW',
+            bitOffset    = 0,
+            pollInterval = 1,
+            enum         = yesNoEnum,
+        ))
 
         self.add(pr.RemoteVariable(
             name         = 'pulser',

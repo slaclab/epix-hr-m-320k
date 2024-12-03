@@ -597,7 +597,10 @@ begin
          mAxilReadSlave    => axilSaciInReadSlaves(0),
          
          -- Charge injection forced trigger
-         forceTrigger      => chargeInjectionTrigger
+         forceTrigger      => chargeInjectionTrigger,
+
+         -- Timing Daq trigger
+         timingDaqTrigger => triggerData(1).valid and triggerData(1).l0Accept
          
       );      
 
