@@ -276,7 +276,7 @@ begin
       axiSlaveRegister (regCon, x"010",  0, v.stop);
       axiSlaveRegister (regCon, x"014",  0, v.triggerWaitCycles);
       axiSlaveRegister (regCon, x"018",  0, v.currentAsic);
-      axiSlaveRegister (regCon, x"01C",  0, r.useTimingTrigger);
+      axiSlaveRegister (regCon, x"01C",  0, v.useTimingTrigger);
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.failingRegister);
@@ -498,7 +498,7 @@ begin
                      v.state := CHARGE_COL_S;
                      v.regAccessState := WRITE_S;
                   else
-                     if (useTimingTrigger = '0') then
+                     if (r.useTimingTrigger = '0') then
                         v.state := TRIGGER_S;
                      else
                         v.state := WAITTIMINGTRIGGER_S;
@@ -524,7 +524,7 @@ begin
                v.stateLast := TRIGGER_S;
                v.status := STOP_S;
             else
-               if (useTimingTrigger = '0') then    
+               if (r.useTimingTrigger = '0') then    
                   -- set trigger and wait triggerWaitCycles (default 200 us)
                   if (r.cycleCounter = 0) then               
                      v.forceTrigger := '1';
