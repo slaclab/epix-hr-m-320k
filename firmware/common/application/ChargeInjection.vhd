@@ -51,7 +51,7 @@ entity ChargeInjection is
       forceTrigger        : out  sl;
 
       -- Timing Daq trigger (TriggerClk Domain = axilClk Domain)
-      timingDaqTrigger    : in   sl;
+      timingDaqTrigger    : in   sl
       
    );
 end ChargeInjection;
