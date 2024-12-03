@@ -75,7 +75,6 @@ class ChargeInjection(pr.Device):
             disp         = '{}',
         ))
 
-
         self.add(pr.RemoteVariable(
             name         = 'UseTiming',
             offset       = 0x1C,
@@ -158,3 +157,13 @@ class ChargeInjection(pr.Device):
             base         = pr.UInt,
             disp         = '{}',
         ))
+
+        @self.command()
+        def disableEventBuilderBypass():
+            for batcherIndex in range(4):
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Bypass.set(0x0)
+
+        @self.command()
+        def enableEventBuilderBypass():
+            for batcherIndex in range(4):
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Bypass.set(0x1)
