@@ -159,7 +159,7 @@ class ChargeInjection(pr.Device):
         ))
 
         @self.command()
-        def TimingChargeInjection():
+        def TimingTriggerChargeInjection():
             for batcherIndex in range(4):
                 getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Bypass.set(0x0)
                 getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(False)
