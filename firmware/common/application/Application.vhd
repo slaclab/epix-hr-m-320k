@@ -600,7 +600,7 @@ begin
          forceTrigger      => chargeInjectionTrigger,
 
          -- Timing Daq trigger
-         timingDaqTrigger => triggerData(1).valid and triggerData(1).l0Accept
+         timingDaqTrigger => asicSroSig
          
       );      
 
