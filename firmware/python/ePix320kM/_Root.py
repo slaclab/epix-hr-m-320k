@@ -114,6 +114,7 @@ class Root(pr.Root):
             self.unbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane), size = DDebugSize) for lane in range(self.numOfAsics)]
+            self.dbgDataFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
             
             # Create configuration stream
             stream = pyrogue.interfaces.stream.Variable(root=self)
@@ -203,7 +204,7 @@ class Root(pr.Root):
             for asicIndex in range(self.numOfAsics):
                 self.dataStream[asicIndex] >> self.dataWriter.getChannel(asicIndex)
                 self.dataStream[asicIndex] >> self.streamUnbatchers[asicIndex]
-                self.streamUnbatchers[asicIndex] >> self._dbg[asicIndex]
+                self.streamUnbatchers[asicIndex] >> self.dbgDataFilter[asicIndex] >> self._dbg[asicIndex]
 
                 if(self.fullRateDataReceiverEn == True):
                     self.add(fullRateDataReceiver(
@@ -298,14 +299,15 @@ class Root(pr.Root):
 
             # Read file stream. 
             self.readerReceiver = [dataDebug(name = "readerReceiver[{}]".format(lane), size = 10000) for lane in range(self.numOfAsics)]
-            self.filter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
+            self.asicFilter =  [rogue.interfaces.stream.Filter(False, lane) for lane in range(self.numOfAsics)]
             self.dataReceiverFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
+            self.readerDataFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
             self.fread = rogue.utilities.fileio.StreamReader()
             self.readUnbatcher = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
 
 
             for i in range(self.numOfAsics):
-                self.readerReceiver[i] << self.readUnbatcher[i] << self.filter[i] << self.fread
+                self.readerReceiver[i] << self.readerDataFilter[i] << self.readUnbatcher[i] << self.asicFilter[i] << self.fread
                 self.readerReceiver[i].enableDataDebug(True)
                 self.readerReceiver[i].enableDebugPrint(True)
 
