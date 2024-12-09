@@ -112,7 +112,7 @@ class App(pr.Device):
                         33: 'slowAdcDout1',
                         34: 'slowAdcDrdyL1', 35: 'slowAdcSyncL1', 36: 'slowAdcSclk1',
                         37: 'slowAdcCsL1', 38: 'slowAdcDin1' , 39: 'slowAdcRefClk1',
-                        40: 'runTrigger', 41: 'daqTrigger'},
+                        41: 'runTrigger', 40: 'daqTrigger'},
 
                     {0:'AsicDM0'}]
 
