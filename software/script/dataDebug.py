@@ -104,7 +104,7 @@ class dataDebug(rogue.interfaces.stream.Slave):
 
     def descramble(self, frame):
         metaData = {}
-        #channel = frame.getChannel() # timing is channel 0. Data is channel 2
+        channel = frame.getChannel() # timing is channel 0. Data is channel 2
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
         current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
         """performs the EpixMv2 image descrambling (simply applying lookup table) """
