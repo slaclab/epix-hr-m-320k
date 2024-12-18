@@ -100,7 +100,7 @@ Root:
       FE_ACQ2InjEn: False
       # To disable banks
       #DigRO_disable2: 0xe
-      pipoclk_delay_row0: 15
+      pipoclk_delay_row0: 6
       pipoclk_delay_row1: 8
-      pipoclk_delay_row2: 8
-      pipoclk_delay_row3: 8
+      pipoclk_delay_row2: 5
+      pipoclk_delay_row3: 3
