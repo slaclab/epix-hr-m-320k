@@ -101,6 +101,6 @@ Root:
       # To disable banks
       #DigRO_disable2: 0xe
       pipoclk_delay_row0: 7
-      pipoclk_delay_row1: 7
-      pipoclk_delay_row2: 7
+      pipoclk_delay_row1: 5
+      pipoclk_delay_row2: 5
       pipoclk_delay_row3: 4
