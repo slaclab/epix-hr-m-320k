@@ -195,7 +195,8 @@ architecture rtl of Application is
    constant DAC_INDEX_C          : natural  := 8;
    constant TIMING_INDEX_C       : natural  := 9;
    constant CHARGEINJ_INDEX_C    : natural  := 10;
-   constant NUM_AXIL_MASTERS_C   : positive := 11;
+   constant DELAYDET_INDEX_C     : natural  := 11;
+   constant NUM_AXIL_MASTERS_C   : positive := 12;
 
    constant AXI_BASE_ADDR_C      : slv(31 downto 0) := X"80000000"; --0
 
@@ -205,7 +206,7 @@ architecture rtl of Application is
                                              addrBits     => 31,
                                              connectivity => x"FFFF")
                                              );
-
+                              
    constant TTLOUT_WIDTH_C         : natural  := 6;
 
    constant DIGMON0_INDEX_C         : natural  := 0;
@@ -254,6 +255,11 @@ architecture rtl of Application is
    signal axilWriteSlaves        : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
    signal axilReadMasters        : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
    signal axilReadSlaves         : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+
+   signal mAxilWriteMastersDD : AxiLiteWriteMasterArray(NUM_OF_ASICS_G-1 downto 0); 
+   signal mAxilWriteSlavesDD  : AxiLiteWriteSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C); 
+   signal mAxilReadMastersDD  : AxiLiteReadMasterArray(NUM_OF_ASICS_G-1 downto 0); 
+   signal mAxilReadSlavesDD   : AxiLiteReadSlaveArray(NUM_OF_ASICS_G-1 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
    -- AXI-Lite Signals
    signal axilSaciInWriteMasters       : AxiLiteWriteMasterArray(1 downto 0); 
@@ -334,7 +340,9 @@ architecture rtl of Application is
    signal biasDacCsbSig          : sl;
    signal biasDacClrbSig         : sl;
 
-   signal chargeInjectionTrigger : sl;
+   signal chargeInjectionTrigger    : sl;
+   signal DelayDeterminationTrigger : sl;
+   signal forceTrigger              : sl;
 
    signal slowAdcMastersDemuxed  : AxiStreamMasterArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
    signal slowAdcSlavesDemuxed   : AxiStreamSlaveArray(SLOW_ADC_VIRTUAL_DEVICE_CNT_G - 1 downto 0);
@@ -561,9 +569,11 @@ begin
          digOut(1)            => '0',
          pwrGood              => '0',
 
-         chargeInjTrigger     => chargeInjectionTrigger
+         forceTrigger         => forceTrigger
+
       );
 
+      forceTrigger <= chargeInjectionTrigger or DelayDeterminationTrigger;
 
       U_ChargeInjection : entity work.ChargeInjection
       generic map(
@@ -656,7 +666,37 @@ begin
          dcdcSync           => dcdcSync,
          pwrGood            => pwrGood
       );
+
+      
+      U_DelayDeterminationGrp: entity work.DelayDeterminationGrp
+      generic map (
+         TPD_G           	   => TPD_G,
+         NUM_DRIVERS_G        => NUM_OF_ASICS_G,
+         AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(DESER_INDEX_C).baseAddr
+      )
+      port map( 
+        
+         
+         -- AXI lite slave port for register access
+         axilClk           => axilClk,
+         axilRst           => axilRst,
    
+         -- local registers
+         sAxilReadMaster   => axilReadMasters(DELAYDET_INDEX_C),
+         sAxilReadSlave    => axilReadSlaves(DELAYDET_INDEX_C),
+         sAxilWriteMaster  => axilWriteMasters(DELAYDET_INDEX_C),
+         sAxilWriteSlave   => axilWriteSlaves(DELAYDET_INDEX_C),
+   
+         mAxilWriteMasters  => mAxilWriteMastersDD,
+         mAxilWriteSlaves   => mAxilWriteSlavesDD,
+         mAxilReadMasters   => mAxilReadMastersDD,
+         mAxilReadSlaves    => mAxilReadSlavesDD,
+         
+         forceTrigger     => DelayDeterminationTrigger
+         
+      );
+
+
    U_Deser : entity work.AppDeser
       generic map (
          TPD_G             => TPD_G,
@@ -668,10 +708,17 @@ begin
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
+
+         mAxilReadMasters  => mAxilReadMastersDD,
+         mAxilReadSlaves   => mAxilReadSlavesDD,
+         mAxilWriteMasters => mAxilWriteMastersDD,
+         mAxilWriteSlaves  => mAxilWriteSlavesDD,
+
          axilReadMaster  => axilReadMasters(DESER_INDEX_C),
          axilReadSlave   => axilReadSlaves(DESER_INDEX_C),
          axilWriteMaster => axilWriteMasters(DESER_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DESER_INDEX_C),
+         
          -- ASIC Ports
          asicDataP       => asicDataP,
          asicDataM       => asicDataM,

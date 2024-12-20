@@ -42,50 +42,31 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # #################################
 # ## Set the clock for the ILA core
 # #################################
-SetDebugCoreClk ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/sspClk}
+#SetDebugCoreClk ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/sspClk}
+SetDebugCoreClk ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/axilClk}
 # #######################
 # ## Set the debug Probes
 #######################
 
 #156.25 clock domain
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[0][*]} {0} {7}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[0][*]} {0} {15}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[0]}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[0].U_Lane/U_Gearbox/masterData[*]} {0} {19}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[0].U_Lane/U_Gearbox/masterValid}
+
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeEnd][0][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeStart][0][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeStarted][*]} {0} {23}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeEnd][0][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeStart][0][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeStarted][0]}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[state][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[usrDelayCfg][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[regIndex][*]} {0} {4}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[optimumDelay][*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v_fstOptimumDelay_out[*]} {0} {31}
+ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v_scndOptimumDelay_out[*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[fstDiff][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[scndDiff][*]} {0} {31}
 
 
 
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[2][*]} {0} {7}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[2][*]} {0} {15}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[2]}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[2].U_Lane/U_Gearbox/masterData[*]} {0} {19}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[2].U_Lane/U_Gearbox/masterValid}
-
-
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[8][*]} {0} {7}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[8][*]} {0} {15}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[8]}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[8].U_Lane/U_Gearbox/masterData[*]} {0} {19}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[8].U_Lane/U_Gearbox/masterValid}
-
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[20][*]} {0} {7}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[20][*]} {0} {15}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[20]}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[20].U_Lane/U_Gearbox/masterData[*]} {0} {19}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[20].U_Lane/U_Gearbox/masterValid}
-
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[18][*]} {0} {7}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[18][*]} {0} {15}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[18]}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[18].U_Lane/U_Gearbox/masterData[*]} {0} {19}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[18].U_Lane/U_Gearbox/masterValid}
-
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/deserData[16][*]} {0} {7}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxData[16][*]} {0} {15}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/rxSof[16]}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[16].U_Lane/U_Gearbox/masterData[*]} {0} {19}
-ConfigProbe ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/U_SspDecoder/GEN_VEC[16].U_Lane/U_Gearbox/masterValid}
 
 # 42 MHz clk domain
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[state]*} 0 2
