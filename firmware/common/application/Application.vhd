@@ -249,6 +249,8 @@ architecture rtl of Application is
    constant SLOWADCCSL1_INDEX_C     : natural := SLOWADCSCLK1_INDEX_C  + 1;
    constant SLOWADCDIN1_INDEX_C     : natural := SLOWADCCSL1_INDEX_C   + 1;
    constant SLOWADCREFCLK1_INDEX_C  : natural := SLOWADCDIN1_INDEX_C   + 1;
+   constant DAQTRIGGER_INDEX_C      : natural := SLOWADCREFCLK1_INDEX_C+ 1;
+   constant RUNTRIGGER_INDEX_C      : natural := DAQTRIGGER_INDEX_C+ 1;
 
    -- AXI-Lite Signals
    signal axilWriteMasters       : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0); 
@@ -429,6 +431,8 @@ begin
          slowAdcCsLSig(1)     when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCCSL1_INDEX_C,     TTLOUT_WIDTH_C) else
          slowAdcDinSig(1)     when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCDIN1_INDEX_C,     TTLOUT_WIDTH_C) else
          slowAdcRefClkSig(1)  when boardConfig.epixhrDbgSel1 = toSlv(SLOWADCREFCLK1_INDEX_C,  TTLOUT_WIDTH_C) else
+         triggerData(0).valid and triggerData(0).l0Accept  when boardConfig.epixhrDbgSel1 = toSlv(RUNTRIGGER_INDEX_C,  TTLOUT_WIDTH_C) else
+         triggerData(1).valid and triggerData(1).l0Accept  when boardConfig.epixhrDbgSel1 = toSlv(DAQTRIGGER_INDEX_C,  TTLOUT_WIDTH_C) else
          '0';
 
    U_AxiLiteCrossbar : entity surf.AxiLiteCrossbar
@@ -597,7 +601,10 @@ begin
          mAxilReadSlave    => axilSaciInReadSlaves(0),
          
          -- Charge injection forced trigger
-         forceTrigger      => chargeInjectionTrigger
+         forceTrigger      => chargeInjectionTrigger,
+
+         -- Timing Daq trigger
+         timingDaqTrigger => asicSroSig
          
       );      
 

@@ -9,7 +9,9 @@ class ChargeInjection(pr.Device):
         stateEnum  = { 0: "WAIT_START_S", 1: "FE_XX2GR_S", 2: "TEST_START_S", 3: "PULSER_S", 
                    4: "CHARGE_COL_S", 5: "CLK_NEGEDGE_S", 6: "CLK_POSEDGE_S", 7: "TRIGGER_S",
                    8: "TEST_END_S" , 9: "ERROR_S", 10: "INIT_S", 11: "CACHE408C_S",
-                    12 : "CACHE400C_S", 13: "CACHE4068_S"}
+                    12 : "CACHE400C_S", 13: "CACHE4068_S", 14: "WAIT_DAQTRIGGER_S"}
+
+        yesNoEnum = { 0: "No", 1: "Yes"}
 
         self.add(pr.RemoteVariable(
             name         = 'startCol',
@@ -73,6 +75,15 @@ class ChargeInjection(pr.Device):
             disp         = '{}',
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'UseTiming',
+            offset       = 0x1C,
+            bitSize      = 1,
+            mode         = 'RW',
+            bitOffset    = 0,
+            pollInterval = 1,
+            enum         = yesNoEnum,
+        ))
 
         self.add(pr.RemoteVariable(
             name         = 'pulser',
@@ -146,3 +157,17 @@ class ChargeInjection(pr.Device):
             base         = pr.UInt,
             disp         = '{}',
         ))
+
+        @self.command()
+        def TimingTriggerChargeInjection():
+            for batcherIndex in range(4):
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Bypass.set(0x0)
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(False)
+            self.UseTiming.set(True)
+
+        @self.command()
+        def InternalTriggerChargeInjection():
+            for batcherIndex in range(4):
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Bypass.set(0x1)
+                getattr(self.root.App.AsicTop, f"BatcherEventBuilder{batcherIndex}").Blowoff.set(False)
+            self.UseTiming.set(False)

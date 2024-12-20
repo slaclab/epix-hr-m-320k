@@ -3,7 +3,7 @@
 target: prom
 
 # Define Firmware Version: v1.0.0.0
-export PRJ_VERSION = 0x01011100
+export PRJ_VERSION = 0x01020100
 
 # Define target part
 export PRJ_PART = XCKU15P-FFVA1156-2-E

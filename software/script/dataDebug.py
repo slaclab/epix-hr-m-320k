@@ -104,6 +104,7 @@ class dataDebug(rogue.interfaces.stream.Slave):
 
     def descramble(self, frame):
         metaData = {}
+        channel = frame.getChannel() # timing is channel 0. Data is channel 2
         rawData = frame.getNumpy(0, frame.getPayload()).view(np.uint16)
         current_frame_temp = np.zeros((self.framePixelRow, self.framePixelColumn), dtype=int)
         """performs the EpixMv2 image descrambling (simply applying lookup table) """
@@ -114,9 +115,10 @@ class dataDebug(rogue.interfaces.stream.Slave):
             metaData['allMasks'] = metaData['autoFillMask'] | metaData['fixedMask']
             metaData['ASIC'] = rawData[4] & 0x7
             metaData['frameNo'] = rawData[3]<< 16 | rawData[2]
-
+            #print("{}: descramble Ok channel {}".format(self.name, channel))
+            #print('rawData length {}'.format(len(rawData)))
         else:
-            print("{}: descramble error".format(self.name))
+            print("{}: descramble error channel {}".format(self.name, channel))
             print('rawData length {}'.format(len(rawData)))
             imgDesc = np.zeros((192,384), dtype='uint16')
 
@@ -139,13 +141,14 @@ class dataDebug(rogue.interfaces.stream.Slave):
             print("Max acquistion size of dataDebug of {} reached. Cleanup dataDebug. Discarding new data.".format(self.size))
         else :
             metaData , self.dataAcc[:,:,self.currentFrameCount] = self.descramble(frame)
-            self.autoFillMask[self.currentFrameCount] = metaData['autoFillMask']
-            self.fixedMask[self.currentFrameCount] = metaData['fixedMask']
-            self.allMasks[self.currentFrameCount] = metaData['allMasks']
-            self.ASIC[self.currentFrameCount] = metaData['ASIC']
-            self.frameNo[self.currentFrameCount] = metaData['frameNo']
+            if metaData:
+                self.autoFillMask[self.currentFrameCount] = metaData['autoFillMask']
+                self.fixedMask[self.currentFrameCount] = metaData['fixedMask']
+                self.allMasks[self.currentFrameCount] = metaData['allMasks']
+                self.ASIC[self.currentFrameCount] = metaData['ASIC']
+                self.frameNo[self.currentFrameCount] = metaData['frameNo']
 
-        self.currentFrameCount = self.currentFrameCount + 1 
+                self.currentFrameCount = self.currentFrameCount + 1 
    
         if (self.enableDP) :
             print("Extracted and descrambled {} frames".format(self.currentFrameCount), end='\r')

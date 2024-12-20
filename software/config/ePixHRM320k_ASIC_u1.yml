@@ -81,9 +81,9 @@ Root:
       InjEn_ePixM: False
       ClkInj_ePixM: False
       rowCK2matrix_delay: 0x4
-      RefinN: 0x7
+      RefinN: 0x0
       RefinCompN: 0x3
-      RefinP: 0x7
+      RefinP: 0x0
       ro_mode_i: 0x0
       SDclk1_b: 0x0
       SDrst1_b: 0x8
@@ -92,7 +92,7 @@ Root:
       SDclk3_b: 0x0
       SDrst3_b: 0x8
       CompTH_ePixM: 24
-      Precharge_DAC_ePixM: 50
+      Precharge_DAC_ePixM: 45
       FE_CLK_dly: 0x4
       FE_CLK_cnt_en: True
       FE_ACQ2GR_en: True
@@ -100,7 +100,7 @@ Root:
       FE_ACQ2InjEn: False
       # To disable banks
       #DigRO_disable2: 0xe
-      pipoclk_delay_row0: 15
-      pipoclk_delay_row1: 8
-      pipoclk_delay_row2: 8
-      pipoclk_delay_row3: 8
+      pipoclk_delay_row0: 5
+      pipoclk_delay_row1: 7
+      pipoclk_delay_row2: 5
+      pipoclk_delay_row3: 3
