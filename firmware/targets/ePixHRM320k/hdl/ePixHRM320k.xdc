@@ -21,17 +21,7 @@ set_property -dict {PACKAGE_PIN E16 IOSTANDARD LVDS} [get_ports adcMonClkP]
 set_property -dict {PACKAGE_PIN D16 IOSTANDARD LVDS} [get_ports adcMonClkM]
 set_property -dict {PACKAGE_PIN D19 IOSTANDARD LVCMOS18} [get_ports adcMonSpiCsL]
 set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS18} [get_ports adcMonPdwn]
-set_property -dict {PACKAGE_PIN AH8 IOSTANDARD LVCMOS25} [get_ports {slowAdcDout[0]}]
-set_property -dict {PACKAGE_PIN AD9 IOSTANDARD LVCMOS25} [get_ports {slowAdcDrdyL[0]}]
-set_property -dict {PACKAGE_PIN AD8 IOSTANDARD LVCMOS25} [get_ports {slowAdcRefClk[0]}]
-set_property -dict {PACKAGE_PIN AD10 IOSTANDARD LVCMOS25} [get_ports {slowAdcSyncL[0]}]
-set_property -dict {PACKAGE_PIN AE10 IOSTANDARD LVCMOS25} [get_ports {slowAdcSclk[0]}]
-set_property -dict {PACKAGE_PIN AE8 IOSTANDARD LVCMOS25} [get_ports {slowAdcDin[0]}]
-set_property -dict {PACKAGE_PIN AF8 IOSTANDARD LVCMOS25} [get_ports {slowAdcCsL[0]}]
 
-set_property PULLUP TRUE [get_ports { slowAdcSclk[0] } ]
-set_property PULLUP TRUE [get_ports { slowAdcDin[0]  } ]
-set_property PULLUP TRUE [get_ports { slowAdcCsL[0]  } ]
 
 ##########################
 ##	Bank 68
@@ -401,6 +391,18 @@ set_property -dict {PACKAGE_PIN AP14 IOSTANDARD LVCMOS18} [get_ports pllClkSda]
 ##########################
 set_property -dict {PACKAGE_PIN AN8 IOSTANDARD LVCMOS25} [get_ports {pwrGood[0]}]
 set_property -dict {PACKAGE_PIN AP8 IOSTANDARD LVCMOS25} [get_ports {pwrGood[1]}]
+
+set_property -dict {PACKAGE_PIN AH8 IOSTANDARD LVCMOS25} [get_ports {slowAdcDout[0]}]
+set_property -dict {PACKAGE_PIN AD9 IOSTANDARD LVCMOS25} [get_ports {slowAdcDrdyL[0]}]
+set_property -dict {PACKAGE_PIN AD8 IOSTANDARD LVCMOS25} [get_ports {slowAdcRefClk[0]}]
+set_property -dict {PACKAGE_PIN AD10 IOSTANDARD LVCMOS25} [get_ports {slowAdcSyncL[0]}]
+set_property -dict {PACKAGE_PIN AE10 IOSTANDARD LVCMOS25} [get_ports {slowAdcSclk[0]}]
+set_property -dict {PACKAGE_PIN AE8 IOSTANDARD LVCMOS25} [get_ports {slowAdcDin[0]}]
+set_property -dict {PACKAGE_PIN AF8 IOSTANDARD LVCMOS25} [get_ports {slowAdcCsL[0]}]
+
+set_property PULLUP TRUE [get_ports { slowAdcSclk[0] } ]
+set_property PULLUP TRUE [get_ports { slowAdcDin[0]  } ]
+set_property PULLUP TRUE [get_ports { slowAdcCsL[0]  } ]
 
 set_property -dict {PACKAGE_PIN AG9 IOSTANDARD LVCMOS25} [get_ports {serialNumber[2]}]
 set_property -dict {PACKAGE_PIN AG10 IOSTANDARD LVCMOS25} [get_ports {serialNumber[0]}]
