@@ -97,7 +97,7 @@ architecture RTL of SlowADCMon is
       state               : state_type;
       tick                : unsigned(31 downto 0);
       delaycnter          : unsigned(7 downto 0);
-      autoTrig            : slv(15 downto 0);
+      autoTrig            : slv(31 downto 0);
       doutreg             : slv(7 downto 0);
 
       selectedCh          : slv(31 downto 0);
@@ -116,7 +116,7 @@ architecture RTL of SlowADCMon is
 
       state               => IDLE_S, --RESET_S,
       tick                => x"00000000",
-      autoTrig            => x"1000",
+      autoTrig            => x"09502F90", -- 1 second on 156.25MHz
       doutreg             => x"00",
       delaycnter          => x"00",
       selectedCh          => x"00000000",
@@ -156,7 +156,7 @@ begin
    ---------------------------------------------------------------------------
    -----------   AXI LIte register readout logic  ----------------------------
    ---------------------------------------------------------------------------
-   comb : process (axilRst, sAxilReadMaster, sAxilWriteMaster, r, axilClk, adcRdDoneSync, adcDrdySync, dbg, adcStart, slowAdcSlavesSMOut, newDataSync, channelSync, channelDataSync, adcDataSync) is
+   comb : process (axilRst, sAxilReadMaster, sAxilWriteMaster, r, axilClk, adcRdDoneSync, adcDrdySync, dbg, slowAdcSlavesSMOut, newDataSync, channelSync, channelDataSync, adcDataSync) is
       variable v        : RegType;
       variable regCon   : AxiLiteEndPointType;
    begin
@@ -206,13 +206,9 @@ begin
                 v.delaycnter      := x"00";
                 v.state           := WAIT_INITDONE_S;
                 
-            elsif adcStart = '1' then
-                v.delaycnter      := x"00";
-                v.state           := WAIT_INITDONE_S;
-            
             elsif v.autoTrig /= x"00000000" and ( 
-               (v.tick(31 downto 16) >= unsigned(v.autoTrig) and SIMULATION_G = FALSE) or
-               (v.tick(15 downto 0) >= unsigned(v.autoTrig) and SIMULATION_G = TRUE) ) then
+               (v.tick(31 downto 0) >= unsigned(v.autoTrig) and SIMULATION_G = FALSE) or
+               (v.tick(15 downto 0) >= unsigned(v.autoTrig(15 downto 0)) and SIMULATION_G = TRUE) ) then
                v.delaycnter      := x"00";
                v.state           := WAIT_INITDONE_S;
             end if;
@@ -237,7 +233,7 @@ begin
                     v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(PGP4_AXIS_CONFIG_C);
                     ssiSetUserSof(PGP4_AXIS_CONFIG_C, v.txMaster(r.adcDeviceSel_r), '1');
                     v.txMaster(r.adcDeviceSel_r).tLast              := '0';
-                    v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
+                    v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := std_logic_vector(r.tick(31 downto 0));
                     v.txMaster(r.adcDeviceSel_r).tValid             := '1';
                 end if;
             end if;   

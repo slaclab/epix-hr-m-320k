@@ -115,7 +115,7 @@ class Root(pr.Root):
             self.streamUnbatchers    = [rogue.protocols.batcher.SplitterV1() for lane in range(self.numOfAsics)]
             self._dbg          = [dataDebug(name='DataDebug[{}]'.format(lane), size = DDebugSize) for lane in range(self.numOfAsics)]
             self.dbgDataFilter =  [rogue.interfaces.stream.Filter(False, 2) for lane in range(self.numOfAsics)]
-            
+            self.adcMonitorRate = [rogue.interfaces.stream.RateDrop(True,1) for i in range(5)]
             # Create configuration stream
             stream = pyrogue.interfaces.stream.Variable(root=self)
 
@@ -287,7 +287,7 @@ class Root(pr.Root):
                         payloadElementSize = 8
                     )
                 )
-                self.packetizer.application(vc) >> self.EnvData[vc]
+                self.packetizer.application(vc) >> self.adcMonitorRate[vc] >> self.EnvData[vc]
 
             # Check if not VCS simulation
             if (not self.sim):
