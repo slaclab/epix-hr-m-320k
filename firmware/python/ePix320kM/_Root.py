@@ -587,7 +587,7 @@ class Root(pr.Root):
 
 
         if not self.sim :
-            self.laneDiagnostics(arg[1:5], threshold=1, loops=5, debugPrint=False)
+            self.laneDiagnostics(arg[1:5], threshold=1, loops=0, debugPrint=False)
 
             # Delay determination needs laneDiagnostics. Exercising the lanes seem to stablize 
             # the lanes better for later evaluating the best lanes delays. 
