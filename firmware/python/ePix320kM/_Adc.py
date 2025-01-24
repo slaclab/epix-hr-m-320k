@@ -24,10 +24,10 @@ class Adc(pr.Device):
         inChbEnum={0:'Off', 0:'Asic0TpsMux', 1:'Asic1TpsMux'}
         HsDacEnum={0:'None', 1:'DAC A (SE)', 2:'DAC B (Diff)', 3:'DAC A & DAC B'}
 
-        AdcChannelEnum =[  ["Therm[0]", "Therm[1]", "ANA_PWR_RAW_DIVIDED", "ASIC_C0_AVDD_IMON", "ASIC_C0_DVDD_IMON", "ASIC_C1_AVDD_IMON", "ASIC_C1_DVDD_IMON","ASIC_C2_AVDD_IMON", "Unused" ],
-                            ["Therm[2]", "Therm[3]", "ASIC_C2_DVDD_IMON", "ASIC_C3_DVDD_IMON", "ASIC_C3_AVDD_IMON", "ASIC_C4_DVDD_IMON", "ASIC_C4_AVDD_IMON","HUMIDITY", "Unused" ],
-                            ["Therm[4]", "Therm[5]", "ASIC_C0_V2_5A", "ASIC_C1_V2_5A", "ASIC_C2_V2_5A", "ASIC_C3_V2_5A", "ASIC_C4_V2_5A","DIG_PWR_RAW_DIVIDED", "Unused" ],
-                            ["THERMISTOR_SENSE[0]", "THERMISTOR_SENSE[1]", "HUMIDITY", "MON_V_1V8", "MON_V_2V5", "7 Vout_6V_10A_IMON", "MON_V_VCC","RAW_VOLTAGE_MON", "Unused" ] ]
+        AdcChannelEnum =[   ["CarrierTherm", "DigitalTherm", "Humidity", "I1V8A_0",     "IAn_ASIC0", "6AV",  "VAn1V8_0", "VAn2V5_ASIC0" ],
+                            ["",             "",             "",         "I1V8A_1",     "IAn_ASIC1", "VCCA", "VAn1V8_1", "VAn2V5_ASIC1" ],
+                            ["",             "",             "",         "IDig2V5",     "IAn_ASIC2", "6DV",  "VDig2V5",  "VAn2V5_ASIC2" ],
+                            ["",             "",             "",         "DS_PLL_I",    "IAn_ASIC3", "VCC",  "VDS_PLL",  "VAn2V5_ASIC3" ] ]
 
         #ADC 1  Digital board
         #ADC 2  Power Communication board
@@ -35,6 +35,7 @@ class Adc(pr.Device):
             name='DigSlowADC',
             offset= 0x00000_0000,
             deviceCount=4,
+            channelEnum=AdcChannelEnum
         ))
 
         self.add(fpga.SlowADC(

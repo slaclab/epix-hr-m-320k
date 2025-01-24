@@ -11,7 +11,7 @@
 import pyrogue as pr
 
 class SlowADC(pr.Device):
-    def __init__( self, deviceCount=1,**kwargs):
+    def __init__( self, deviceCount=1,channelEnum={}, **kwargs):
         super().__init__(**kwargs)
 
         self.add(pr.RemoteVariable(name='enableADC',     offset=0x00,     bitOffset=0,   bitSize=1,   mode='RW',    base=pr.Bool,))
@@ -26,8 +26,13 @@ class SlowADC(pr.Device):
         self.add(pr.RemoteVariable(name='doutreg',       offset=0x10,     bitOffset=0,   bitSize=8,   mode='RW',    base=pr.UInt,))
 
         for deviceIndex in range(deviceCount):
-           for registerIndex in range(8): 
-            self.add(pr.RemoteVariable(name=f'ADC[{deviceIndex}][{registerIndex}]',         offset=0x20 * (deviceIndex+1) + registerIndex * 4,     bitOffset=0,   bitSize=32,  mode='RO',    base=pr.UInt, pollInterval = 1))
+            for registerIndex in range(8): 
+                if not channelEnum :
+                    self.add(pr.RemoteVariable(name=f'ADC[{deviceIndex}][{registerIndex}]',         offset=0x20 * (deviceIndex+1) + registerIndex * 4,     bitOffset=0,   bitSize=32,  mode='RO',    base=pr.UInt, pollInterval = 1))
+                else:
+                    channelName = channelEnum[deviceIndex][registerIndex]
+                    if channelName:
+                        self.add(pr.RemoteVariable(name=f'ADC[{deviceIndex}][{registerIndex}]_{channelName}',         offset=0x20 * (deviceIndex+1) + registerIndex * 4,     bitOffset=0,   bitSize=32,  mode='RO',    base=pr.UInt, pollInterval = 1))
 
 
         self.add(pr.RemoteVariable(name='cmd_counter',   offset=0x14,     bitOffset=0,    bitSize=8,  mode='RO',    base=pr.Int,))
