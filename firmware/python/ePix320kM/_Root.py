@@ -532,7 +532,7 @@ class Root(pr.Root):
         arguments = np.asarray(arg)
         if (self.justCtrl == False) :
             for asicIndex in range(self.numOfAsics) :
-                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(arguments[asicIndex])
+                getattr(self, f"DataReceiver{asicIndex}").RxEnable.set(bool(arguments[asicIndex]))
         
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""     
