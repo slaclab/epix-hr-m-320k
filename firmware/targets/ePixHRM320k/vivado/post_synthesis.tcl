@@ -43,25 +43,47 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 # ## Set the clock for the ILA core
 # #################################
 #SetDebugCoreClk ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/sspClk}
-SetDebugCoreClk ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/axilClk}
+#SetDebugCoreClk ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/axilClk}
+
+SetDebugCoreClk ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/deserClk}
 # #######################
 # ## Set the debug Probes
 #######################
 
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[state][*]} 0 2
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[sroReceived]}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/sro}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/sroSync}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/daqTrigger}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/daqTriggerSync}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/dFifoSof[*]} 0 23
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/dFifoValid[*]} 0 23
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/rdDataCount[0][*]} 0 8
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/rdDataCount[3][*]} 0 8
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/rdDataCount[6][*]} 0 8
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/rdDataCount[10][*]} 0 8
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/rdDataCount[15][*]} 0 8
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/rdDataCount[20][*]} 0 8
+
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/dFifoRst}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/acqStart}
+ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/acqStartSync}
+
+
 #156.25 clock domain
 
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeEnd][0][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeStart][0][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeStarted][*]} {0} {23}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeEnd][0][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeStart][0][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeStarted][0]}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[state][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[usrDelayCfg][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[regIndex][*]} {0} {4}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[optimumDelay][*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v_fstOptimumDelay_out[*]} {0} {31}
-ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v_scndOptimumDelay_out[*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeEnd][0][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeStart][0][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[fstRangeStarted][*]} {0} {23}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeEnd][0][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeStart][0][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[scndRangeStarted][0]}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[state][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[usrDelayCfg][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/r[regIndex][*]} {0} {4}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[optimumDelay][*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v_fstOptimumDelay_out[*]} {0} {31}
+#ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/v_scndOptimumDelay_out[*]} {0} {31}
 #ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[fstDiff][*]} {0} {31}
 #ConfigProbe ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/rin[scndDiff][*]} {0} {31}
 
