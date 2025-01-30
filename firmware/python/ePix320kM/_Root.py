@@ -392,6 +392,11 @@ class Root(pr.Root):
                                     boardType = self.boardType,
             ))
 
+        @self.command(description  = 'Fix Dig ASIC stream timeouts')
+        def fixDigAsicStreamTimeouts():
+            for i in range(4):
+                getattr(self.App.AsicTop, f"DigAsicStrmRegisters{i}").FixTimeouts()
+
         @self.command(description  = 'Adjusts user lane delays')
         def AdjustUsrLaneDelay():
             self.root.App.FPGADelayDetermination.Start()
