@@ -227,51 +227,51 @@ class Root(pr.Root):
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C' },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
                     {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%' },
-                    {   'id': 3, 'name': 'DUAL LDO 0 I 1V8',  'conv': lambda data: (data/0.33) * 0.4 * 45.3 / 6, 'color': '#FFFF00' , 'units' : 'A' },
-                    {   'id': 4, 'name': 'ASIC0 An I 2V5',    'conv': lambda data: (data/0.33) * 0.4 * 45.3 / 6, 'color': '#F0F0F0' , 'units' : 'A' },
-                    {   'id': 5, 'name': 'An V 6V',          'conv': lambda data: data/0.33, 'color': '#503010', 'units' : 'volts'  },
-                    {   'id': 6, 'name': 'DUAL LDO 0 V 1V8', 'conv': lambda data: data/0.33, 'color': '#503010', 'units' : 'volts'   },
-                    {   'id': 7, 'name': 'ASIC0 An V 2V5',  'conv': lambda data: data/0.33, 'color': '#777777', 'units' : 'volts'   }
+                    {   'id': 3, 'name': 'DUAL LDO 0 I 1V8',  'conv': lambda data: (data*3), 'color': '#FFFF00' , 'units' : '(x3) A' },
+                    {   'id': 4, 'name': 'ASIC0 An I 2V5',    'conv': lambda data: (data*3), 'color': '#F0F0F0' , 'units' : '(x3) A' },
+                    {   'id': 5, 'name': 'An V 6V',          'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 6, 'name': 'DUAL LDO 0 V 1V8', 'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'   },
+                    {   'id': 7, 'name': 'ASIC0 An V 2V5',  'conv': lambda data: data*3, 'color': '#777777', 'units' : '(x3) V'   }
                 ],
                 [
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C'  },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
                     {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%'  },
-                    {   'id': 3, 'name': 'DUAL LDO 1 I 1V8',  'conv': lambda data: data, 'color': '#FFFF00'  },
-                    {   'id': 4, 'name': 'ASIC1 An I 2V5',    'conv': lambda data: data, 'color': '#F0F0F0'  },
-                    {   'id': 5, 'name': 'VCCA V 3V0',       'conv': lambda data: data, 'color': '#503010', 'units' : 'volts'  },
-                    {   'id': 6, 'name': 'DUAL LDO 1 V 1V8', 'conv': lambda data: data, 'color': '#503010'  },
-                    {   'id': 7, 'name': 'ASIC1 An V 2V5',  'conv': lambda data: data, 'color': '#777777'  }
+                    {   'id': 3, 'name': 'DUAL LDO 1 I 1V8',  'conv': lambda data: data*3, 'color': '#FFFF00', 'units' : '(x3) A'  },
+                    {   'id': 4, 'name': 'ASIC1 An I 2V5',    'conv': lambda data: data*3, 'color': '#F0F0F0', 'units' : '(x3) A'  },
+                    {   'id': 5, 'name': 'VCCA V 3V0',       'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 6, 'name': 'DUAL LDO 1 V 1V8', 'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 7, 'name': 'ASIC1 An V 2V5',  'conv': lambda data: data*3, 'color': '#777777', 'units' : '(x3) V'  }
                 ],
                 [
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C'  },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
                     {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%'  },
-                    {   'id': 3, 'name': 'Digital I 2V5',     'conv': lambda data: data, 'color': '#FFFF00'  },
-                    {   'id': 4, 'name': 'ASIC2 An I 2V5',    'conv': lambda data: data, 'color': '#F0F0F0'  },
-                    {   'id': 5, 'name': 'Digital V 6V',     'conv': lambda data: data, 'color': '#503010', 'units' : 'volts'  },
-                    {   'id': 6, 'name': 'Digital V 2V5',    'conv': lambda data: data, 'color': '#503010'  },
-                    {   'id': 7, 'name': 'ASIC2 An V 2V5',  'conv': lambda data: data, 'color': '#777777'  }
+                    {   'id': 3, 'name': 'Digital I 2V5',     'conv': lambda data: data*3, 'color': '#FFFF00', 'units' : '(x3) A'  },
+                    {   'id': 4, 'name': 'ASIC2 An I 2V5',    'conv': lambda data: data*3, 'color': '#F0F0F0', 'units' : '(x3) A'  },
+                    {   'id': 5, 'name': 'Digital V 6V',     'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 6, 'name': 'Digital V 2V5',    'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 7, 'name': 'ASIC2 An V 2V5',  'conv': lambda data: data*3, 'color': '#777777', 'units' : '(x3) V'  }
                 ],
                 [
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C'  },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
                     {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%'  },
-                    {   'id': 3, 'name': 'DS_PLL I 2V5',          'conv': lambda data: data, 'color': '#FFFF00'  },
-                    {   'id': 4, 'name': 'ASIC3 An I 2V5',    'conv': lambda data: data, 'color': '#F0F0F0'  },
-                    {   'id': 5, 'name': 'VCC V 2V7',        'conv': lambda data: data, 'color': '#503010', 'units' : 'volts'  },
-                    {   'id': 6, 'name': 'DS_PLL V 2V5',         'conv': lambda data: data, 'color': '#503010'  },
-                    {   'id': 7, 'name': 'ASIC3 An V 2V5',  'conv': lambda data: data, 'color': '#777777'  }
+                    {   'id': 3, 'name': 'DS_PLL I 2V5',          'conv': lambda data: data*3, 'color': '#FFFF00', 'units' : '(x3) A'  },
+                    {   'id': 4, 'name': 'ASIC3 An I 2V5',    'conv': lambda data: data*3, 'color': '#F0F0F0', 'units' : '(x3) A'  },
+                    {   'id': 5, 'name': 'VCC V 2V7',        'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 6, 'name': 'DS_PLL V 2V5',         'conv': lambda data: data*3, 'color': '#503010', 'units' : '(x3) V'  },
+                    {   'id': 7, 'name': 'ASIC3 An V 2V5',  'conv': lambda data: data*3, 'color': '#777777', 'units' : '(x3) V'  }
                 ],
                 [
                     {   'id': 0, 'name': 'PCB Humidity', 'conv': lambda data: data*45.8-21.3, 'color': '#FFFFFF', 'units' : '%'  },
                     {   'id': 1, 'name': 'PCB Thermal', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C'},
-                    {   'id': 2, 'name': 'PCB 3V3',     'conv': lambda data: data, 'color': '#00FFFF', 'units' : 'volts'  },
-                    {   'id': 3, 'name': 'PCB 1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : 'volts'  },
-                    {   'id': 4, 'name': 'PCB An 2V',   'conv': lambda data: data, 'color': '#F0F0F0', 'units' : 'volts'  },
-                    {   'id': 5, 'name': 'PCB Dig 2V',  'conv': lambda data: data, 'color': '#F0500F', 'units' : 'volts'  },
-                    {   'id': 6, 'name': 'PCB Dig 6V',  'conv': lambda data: data, 'color': '#503010', 'units' : 'volts'  },
-                    {   'id': 7, 'name': 'PCB An 6V',   'conv': lambda data: data, 'color': '#777777', 'units' : 'volts'  }
+                    {   'id': 2, 'name': 'PCB V 3V3',     'conv': lambda data: data*2, 'color': '#00FFFF', 'units' : '(x2) V'  },
+                    {   'id': 3, 'name': 'PCB V 1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : '(x1) V'  },
+                    {   'id': 4, 'name': 'PCB An V 6V',   'conv': lambda data: data*3, 'color': '#F0F0F0', 'units' : '(x3) V'  },
+                    {   'id': 5, 'name': 'PCB Dig V 6V',  'conv': lambda data: data*3, 'color': '#F0500F', 'units' : '(x3) V'  },
+                    {   'id': 6, 'name': 'PCB Dig I 6V',  'conv': lambda data: data, 'color': '#503010', 'units' : '(x1) A'  },
+                    {   'id': 7, 'name': 'PCB An I 6V',   'conv': lambda data: data, 'color': '#777777', 'units' : '(x1) A'  }
                 ]
             ]
         
