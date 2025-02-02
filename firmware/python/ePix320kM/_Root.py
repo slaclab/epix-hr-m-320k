@@ -223,10 +223,17 @@ class Root(pr.Root):
 
             # Check if not VCS simulation
             envConf = [
-                [   # seems like there is some gain, so multiplying by 0.97647 obtained empirically
+                [   # GAIN: seems like there is some gain, so multiplying by 0.97647 obtained empirically vy all data values
+                    # HUMIDITY   :   equation acoording to SPEC: https://prod-edam.honeywell.com/content/dam/honeywell-edam/sps/siot/en-us/products/sensors/humidity-with-temperature-sensors/hih-5030-5031-series/documents/sps-siot-hih5030-5031-series-product-sheet-009050-2-en-ciid-49692.pdf
+                    #                RH (%) = (Vout - 0.1515) / (Vsupply - 0.00636)
+                    #                Temperature compensated RH (%) = RH / (1.0546 - 0.00216 * Temperature)
+                    # CURRENT    :   Equation according to SPEC: https://www.analog.com/media/en/technical-documentation/data-sheets/3086fb.pdf
+                    #                Current = (Vmon x 2.24) / 0.8
+                    #                Vmon = 3 * Vin (schematic)
+                    # VOLTAGE    :   Vmon = 3 * Vin (schematic)
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C' },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
-                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%' },
+                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 58.2*data*0.97647-8.8225, 'color': '#777777', 'units' : '%' },
                     {   'id': 3, 'name': 'DUAL LDO 0 I 1V8',  'conv': lambda data: (data*3)*0.97647*2.24/0.8, 'color': '#FFFF00' , 'units' : 'A' },
                     {   'id': 4, 'name': 'ASIC0 An I 2V5',    'conv': lambda data: (data*3)*0.97647*2.24/0.8, 'color': '#F0F0F0' , 'units' : 'A' },
                     {   'id': 5, 'name': 'An V 6V',          'conv': lambda data: data*3*0.97647, 'color': '#503010', 'units' : 'V'  },
@@ -236,7 +243,7 @@ class Root(pr.Root):
                 [
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C'  },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
-                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%'  },
+                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 58.2*data*0.97647-8.8225, 'color': '#777777', 'units' : '%'  },
                     {   'id': 3, 'name': 'DUAL LDO 1 I 1V8',  'conv': lambda data: data*3*0.97647*2.24/0.8, 'color': '#FFFF00', 'units' : 'A'  },
                     {   'id': 4, 'name': 'ASIC1 An I 2V5',    'conv': lambda data: data*3*0.97647*2.24/0.8, 'color': '#F0F0F0', 'units' : 'A'  },
                     {   'id': 5, 'name': 'VCCA V 3V0',       'conv': lambda data: data*3*0.97647, 'color': '#503010', 'units' : 'V'  },
@@ -246,7 +253,7 @@ class Root(pr.Root):
                 [
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C'  },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
-                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%'  },
+                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 58.2*data*0.97647-8.8225, 'color': '#777777', 'units' : '%'  },
                     {   'id': 3, 'name': 'Digital I 2V5',     'conv': lambda data: data*3*0.97647*2.24/0.8, 'color': '#FFFF00', 'units' : 'A'  },
                     {   'id': 4, 'name': 'ASIC2 An I 2V5',    'conv': lambda data: data*3*0.97647*2.24/0.8, 'color': '#F0F0F0', 'units' : 'A'  },
                     {   'id': 5, 'name': 'Digital V 6V',     'conv': lambda data: data*3*0.97647, 'color': '#503010', 'units' : 'V'  },
@@ -256,7 +263,7 @@ class Root(pr.Root):
                 [
                     {   'id': 0, 'name': 'Carrier Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FFFFFF', 'units' : 'deg. C'  },
                     {   'id': 1, 'name': 'Digital Therm', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C' },
-                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 45.8*data-21.3, 'color': '#777777', 'units' : '%'  },
+                    {   'id': 2, 'name': 'Digital Humidity',   'conv': lambda data: 58.2*data*0.97647-8.8225, 'color': '#777777', 'units' : '%'  },
                     {   'id': 3, 'name': 'DS_PLL I 2V5',          'conv': lambda data: data*3*0.97647*2.24/0.8, 'color': '#FFFF00', 'units' : 'A'  },
                     {   'id': 4, 'name': 'ASIC3 An I 2V5',    'conv': lambda data: data*3*0.97647*2.24/0.8, 'color': '#F0F0F0', 'units' : 'A'  },
                     {   'id': 5, 'name': 'VCC V 2V7',        'conv': lambda data: data*3*0.97647, 'color': '#503010', 'units' : 'V'  },
@@ -264,14 +271,14 @@ class Root(pr.Root):
                     {   'id': 7, 'name': 'ASIC3 An V 2V5',  'conv': lambda data: data*3*0.97647, 'color': '#777777', 'units' : 'V'  }
                 ],
                 [
-                    {   'id': 0, 'name': 'PCB Humidity', 'conv': lambda data: data*45.8-21.3, 'color': '#FFFFFF', 'units' : '%'  },
+                    {   'id': 0, 'name': 'PCB Humidity', 'conv': lambda data: data*0.97647*47.646-7.2184, 'color': '#FFFFFF', 'units' : '%'  },
                     {   'id': 1, 'name': 'PCB Thermal', 'conv': lambda data: (1/((np.log((data/0.0001992)/10000)/3750)+(1/298.15)))-273.15, 'color': '#FF00FF', 'units' : 'deg. C'},
                     {   'id': 2, 'name': 'PCB V 3V3',     'conv': lambda data: data*2, 'color': '#00FFFF', 'units' : 'V'  },
                     {   'id': 3, 'name': 'PCB V 1V8',     'conv': lambda data: data, 'color': '#FFFF00', 'units' : 'V'  },
                     {   'id': 4, 'name': 'PCB An V 6V',   'conv': lambda data: data*3, 'color': '#F0F0F0', 'units' : 'V'  },
                     {   'id': 5, 'name': 'PCB Dig V 6V',  'conv': lambda data: data*3, 'color': '#F0500F', 'units' : 'V'  },
-                    {   'id': 6, 'name': 'PCB Dig I 6V',  'conv': lambda data: data, 'color': '#503010', 'units' : 'A'  },
-                    {   'id': 7, 'name': 'PCB An I 6V',   'conv': lambda data: data, 'color': '#777777', 'units' : 'A'  }
+                    {   'id': 6, 'name': 'PCB Dig I 6V',  'conv': lambda data: data*10, 'color': '#503010', 'units' : 'A'  },
+                    {   'id': 7, 'name': 'PCB An I 6V',   'conv': lambda data: data*10, 'color': '#777777', 'units' : 'A'  }
                 ]
             ]
         
