@@ -69,8 +69,8 @@ entity AdcMon is
       slowAdcDrdyL    : in    slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       slowAdcRefClk   : out   slv(NUM_OF_SLOW_ADCS_G - 1 downto 0);
       -- ADC Monitor Ports
-      adcMonSpiCsL    : out   sl;
-      adcMonPdwn      : out   sl;
+      adcMonSpiCsL    : out   sl          := '1';
+      adcMonPdwn      : out   sl          := '0';
       adcMonSpiClk    : out   sl;
       adcMonSpiData   : inout sl;
       adcMonClkOutP   : out   sl;
