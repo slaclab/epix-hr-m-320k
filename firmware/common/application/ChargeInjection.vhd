@@ -28,7 +28,7 @@ entity ChargeInjection is
    generic (
       TPD_G           	   : time := 1 ns;
       AXIL_ERR_RESP_G      : slv(1 downto 0)  := AXI_RESP_DECERR_C;
-      AXI_BASE_ADDR_C      : slv(31 downto 0) := x"00000000"
+      AXI_BASE_ADDR_G      : slv(31 downto 0) := x"00000000"
    );
    port ( 
      
@@ -61,25 +61,46 @@ end ChargeInjection;
 architecture RTL of ChargeInjection is
 
    type asicAddressOffsetType is array (0 to 3) of slv(31 downto 0);
-   constant addresses : asicAddressOffsetType := (x"00000000"+AXI_BASE_ADDR_C, 
-                                                  x"00400000"+AXI_BASE_ADDR_C, 
-                                                  x"00800000"+AXI_BASE_ADDR_C, 
-                                                  x"00C00000"+AXI_BASE_ADDR_C);
+   constant addresses : asicAddressOffsetType := (x"00000000"+AXI_BASE_ADDR_G, 
+                                                  x"00400000"+AXI_BASE_ADDR_G, 
+                                                  x"00800000"+AXI_BASE_ADDR_G, 
+                                                  x"00C00000"+AXI_BASE_ADDR_G);
+
+   constant WAIT_START_S_C        : slv(7 downto 0) :=  x"00";
+   constant FE_XX2GR_S_C          : slv(7 downto 0) :=  x"01";
+   constant TEST_START_S_C        : slv(7 downto 0) :=  x"02";
+   constant PULSER_S_C            : slv(7 downto 0) :=  x"03";
+   constant CHARGE_COL_S_C        : slv(7 downto 0) :=  x"04";
+   constant CLK_NEGEDGE_S_C       : slv(7 downto 0) :=  x"05";
+   constant CLK_POSEDGE_S_C       : slv(7 downto 0) :=  x"06";
+   constant TRIGGER_S_C           : slv(7 downto 0) :=  x"07";
+   constant TEST_END_S_C          : slv(7 downto 0) :=  x"08";
+   constant ERROR_S_C             : slv(7 downto 0) :=  x"09";
+   constant INIT_S_C              : slv(7 downto 0) :=  x"0A";
+   constant CACHE408C_S_C         : slv(7 downto 0) :=  x"0B";
+   constant CACHE400C_S_C         : slv(7 downto 0) :=  x"0C";
+   constant CACHE4068_S_C         : slv(7 downto 0) :=  x"0D";
+   constant WAITTIMINGTRIGGER_S_C : slv(7 downto 0) :=  x"0E";
 
    type StateType is (WAIT_START_S, FE_XX2GR_S, TEST_START_S, PULSER_S, 
                       CHARGE_COL_S, CLK_NEGEDGE_S, CLK_POSEDGE_S, TRIGGER_S, 
                       TEST_END_S , ERROR_S, INIT_S, 
                       CACHE408C_S, CACHE400C_S, CACHE4068_S, WAITTIMINGTRIGGER_S);
 
-   type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S, WAIT_WRITE_DONE_S);
+   type RegAccessStateType is ( READ_S, READ_ACK_WAIT_S, WRITE_S, WRITE_ACK_WAIT_S);
 
-   type chargeInjectionStatusType is ( IDLE_S, RUNNING_S, SUCCESS_S, AXI_ERROR_S, COL_ERROR_S, STEP_ERROR_S, STOP_S );
+   constant IDLE_S_C             : slv(7 downto 0) :=  x"00";
+   constant RUNNING_S_C          : slv(7 downto 0) :=  x"01";
+   constant SUCCESS_S_C          : slv(7 downto 0) :=  x"02";
+   constant AXI_ERROR_S_C        : slv(7 downto 0) :=  x"03";
+   constant COL_ERROR_S_C        : slv(7 downto 0) :=  x"04";
+   constant STEP_ERROR_S_C       : slv(7 downto 0) :=  x"05";
+   constant STOP_S_C             : slv(7 downto 0) :=  x"06";
 
 
 
    type RegType is record
       state                       : StateType;
-      stateLast                   : StateType;
       regAccessState              : RegAccessStateType;
       req                         : AxiLiteReqType;
       sAxilWriteSlave             : AxiLiteWriteSlaveType;
@@ -96,18 +117,19 @@ architecture RTL of ChargeInjection is
       forceTrigger                : sl;
       triggerWaitCycles           : slv(31 downto 0);
       cycleCounter                : slv(31 downto 0);
-      status                      : chargeInjectionStatusType;
+      status                      : slv(7 downto 0);
       currentAsic                 : slv(1 downto 0);
       triggerStateCounter         : slv(31 downto 0);
       cache408C                   : slv(31 downto 0);
       cache400C                   : slv(31 downto 0);
       cache4068                   : slv(31 downto 0);
+      stateNumber                 : slv(7 downto 0);
+      prevStateNumber             : slv(7 downto 0);
       useTimingTrigger            : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
       state                       => WAIT_START_S,
-      stateLast                   => WAIT_START_S,
       regAccessState              => READ_S,
       sAxilWriteSlave             => AXI_LITE_WRITE_SLAVE_INIT_C,
       sAxilReadSlave              => AXI_LITE_READ_SLAVE_INIT_C,
@@ -124,12 +146,14 @@ architecture RTL of ChargeInjection is
       forceTrigger                => '0',
       triggerWaitCycles           => x"00007A12",
       cycleCounter                => (others=>'0'),
-      status                      => IDLE_S,
+      status                      => IDLE_S_C,
       currentAsic                 => (others=>'0'),
       triggerStateCounter         => (others=>'0'),
       cache408C                   => (others=>'0'),
       cache400C                   => (others=>'0'),
       cache4068                   => (others=>'0'),
+      stateNumber                 => WAIT_START_S_C,
+      prevStateNumber             => WAIT_START_S_C,
       useTimingTrigger            => '0'
    );
    
@@ -151,13 +175,6 @@ architecture RTL of ChargeInjection is
    begin
 
       case r.regAccessState is
-         when READ_S =>
-            if (ack.done = '0') then
-               v.req.address  := address; 
-               v.req.rnw := '1'; -- READ
-               v.req.request := '1'; -- initiate request
-               v.regAccessState := READ_ACK_WAIT_S;
-            end if;
          when READ_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp /= AXI_RESP_OK_C) then
@@ -166,8 +183,13 @@ architecture RTL of ChargeInjection is
                v.req.request := '0';
                v.regAccessState := WRITE_S;
             end if;
-
-         when others =>
+         when others => -- READ_S
+            if (ack.done = '0') then
+               v.req.address  := address; 
+               v.req.rnw := '1'; -- READ
+               v.req.request := '1'; -- initiate request
+               v.regAccessState := READ_ACK_WAIT_S;
+            end if;         
          -- do nothing
        end case;    
    end procedure;
@@ -182,14 +204,6 @@ architecture RTL of ChargeInjection is
    begin
 
       case r.regAccessState is
-         when WRITE_S =>
-            if (ack.done = '0') then
-               v.req.address  := address;
-               v.req.rnw := '0'; -- WRITE
-               v.req.wrData := wrData; 
-               v.req.request := '1'; -- initiate request
-               v.regAccessState := WRITE_ACK_WAIT_S; 
-            end if;              
          when WRITE_ACK_WAIT_S =>
             if (ack.done = '1') then
                if (ack.resp /= AXI_RESP_OK_C) then
@@ -198,8 +212,14 @@ architecture RTL of ChargeInjection is
                v.regAccessState := WRITE_S; 
                v.req.request := '0';    
             end if;  
-         when others =>
-         -- do nothing              
+         when others => -- WRITE_S
+            if (ack.done = '0') then
+               v.req.address  := address;
+               v.req.rnw := '0'; -- WRITE
+               v.req.wrData := wrData; 
+               v.req.request := '1'; -- initiate request
+               v.regAccessState := WRITE_ACK_WAIT_S; 
+            end if;               
       end case;    
    end procedure;
 
@@ -280,9 +300,9 @@ begin
       axiSlaveRegisterR(regCon, x"020",  0, r.pulser);
       axiSlaveRegisterR(regCon, x"024",  0, r.currentCol);
       axiSlaveRegisterR(regCon, x"028",  0, r.failingRegister);
-      axiSlaveRegisterR(regCon, x"02C",  0, std_logic_vector(to_unsigned(chargeInjectionStatusType'POS(r.status), 8)) );
-      axiSlaveRegisterR(regCon, x"030",  0, std_logic_vector(to_unsigned(StateType'pos(r.state), 8))); 
-      axiSlaveRegisterR(regCon, x"034",  0, std_logic_vector(to_unsigned(StateType'pos(r.stateLast), 8))); 
+      axiSlaveRegisterR(regCon, x"02C",  0, r.status);
+      axiSlaveRegisterR(regCon, x"030",  0, r.stateNumber); 
+      axiSlaveRegisterR(regCon, x"034",  0, r.prevStateNumber); 
       axiSlaveRegisterR(regCon, x"038",  0, r.triggerStateCounter);
       
       
@@ -310,17 +330,17 @@ begin
 
       -- RegAccessStateType is ( READ_S, READ_ACK_WAIT, WRITE_S, WRITE_ACK_WAIT );
 
-            case r.state is
+      case r.state is
          when WAIT_START_S =>
             v.stop := '0';
             if (r.startCol >= r.endCol) then
-               v.status := COL_ERROR_S;
+               v.status := COL_ERROR_S_C;
             elsif (r.step = '0' & x"00") then
-               v.status := STEP_ERROR_S;
+               v.status := STEP_ERROR_S_C;
             elsif r.start = '1' then
                v.state := CACHE408C_S;
-               v.stateLast := WAIT_START_S;
-               v.regAccessState := READ_S;
+               v.stateNumber := CACHE408C_S_C;
+               v.prevStateNumber := WAIT_START_S_C;
                v.failingRegister := (others => '0');
                v.triggerStateCounter := (others => '0');
             end if;
@@ -328,42 +348,45 @@ begin
             axiLRead(x"408C"+addresses(currentAsic), r, v, ack);
             if(checkError(r, ack) = True) then
                v.state := ERROR_S;
-               v.stateLast := CACHE408C_S;
+               v.stateNumber := ERROR_S_C;
+               v.prevStateNumber := CACHE408C_S_C;
             elsif (axiLEndOfRead(r, ack) = True) then
                v.state := CACHE400C_S;
-               v.stateLast := CACHE408C_S;
-               v.regAccessState := READ_S;
+               v.stateNumber := CACHE400C_S_C;
+               v.prevStateNumber := CACHE408C_S_C;
                v.cache408C := ack.rdData;
             end if;            
-            v.status := RUNNING_S;
+            v.status := RUNNING_S_C;
          when CACHE400C_S =>
             axiLRead(x"400C"+addresses(currentAsic), r, v, ack);
             if(checkError(r, ack) = True) then
                v.state := ERROR_S;
-               v.stateLast := CACHE400C_S;
+               v.stateNumber := ERROR_S_C;
+               v.prevStateNumber := CACHE400C_S_C;
             elsif (axiLEndOfRead(r, ack) = True) then
                v.state := CACHE4068_S;
-               v.stateLast := CACHE400C_S;
-               v.regAccessState := READ_S;
+               v.stateNumber := CACHE4068_S_C;
+               v.prevStateNumber := CACHE400C_S_C;
                v.cache400C := ack.rdData;
             end if;          
          when CACHE4068_S =>
             axiLRead(x"4068"+addresses(currentAsic), r, v, ack);
             if(checkError(r, ack) = True) then
                v.state := ERROR_S;
-               v.stateLast := CACHE4068_S;
+               v.stateNumber := ERROR_S_C;
+               v.prevStateNumber := CACHE4068_S_C;
             elsif (axiLEndOfRead(r, ack) = True) then
                v.state := FE_XX2GR_S;
-               v.stateLast := CACHE4068_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := FE_XX2GR_S_C;
+               v.prevStateNumber := CACHE4068_S_C;
                v.cache4068 := ack.rdData;
             end if;          
          when FE_XX2GR_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := FE_XX2GR_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := FE_XX2GR_S_C;
+               v.status := STOP_S_C;
             else
                -- Setting charge injection necessary registers in the relevant ASIC
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
@@ -374,11 +397,12 @@ begin
                -- check end case
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := FE_XX2GR_S;
+                  v.stateNumber := ERROR_S_C;
+                  v.prevStateNumber := FE_XX2GR_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   v.state := TEST_START_S;
-                  v.stateLast := FE_XX2GR_S;
-                  v.regAccessState := WRITE_S;
+                  v.stateNumber := TEST_START_S_C;
+                  v.prevStateNumber := FE_XX2GR_S_C;
                end if;
 
                
@@ -386,9 +410,9 @@ begin
          when TEST_START_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := TEST_START_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := TEST_START_S_C;
+               v.status := STOP_S_C;
             else         
                -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
                v.cache400C := r.cache400C(31 downto 13) & "1" & r.cache400C(11 downto 0);
@@ -397,11 +421,12 @@ begin
                -- check end case
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := TEST_START_S;
+                  v.stateNumber := ERROR_S_C;
+                  v.prevStateNumber := TEST_START_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   v.state := PULSER_S;
-                  v.stateLast := TEST_START_S;
-                  v.regAccessState := WRITE_S;
+                  v.stateNumber := PULSER_S_C;
+                  v.prevStateNumber := TEST_START_S_C;
                end if;
                
                v.pulser := (others => '0');
@@ -409,9 +434,9 @@ begin
          when PULSER_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := PULSER_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := PULSER_S_C;
+               v.status := STOP_S_C;
             else           
                -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
                -- exit state condition
@@ -421,22 +446,23 @@ begin
                -- check end case
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := PULSER_S;
+                  v.stateNumber := ERROR_S_C;
+                  v.prevStateNumber := PULSER_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   -- increment pulser
                   v.pulser := r.pulser + r.step;
                   v.state := CHARGE_COL_S;
-                  v.stateLast := PULSER_S;
-                  v.regAccessState := WRITE_S;
+                  v.stateNumber := CHARGE_COL_S_C;
+                  v.prevStateNumber := PULSER_S_C;
                end if;
                v.currentCol := (others => '0');
             end if;
          when CHARGE_COL_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := CHARGE_COL_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := CHARGE_COL_S_C;
+               v.status := STOP_S_C;
             else              
                -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
                -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
@@ -451,11 +477,12 @@ begin
                
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := CHARGE_COL_S;
+                  v.stateNumber := ERROR_S_C;
+                  v.prevStateNumber := CHARGE_COL_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   v.state := CLK_NEGEDGE_S;
-                  v.stateLast := CHARGE_COL_S;
-                  v.regAccessState := WRITE_S;
+                  v.stateNumber := CLK_NEGEDGE_S_C;
+                  v.prevStateNumber := CHARGE_COL_S_C;
                   -- increment currentCol
                   v.currentCol := r.currentCol + 1;
                end if;
@@ -464,9 +491,9 @@ begin
          when CLK_NEGEDGE_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := CLK_NEGEDGE_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := CLK_NEGEDGE_S_C;
+               v.status := STOP_S_C;
             else              
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                v.cache4068 := r.cache4068(31 downto 8) & '0' & r.cache4068(6 downto 0);
@@ -475,20 +502,21 @@ begin
                -- check end case
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := CLK_NEGEDGE_S;
+                  v.stateNumber := ERROR_S_C;
+                  v.prevStateNumber := CLK_NEGEDGE_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   -- increment pulser
                   v.state := CLK_POSEDGE_S;
-                  v.stateLast := CLK_NEGEDGE_S;
-                  v.regAccessState := WRITE_S;
+                  v.stateNumber := CLK_POSEDGE_S_C;
+                  v.prevStateNumber := CLK_NEGEDGE_S_C;
                end if;
             end if;
          when CLK_POSEDGE_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := CLK_POSEDGE_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := CLK_POSEDGE_S_C;
+               v.status := STOP_S_C;
             else            
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                v.cache4068 := r.cache4068(31 downto 8) & '1' & r.cache4068(6 downto 0);
@@ -497,40 +525,43 @@ begin
                -- check end case
                if(checkError(r, ack) = True) then
                   v.state := ERROR_S;
-                  v.stateLast := CLK_POSEDGE_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := CLK_POSEDGE_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
                   -- increment pulser
                   if (r.currentCol < 384) then
                      v.state := CHARGE_COL_S;
-                     v.regAccessState := WRITE_S;
+                     v.stateNumber := CHARGE_COL_S_C;
                   else
                      if (r.useTimingTrigger = '0') then
                         v.state := TRIGGER_S;
+                        v.stateNumber := TRIGGER_S_C;
                      else
                         v.state := WAITTIMINGTRIGGER_S;
+                        v.stateNumber := WAITTIMINGTRIGGER_S_C;
                      end if;
-                     v.regAccessState := WRITE_S;
                   end if;
-                  v.stateLast := CLK_POSEDGE_S;
+                  v.prevStateNumber := CLK_POSEDGE_S_C;
                end if;
             end if;
          when WAITTIMINGTRIGGER_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := WAITTIMINGTRIGGER_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := WAITTIMINGTRIGGER_S_C;
+               v.status := STOP_S_C;
             else
                if (timingDaqTrigger = '1') then
                   v.state := TRIGGER_S;
+                  v.stateNumber := TRIGGER_S_C;
                end if;
             end if;
          when TRIGGER_S =>
             if (r.stop = '1') then
                v.state := TEST_END_S;
-               v.stateLast := TRIGGER_S;
-               v.status := STOP_S;
-               v.regAccessState := WRITE_S;
+               v.stateNumber := TEST_END_S_C;
+               v.prevStateNumber := TRIGGER_S_C;
+               v.status := STOP_S_C;
             else
                if (r.useTimingTrigger = '0') then    
                   -- set trigger and wait triggerWaitCycles (default 200 us)
@@ -546,12 +577,12 @@ begin
                   v.cycleCounter := (others => '0');
                   if (r.pulser < 1024) then
                      v.state := PULSER_S;
-                     v.regAccessState := WRITE_S;
+                     v.stateNumber := PULSER_S_C;
                   else               
                      v.state := TEST_END_S;
-                     v.regAccessState := WRITE_S;
+                     v.stateNumber := TEST_END_S_C;
                   end if;
-                  v.stateLast := TRIGGER_S;
+                  v.prevStateNumber := TRIGGER_S_C;
                   v.triggerStateCounter := r.triggerStateCounter + 1;
                end if;
             end if;
@@ -563,24 +594,27 @@ begin
             -- check end case
             if(checkError(r, ack) = True) then
                v.state := ERROR_S;
-               v.stateLast := TEST_END_S;
+               v.stateNumber := ERROR_S_C;
+               v.prevStateNumber := TEST_END_S_C;
             elsif (axiLEndOfWrite(r, ack) = True) then
                v.state := INIT_S;
-               v.stateLast := TEST_END_S;
+               v.stateNumber := INIT_S_C;
+               v.prevStateNumber := TEST_END_S_C;
             end if;
             if (r.stop = '1') then
-               v.status := STOP_S;
+               v.status := STOP_S_C;
             else                
-               v.status := SUCCESS_S;
+               v.status := SUCCESS_S_C;
             end if;
          when ERROR_S =>   
             v.state := INIT_S;
-            v.stateLast := ERROR_S;
-            v.status := AXI_ERROR_S;
+            v.stateNumber := INIT_S_C;
+            v.prevStateNumber := ERROR_S_C;
+            v.status := AXI_ERROR_S_C;
             
          when INIT_S =>
             v.state := WAIT_START_S;
-            v.regAccessState := READ_S;
+            v.stateNumber := WAIT_START_S_C;
             v.start := '0';
             v.stop  := '0';
             v.req  := AXI_LITE_REQ_INIT_C;
