@@ -24,8 +24,6 @@ set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS18} [get_ports adcMonPdwn]
 
 set_property PULLUP TRUE [get_ports { adcMonSpiData } ]
 set_property PULLUP TRUE [get_ports { adcMonSpiClk } ]
-set_property PULLUP TRUE [get_ports { adcMonSpiCsL } ]
-set_property PULLDOWN TRUE [get_ports { adcMonPdwn } ]
 
 ##########################
 ##	Bank 68
