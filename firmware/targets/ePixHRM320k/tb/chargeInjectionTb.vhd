@@ -62,8 +62,17 @@ begin
         req.wrData <= x"00000001"; 
         req.request <= '1'; -- initiate request
         wait until ack.done = '1';
+        wait until ack.done = '0';
         req.request <= '0';        
-        wait;
+        wait 10000ns;
+        axilRst <= '0'; -- STOP
+        req.address  <= x"00000010"; 
+        req.rnw <= '0'; -- WRITE
+        req.wrData <= x"00000001"; 
+        req.request <= '1'; -- initiate request
+        wait until ack.done = '1';
+        req.request <= '0';     
+        wait 500ns;   
     end process;
 
 
