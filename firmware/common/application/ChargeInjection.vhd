@@ -360,9 +360,10 @@ begin
             end if;          
          when FE_XX2GR_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := FE_XX2GR_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else
                -- Setting charge injection necessary registers in the relevant ASIC
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
@@ -384,9 +385,10 @@ begin
             end if;
          when TEST_START_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := TEST_START_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else         
                -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
                v.cache400C := r.cache400C(31 downto 13) & "1" & r.cache400C(11 downto 0);
@@ -406,9 +408,10 @@ begin
             end if;
          when PULSER_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := PULSER_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else           
                -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
                -- exit state condition
@@ -430,9 +433,10 @@ begin
             end if;
          when CHARGE_COL_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := CHARGE_COL_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else              
                -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
                -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
@@ -459,9 +463,10 @@ begin
             
          when CLK_NEGEDGE_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := CLK_NEGEDGE_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else              
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                v.cache4068 := r.cache4068(31 downto 8) & '0' & r.cache4068(6 downto 0);
@@ -480,9 +485,10 @@ begin
             end if;
          when CLK_POSEDGE_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := CLK_POSEDGE_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else            
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                v.cache4068 := r.cache4068(31 downto 8) & '1' & r.cache4068(6 downto 0);
@@ -510,9 +516,10 @@ begin
             end if;
          when WAITTIMINGTRIGGER_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := WAITTIMINGTRIGGER_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else
                if (timingDaqTrigger = '1') then
                   v.state := TRIGGER_S;
@@ -520,9 +527,10 @@ begin
             end if;
          when TRIGGER_S =>
             if (r.stop = '1') then
-               v.state := INIT_S;
+               v.state := TEST_END_S;
                v.stateLast := TRIGGER_S;
                v.status := STOP_S;
+               v.regAccessState := WRITE_S;
             else
                if (r.useTimingTrigger = '0') then    
                   -- set trigger and wait triggerWaitCycles (default 200 us)
@@ -548,23 +556,21 @@ begin
                end if;
             end if;
          when TEST_END_S =>
-            if (r.stop = '1') then
+            -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
+            v.cache400C := r.cache400C(31 downto 13) & "0" & r.cache400C(11 downto 0);
+            axiLWrite(x"400C"+addresses(currentAsic), v.cache400C, r, v, ack);          
+
+            -- check end case
+            if(checkError(r, ack) = True) then
+               v.state := ERROR_S;
+               v.stateLast := TEST_END_S;
+            elsif (axiLEndOfWrite(r, ack) = True) then
                v.state := INIT_S;
                v.stateLast := TEST_END_S;
+            end if;
+            if (r.stop = '1') then
                v.status := STOP_S;
-            else              
-               -- test = False               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12 
-               v.cache400C := r.cache400C(31 downto 13) & "0" & r.cache400C(11 downto 0);
-               axiLWrite(x"400C"+addresses(currentAsic), v.cache400C, r, v, ack);          
-
-               -- check end case
-               if(checkError(r, ack) = True) then
-                  v.state := ERROR_S;
-                  v.stateLast := TEST_END_S;
-               elsif (axiLEndOfWrite(r, ack) = True) then
-                  v.state := INIT_S;
-                  v.stateLast := TEST_END_S;
-               end if;
+            else                
                v.status := SUCCESS_S;
             end if;
          when ERROR_S =>   
