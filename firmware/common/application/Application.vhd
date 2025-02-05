@@ -581,7 +581,7 @@ begin
 
       U_ChargeInjection : entity work.ChargeInjection
       generic map(
-         AXI_BASE_ADDR_C   => AXI_BASE_ADDR_C
+         AXI_BASE_ADDR_G   => AXI_BASE_ADDR_C
       )
       port map( 
         
