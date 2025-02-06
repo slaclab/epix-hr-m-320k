@@ -351,6 +351,7 @@ begin
                v.stateNumber := ERROR_S_C;
                v.prevStateNumber := CACHE408C_S_C;
             elsif (axiLEndOfRead(r, ack) = True) then
+               v.req.request := '0';
                v.state := CACHE400C_S;
                v.stateNumber := CACHE400C_S_C;
                v.prevStateNumber := CACHE408C_S_C;
@@ -364,6 +365,7 @@ begin
                v.stateNumber := ERROR_S_C;
                v.prevStateNumber := CACHE400C_S_C;
             elsif (axiLEndOfRead(r, ack) = True) then
+               v.req.request := '0';
                v.state := CACHE4068_S;
                v.stateNumber := CACHE4068_S_C;
                v.prevStateNumber := CACHE400C_S_C;
@@ -376,6 +378,7 @@ begin
                v.stateNumber := ERROR_S_C;
                v.prevStateNumber := CACHE4068_S_C;
             elsif (axiLEndOfRead(r, ack) = True) then
+               v.req.request := '0';
                v.state := FE_XX2GR_S;
                v.stateNumber := FE_XX2GR_S_C;
                v.prevStateNumber := CACHE4068_S_C;
@@ -383,10 +386,13 @@ begin
             end if;          
          when FE_XX2GR_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := FE_XX2GR_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := FE_XX2GR_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else
                -- Setting charge injection necessary registers in the relevant ASIC
                -- FE_ACQ2GR_en = True       0x00001023*addrSize, bitSize=1, bitOffset=5
@@ -400,6 +406,7 @@ begin
                   v.stateNumber := ERROR_S_C;
                   v.prevStateNumber := FE_XX2GR_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
+                  v.req.request := '0';
                   v.state := TEST_START_S;
                   v.stateNumber := TEST_START_S_C;
                   v.prevStateNumber := FE_XX2GR_S_C;
@@ -409,10 +416,13 @@ begin
             end if;
          when TEST_START_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := TEST_START_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := TEST_START_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else         
                -- test = True               offset=0x00001003*addrSize, bitSize=1,  bitOffset=12         
                v.cache400C := r.cache400C(31 downto 13) & "1" & r.cache400C(11 downto 0);
@@ -424,6 +434,7 @@ begin
                   v.stateNumber := ERROR_S_C;
                   v.prevStateNumber := TEST_START_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
+                  v.req.request := '0';
                   v.state := PULSER_S;
                   v.stateNumber := PULSER_S_C;
                   v.prevStateNumber := TEST_START_S_C;
@@ -433,10 +444,13 @@ begin
             end if;
          when PULSER_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := PULSER_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0' or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := PULSER_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else           
                -- Set the value of the Pulser  offset=0x00001003*addrSize, bitSize=10, bitOffset=0         
                -- exit state condition
@@ -449,8 +463,10 @@ begin
                   v.stateNumber := ERROR_S_C;
                   v.prevStateNumber := PULSER_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
+                  v.req.request := '0';
                   -- increment pulser
                   v.pulser := r.pulser + r.step;
+                  v.req.request := '0';
                   v.state := CHARGE_COL_S;
                   v.stateNumber := CHARGE_COL_S_C;
                   v.prevStateNumber := PULSER_S_C;
@@ -459,10 +475,13 @@ begin
             end if;
          when CHARGE_COL_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := CHARGE_COL_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := CHARGE_COL_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else              
                -- InjEn_ePixM 0 being disable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6
                -- InjEn_ePixM 1 being enable charge injection for the column offset=0x0000101a*addrSize, bitSize=1, bitOffset=6         
@@ -480,6 +499,7 @@ begin
                   v.stateNumber := ERROR_S_C;
                   v.prevStateNumber := CHARGE_COL_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
+                  v.req.request := '0';
                   v.state := CLK_NEGEDGE_S;
                   v.stateNumber := CLK_NEGEDGE_S_C;
                   v.prevStateNumber := CHARGE_COL_S_C;
@@ -490,10 +510,13 @@ begin
             
          when CLK_NEGEDGE_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := CLK_NEGEDGE_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := CLK_NEGEDGE_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else              
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                v.cache4068 := r.cache4068(31 downto 8) & '0' & r.cache4068(6 downto 0);
@@ -505,6 +528,7 @@ begin
                   v.stateNumber := ERROR_S_C;
                   v.prevStateNumber := CLK_NEGEDGE_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
+                  v.req.request := '0';
                   -- increment pulser
                   v.state := CLK_POSEDGE_S;
                   v.stateNumber := CLK_POSEDGE_S_C;
@@ -513,10 +537,13 @@ begin
             end if;
          when CLK_POSEDGE_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := CLK_POSEDGE_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := CLK_POSEDGE_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else            
                -- ClkInj_ePixM offset=0x0000101a*addrSize, bitSize=1, bitOffset=7
                v.cache4068 := r.cache4068(31 downto 8) & '1' & r.cache4068(6 downto 0);
@@ -528,6 +555,7 @@ begin
                   v.stateNumber := TEST_END_S_C;
                   v.prevStateNumber := CLK_POSEDGE_S_C;
                elsif (axiLEndOfWrite(r, ack) = True) then
+                  v.req.request := '0';
                   -- increment pulser
                   if (r.currentCol < 384) then
                      v.state := CHARGE_COL_S;
@@ -546,10 +574,13 @@ begin
             end if;
          when WAITTIMINGTRIGGER_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := WAITTIMINGTRIGGER_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := WAITTIMINGTRIGGER_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else
                if (timingDaqTrigger = '1') then
                   v.state := TRIGGER_S;
@@ -558,10 +589,13 @@ begin
             end if;
          when TRIGGER_S =>
             if (r.stop = '1') then
-               v.state := TEST_END_S;
-               v.stateNumber := TEST_END_S_C;
-               v.prevStateNumber := TRIGGER_S_C;
-               v.status := STOP_S_C;
+               if (r.req.request = '0'  or ack.done = '1') then
+                  v.req.request := '0';
+                  v.state := TEST_END_S;
+                  v.stateNumber := TEST_END_S_C;
+                  v.prevStateNumber := TRIGGER_S_C;
+                  v.status := STOP_S_C;
+               end if;
             else
                if (r.useTimingTrigger = '0') then    
                   -- set trigger and wait triggerWaitCycles (default 200 us)
@@ -597,6 +631,7 @@ begin
                v.stateNumber := ERROR_S_C;
                v.prevStateNumber := TEST_END_S_C;
             elsif (axiLEndOfWrite(r, ack) = True) then
+               v.req.request := '0';
                v.state := INIT_S;
                v.stateNumber := INIT_S_C;
                v.prevStateNumber := TEST_END_S_C;

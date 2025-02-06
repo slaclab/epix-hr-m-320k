@@ -57,14 +57,14 @@ begin
         axilRst <= '1';
         wait for 50 ns;
         axilRst <= '0';
+        wait for 50 ns;
         req.address  <= x"0000000C"; 
         req.rnw <= '0'; -- WRITE
         req.wrData <= x"00000001"; 
         req.request <= '1'; -- initiate request
         wait until ack.done = '1';
-        wait until ack.done = '0';
-        req.request <= '0';        
-        wait 10000ns;
+        req.request <= '0';       
+        wait for 100000 ns;
         axilRst <= '0'; -- STOP
         req.address  <= x"00000010"; 
         req.rnw <= '0'; -- WRITE
@@ -72,7 +72,7 @@ begin
         req.request <= '1'; -- initiate request
         wait until ack.done = '1';
         req.request <= '0';     
-        wait 500ns;   
+        wait; 
     end process;
 
 
@@ -108,7 +108,8 @@ begin
        mAxilReadSlave    => mAxilReadSlave,
        
        -- Charge injection forced trigger
-       forceTrigger      => forceTrigger
+       forceTrigger      => forceTrigger,
+       timingDaqTrigger  => '0'
        
     );  
 
