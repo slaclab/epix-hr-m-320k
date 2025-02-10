@@ -124,6 +124,10 @@ architecture mapping of AdcMon is
 
 begin
 
+   adcMonSpiCsL <= adcSpiCsL_i(0);
+   adcMonPdwn   <= adcPdwn_i(0);
+
+   
    U_adcClk : entity surf.ClockManagerUltraScale
       generic map(
          TPD_G              => TPD_G,

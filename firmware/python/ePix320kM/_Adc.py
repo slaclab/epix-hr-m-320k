@@ -19,15 +19,17 @@ class Adc(pr.Device):
         super().__init__(**kwargs)
 
         # TODO: Someone should update these emulation in the future then delete this comment
-        trigChEnum={0:'TrigReg', 1:'ThresholdChA', 2:'ThresholdChB', 3:'AcqStart', 4:'AsicAcq', 5:'AsicR0', 6:'AsicRoClk', 7:'AsicPpmat', 8:'AsicPpbe', 9:'AsicSync', 10:'AsicGr', 11:'AsicSaciSel0', 12:'AsicSaciSel1'}
-        inChaEnum={0:'Off', 0:'Asic0TpsMux', 1:'Asic1TpsMux'}
-        inChbEnum={0:'Off', 0:'Asic0TpsMux', 1:'Asic1TpsMux'}
-        HsDacEnum={0:'None', 1:'DAC A (SE)', 2:'DAC B (Diff)', 3:'DAC A & DAC B'}
+        trigChEnum={0:'TrigReg', 1:'ThresholdChA', 2:'ThresholdChB', 3:'AcqStart'}
+        inChEnum=[ [ {0:'ASIC0_ANA_MON', 1:'ASIC1_ANA_MON'}, {0:'ASIC2_ANA_MON', 1:'ASIC3_ANA_MON'} ],
+                   [ {0:'VAn2V5_ASIC0',  1:'VAn2V5_ASIC1' }, {0:'VAn2V5_ASIC2',  1:'VAn2V5_ASIC3' } ],
+                   [ {0:'V_An1V8_0',     1:'V_An1V8_1'    }, {0:'VDig2V5',       1:'V_DS_PLL'} ],
+                   [ {0:'AGND',          1:'AGND'         }, {0:'AGND',          1:'AGND'} ] ]
 
-        AdcChannelEnum =[   ["CarrierTherm", "DigitalTherm", "Humidity", "I1V8A_0",     "IAn_ASIC0", "6AV",  "VAn1V8_0", "VAn2V5_ASIC0" ],
-                            ["",             "",             "",         "I1V8A_1",     "IAn_ASIC1", "VCCA", "VAn1V8_1", "VAn2V5_ASIC1" ],
-                            ["",             "",             "",         "IDig2V5",     "IAn_ASIC2", "6DV",  "VDig2V5",  "VAn2V5_ASIC2" ],
-                            ["",             "",             "",         "DS_PLL_I",    "IAn_ASIC3", "VCC",  "VDS_PLL",  "VAn2V5_ASIC3" ] ]
+
+        AdcChannelEnum =[   ["CarrierTherm", "DigitalTherm", "Humidity", "I_1V8A_0",     "I_An_ASIC0", "6AV",  "V_An1V8_0", "V_An2V5_ASIC0" ],
+                            ["",             "",             "",         "I_1V8A_1",     "I_An_ASIC1", "VCCA", "V_An1V8_1", "V_An2V5_ASIC1" ],
+                            ["",             "",             "",         "I_Dig2V5",     "I_An_ASIC2", "6DV",  "V_Dig2V5",  "V_An2V5_ASIC2" ],
+                            ["",             "",             "",         "I_DS_PLL",     "I_An_ASIC3", "VCC",  "V_DS_PLL",  "V_An2V5_ASIC3" ] ]
 
         #ADC 1  Digital board
         #ADC 2  Power Communication board
@@ -49,8 +51,8 @@ class Adc(pr.Device):
                 name       = f'Oscope[{i}]',
                 offset     = (i+2)*0x0001_0000,
                 trigChEnum = trigChEnum,
-                inChaEnum  = inChaEnum,
-                inChbEnum  = inChbEnum,
+                inChaEnum  = inChEnum[i][0],
+                inChbEnum  = inChEnum[i][1],
             ))
 
         for i in range(2):

@@ -399,6 +399,12 @@ class Root(pr.Root):
                                     boardType = self.boardType,
             ))
 
+        self.add(pr.LocalCommand(name='InitHSADC',
+                                 description='Initialize the HS ADC used by the scope module',
+                                 value='' ,
+                                 function=self.fnInitHsADC
+                                 ))
+        
         @self.command(description  = 'Fix Dig ASIC stream timeouts')
         def fixDigAsicStreamTimeouts():
             for i in range(4):
@@ -422,6 +428,20 @@ class Root(pr.Root):
             self.Core.AxiVersion.FpgaReload()
             time.sleep(20)
             print('\nReloading FPGA done')
+
+    def fnInitHsADC(self, dev,cmd,arg):
+        """Initialization routine for the HS ADC"""
+        self.App.Adcs.FastADCsDebug[0].enable.set(True)   
+        self.App.Adcs.FastADCsDebug[0].DelayAdc0.set(15)
+        self.root.readBlocks()
+        self.App.Adcs.FastADCsDebug[1].enable.set(True)   
+        self.App.Adcs.FastADCsDebug[1].DelayAdc0.set(15)
+        self.root.readBlocks()
+        self.App.Adcs.FastADCsConfig.InternalPdwnMode.set(3)
+        self.App.Adcs.FastADCsConfig.InternalPdwnMode.set(0)
+        self.App.Adcs.FastADCsConfig.OutputFormat.set(0)
+        self.root.readBlocks()
+        print("Fast ADC initialized")
 
     def start(self, **kwargs):
         super().start(**kwargs)
