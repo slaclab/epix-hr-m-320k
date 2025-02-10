@@ -206,7 +206,7 @@ begin
                 v.delaycnter      := x"00";
                 v.state           := WAIT_INITDONE_S;
                 
-            elsif v.autoTrig /= x"00000000" and ( 
+            elsif r.enableADC_r = 1 and v.autoTrig /= x"00000000" and ( 
                (v.tick(31 downto 0) >= unsigned(v.autoTrig) and SIMULATION_G = FALSE) or
                (v.tick(15 downto 0) >= unsigned(v.autoTrig(15 downto 0)) and SIMULATION_G = TRUE) ) then
                v.delaycnter      := x"00";
