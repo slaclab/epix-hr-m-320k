@@ -45,22 +45,34 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ila0Name}]
 #SetDebugCoreClk ${ila0Name} {U_App/U_Deser/GEN_VEC[1].U_Deser_Group/sspClk}
 #SetDebugCoreClk ${ila0Name} {U_App/U_DelayDeterminationGrp/G_DELAYDETERMINATION[1].U_DelayDetermination/axilClk}
 
-SetDebugCoreClk ${ila0Name} {U_App/U_AdcMon/U_AdcConf/axilClk}
+SetDebugCoreClk ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/axilClk}
 # #######################
 # ## Set the debug Probes
 #######################
 
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/spiSdo}
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/spiSdi}
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/spiSclk}
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/sRst}
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[0][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[0][tValid]}
 
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/rdEn}
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/wrEn}
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/rdData[*]} 0 23
-ConfigProbe ${ila0Name} {U_App/U_AdcMon/U_AdcConf/SpiMaster_1/wrData[*]} 0 23
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[1][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[1][tValid]}
 
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[2][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[2][tValid]}
 
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[3][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[3][tValid]}
+
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[4][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[4][tValid]}
+
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[5][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[5][tValid]}
+
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[6][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[6][tValid]}
+
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[7][tData][*]} 0 13
+ConfigProbe ${ila0Name} {U_App/U_AdcMon/GEN_FAST_ADC[0].U_MonAdcReadout/adcStreams[7][tValid]}
 
 
 #ConfigProbe ${ila0Name} {U_App/U_AsicTop/G_ASICS[0].U_DigitalAsicStreamAxiV2/r[state][*]} 0 2
