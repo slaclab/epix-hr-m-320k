@@ -399,12 +399,6 @@ class Root(pr.Root):
                                     boardType = self.boardType,
             ))
 
-        self.add(pr.LocalCommand(name='InitHSADC',
-                                 description='Initialize the HS ADC used by the scope module',
-                                 value='' ,
-                                 function=self.fnInitHsADC
-                                 ))
-        
         @self.command(description  = 'Fix Dig ASIC stream timeouts')
         def fixDigAsicStreamTimeouts():
             for i in range(4):
@@ -429,19 +423,26 @@ class Root(pr.Root):
             time.sleep(20)
             print('\nReloading FPGA done')
 
-    def fnInitHsADC(self, dev,cmd,arg):
-        """Initialization routine for the HS ADC"""
-        self.App.Adcs.FastADCsDebug[0].enable.set(True)   
-        self.App.Adcs.FastADCsDebug[0].DelayAdc0.set(15)
-        self.root.readBlocks()
-        self.App.Adcs.FastADCsDebug[1].enable.set(True)   
-        self.App.Adcs.FastADCsDebug[1].DelayAdc0.set(15)
-        self.root.readBlocks()
-        self.App.Adcs.FastADCsConfig.InternalPdwnMode.set(3)
-        self.App.Adcs.FastADCsConfig.InternalPdwnMode.set(0)
-        self.App.Adcs.FastADCsConfig.OutputFormat.set(0)
-        self.root.readBlocks()
-        print("Fast ADC initialized")
+        @self.command()
+        def fnInitHsADC():
+            """Initialization routine for the HS ADC and scopes"""
+            self.App.Adcs.FastADCsDebug[0].enable.set(True)   
+            self.App.Adcs.FastADCsDebug[0].DelayAdc0.set(15)
+            self.root.readBlocks()
+            self.App.Adcs.FastADCsDebug[1].enable.set(True)   
+            self.App.Adcs.FastADCsDebug[1].DelayAdc0.set(15)
+            self.root.readBlocks()
+            self.App.Adcs.FastADCsConfig.InternalPdwnMode.set(3)
+            self.App.Adcs.FastADCsConfig.InternalPdwnMode.set(0)
+            self.App.Adcs.FastADCsConfig.OutputFormat.set(0)
+            self.root.readBlocks()
+            print("Fast ADC initialized")
+            for index in range(4):
+                self.App.Adcs.Oscope[index].enable.set(True)
+                self.App.Adcs.Oscope[index].TriggerChannel.set(3)
+                self.App.Adcs.Oscope[index].TriggerMode.set(2)
+                self.App.Adcs.Oscope[index].TraceLength.set(100)
+                self.App.Adcs.Oscope[index].ScopeEnable.set(True)
 
     def start(self, **kwargs):
         super().start(**kwargs)
