@@ -292,14 +292,14 @@ set_property -dict {IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 DQS_BIAS TRUE EQUALIZ
 ##########################
 ##	Bank 66
 ##########################
-set_property -dict {PACKAGE_PIN J13 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][4]}]
-set_property -dict {PACKAGE_PIN H13 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][4]}]
-set_property -dict {PACKAGE_PIN L12 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][3]}]
-set_property -dict {PACKAGE_PIN K12 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][3]}]
-set_property -dict {PACKAGE_PIN L13 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][2]}]
-set_property -dict {PACKAGE_PIN K13 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][2]}]
-set_property -dict {PACKAGE_PIN K11 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][1]}]
-set_property -dict {PACKAGE_PIN J11 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][1]}]
+set_property -dict {PACKAGE_PIN J13 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][3]}]
+set_property -dict {PACKAGE_PIN H13 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][3]}]
+set_property -dict {PACKAGE_PIN L12 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][2]}]
+set_property -dict {PACKAGE_PIN K12 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][2]}]
+set_property -dict {PACKAGE_PIN L13 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][1]}]
+set_property -dict {PACKAGE_PIN K13 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][1]}]
+set_property -dict {PACKAGE_PIN K11 IOSTANDARD LVDS} [get_ports {adcMonDoutP[1][0]}]
+set_property -dict {PACKAGE_PIN J11 IOSTANDARD LVDS} [get_ports {adcMonDoutM[1][0]}]
 set_property -dict {PACKAGE_PIN H12 IOSTANDARD LVDS} [get_ports {adcMonDataClkP[1]}]
 set_property -dict {PACKAGE_PIN G12 IOSTANDARD LVDS} [get_ports {adcMonDataClkM[1]}]
 set_property -dict {PACKAGE_PIN H11 IOSTANDARD LVDS} [get_ports {adcMonFrameClkP[1]}]
