@@ -31,7 +31,7 @@ entity ePixHRM320k is
       SIMULATION_G                  : boolean         := false;
       NUM_OF_ASICS_G                : integer         := 4;
       NUM_OF_SLOW_ADCS_G            : integer         := 2;
-      NUM_OF_PSCOPE_G               : integer         := 4
+      NUM_OF_PSCOPE_G               : integer         := 3
    );
    port (
       ----------------------------------------------
@@ -68,8 +68,8 @@ entity ePixHRM320k is
       asicDataM            : in Slv24Array(NUM_OF_ASICS_G - 1 downto 0);
 
 
-      adcMonDoutP          : in Slv8Array(1 downto 0);
-      adcMonDoutM          : in Slv8Array(1 downto 0);
+      adcMonDoutP          : in Slv8Array(1 downto 0) := (others => (others => '1'));
+      adcMonDoutM          : in Slv8Array(1 downto 0) := (others => (others => '0'));
       adcMonDataClkP       : in slv(1 downto 0);
       adcMonDataClkM       : in slv(1 downto 0);
       adcMonFrameClkP      : in slv(1 downto 0);

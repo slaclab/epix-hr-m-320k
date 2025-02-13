@@ -113,7 +113,7 @@ architecture mapping of AdcMon is
 
    signal adcValid             : slv(15 downto 0);
    signal adcData              : Slv16Array(15 downto 0);
-   signal adcStreams           : AxiStreamMasterArray(15 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
+   signal adcStreams           : AxiStreamMasterArray(11 downto 0) := (others=>AXI_STREAM_MASTER_INIT_C);
    signal monAdc               : Ad9249SerialGroupArray(NUM_OF_PSCOPE_G - 1 downto 0);
 
    signal adcClk               : sl;
@@ -214,7 +214,7 @@ begin
          sAxilReadSlave   => axilReadSlaves(SCOPE_INDEX_C + i)
          );
    
-         GenAdcStr : for j in 0 to NUM_OF_PSCOPE_G - 1 generate
+         GenAdcStr : for j in 0 to 3 generate
             adcData(4*i+j)  <= adcStreams(4*i+j).tData(15 downto 0);
             adcValid(4*i+j) <= adcStreams(4*i+j).tValid;
          end generate;
@@ -265,7 +265,10 @@ begin
             rstOut(1) => adcBitRstDiv4(i)
          );
 
-   U_MonAdcReadout : entity surf.Ad9249ReadoutGroup
+   end generate;
+
+
+   U_MonAdcReadout0 : entity surf.Ad9249ReadoutGroup
       generic map (
          TPD_G           => TPD_G,
          SIM_DEVICE_G    => XIL_DEVICE_C,
@@ -279,26 +282,58 @@ begin
          axilClk         => axilClk,
          axilRst         => axilRst,
          -- Axi Interface
-         axilReadMaster  => axilReadMasters(ADC_RD_INDEX_C + i),
-         axilReadSlave   => axilReadSlaves(ADC_RD_INDEX_C + i),
-         axilWriteMaster => axilWriteMasters(ADC_RD_INDEX_C + i),
-         axilWriteSlave  => axilWriteSlaves(ADC_RD_INDEX_C + i),
+         axilReadMaster  => axilReadMasters(ADC_RD_INDEX_C),
+         axilReadSlave   => axilReadSlaves(ADC_RD_INDEX_C),
+         axilWriteMaster => axilWriteMasters(ADC_RD_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(ADC_RD_INDEX_C),
          -- Reset for adc deserializer (axilClk domain)
          adcClkRst       => '0',
          -- clocks must be provided with USE_MMCME_G = false
-         adcBitClkIn     => adcBitClk(i),
-         adcBitClkDiv4In => adcBitClkDiv4(i),
-         adcBitRstIn     => adcBitRst(i),
-         adcBitRstDiv4In => adcBitRstDiv4(i),
+         adcBitClkIn     => adcBitClk(0),
+         adcBitClkDiv4In => adcBitClkDiv4(0),
+         adcBitRstIn     => adcBitRst(0),
+         adcBitRstDiv4In => adcBitRstDiv4(0),
          -- Serial Data from ADC
-         adcSerial       => monAdc(i),
+         adcSerial       => monAdc(0),
          -- Deserialized ADC Data
          adcStreamClk    => axilClk,
-         adcStreams      => adcStreams(8*i+7 downto 8*i)
+         adcStreams      => adcStreams(7 downto 0)
       );
-   
-   end generate;
+      
 
+      U_MonAdcReadout1 : entity surf.Ad9249ReadoutGroup
+      generic map (
+         TPD_G           => TPD_G,
+         SIM_DEVICE_G    => XIL_DEVICE_C,
+         NUM_CHANNELS_G  => 4,
+         DEFAULT_DELAY_G => (others => '0'),
+         ADC_INVERT_CH_G => "00000000",
+         USE_MMCME_G     => false
+      )
+      port map (
+         -- Master system clock
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         -- Axi Interface
+         axilReadMaster  => axilReadMasters(ADC_RD_INDEX_C + 1),
+         axilReadSlave   => axilReadSlaves(ADC_RD_INDEX_C + 1),
+         axilWriteMaster => axilWriteMasters(ADC_RD_INDEX_C + 1),
+         axilWriteSlave  => axilWriteSlaves(ADC_RD_INDEX_C + 1),
+         -- Reset for adc deserializer (axilClk domain)
+         adcClkRst       => '0',
+         -- clocks must be provided with USE_MMCME_G = false
+         adcBitClkIn     => adcBitClk(1),
+         adcBitClkDiv4In => adcBitClkDiv4(1),
+         adcBitRstIn     => adcBitRst(1),
+         adcBitRstDiv4In => adcBitRstDiv4(1),
+         -- Serial Data from ADC
+         adcSerial       => monAdc(1),
+         -- Deserialized ADC Data
+         adcStreamClk    => axilClk,
+         adcStreams      => adcStreams(11 downto 8)
+      );
+      
+      
    U_AdcConf : entity surf.Ad9249Config
    generic map (
       TPD_G             => TPD_G,

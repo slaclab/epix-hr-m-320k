@@ -354,7 +354,7 @@ class Root(pr.Root):
             memBase  = self.srp,
             sim      = self.sim,
             promProg = self.promProg,
-            pgpLaneVc= [1,1,1,1,0,3,1,4],
+            pgpLaneVc= [1,1,1,1,0,3,1,3],
             expand   = False,
         ))
 

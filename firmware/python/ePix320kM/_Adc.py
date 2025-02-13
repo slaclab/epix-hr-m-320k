@@ -22,8 +22,7 @@ class Adc(pr.Device):
         trigChEnum={0:'TrigReg', 1:'ThresholdChA', 2:'ThresholdChB', 3:'AcqStart'}
         inChEnum=[ [ {0:'ASIC0_ANA_MON', 1:'ASIC1_ANA_MON'}, {0:'ASIC2_ANA_MON', 1:'ASIC3_ANA_MON'} ],
                    [ {0:'VAn2V5_ASIC0',  1:'VAn2V5_ASIC1' }, {0:'VAn2V5_ASIC2',  1:'VAn2V5_ASIC3' } ],
-                   [ {0:'V_An1V8_0',     1:'V_An1V8_1'    }, {0:'VDig2V5',       1:'V_DS_PLL'} ],
-                   [ {0:'AGND',          1:'AGND'         }, {0:'AGND',          1:'AGND'} ] ]
+                   [ {0:'V_An1V8_0',     1:'V_An1V8_1'    }, {0:'VDig2V5',       1:'V_DS_PLL'} ]]
 
 
         AdcChannelEnum =[   ["CarrierTherm", "DigitalTherm", "Humidity", "I_1V8A_0",     "I_An_ASIC0", "6AV",  "V_An1V8_0", "V_An2V5_ASIC0" ],
@@ -46,7 +45,7 @@ class Adc(pr.Device):
             deviceCount=1,
         ))
 
-        for i in range(4):
+        for i in range(3):
             self.add(epixHr.OscilloscopeRegisters(
                 name       = f'Oscope[{i}]',
                 offset     = (i+2)*0x0001_0000,
