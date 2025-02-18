@@ -387,7 +387,7 @@ begin
          when FE_XX2GR_S =>
             if (r.stop = '1') then
                if (r.req.request = '0' or ack.done = '1') then
-                  v.req.request = '0';
+                  v.req.request := '0';
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
                   v.prevStateNumber := FE_XX2GR_S_C;
@@ -416,7 +416,7 @@ begin
             end if;
          when TEST_START_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
@@ -444,7 +444,7 @@ begin
             end if;
          when PULSER_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
@@ -475,7 +475,7 @@ begin
             end if;
          when CHARGE_COL_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
@@ -510,7 +510,7 @@ begin
             
          when CLK_NEGEDGE_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
@@ -537,7 +537,7 @@ begin
             end if;
          when CLK_POSEDGE_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
@@ -574,7 +574,7 @@ begin
             end if;
          when WAITTIMINGTRIGGER_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
@@ -589,7 +589,7 @@ begin
             end if;
          when TRIGGER_S =>
             if (r.stop = '1') then
-               v.req.request = '0';
+               v.req.request := '0';
                if (r.req.request = '0' and ack.done = '0') then
                   v.state := TEST_END_S;
                   v.stateNumber := TEST_END_S_C;
