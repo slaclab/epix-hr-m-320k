@@ -570,6 +570,13 @@ class Root(pr.Root):
     def fnInitAsic(self, dev,cmd,arg):
         """SetTestBitmap command function"""     
 
+        self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
+
+        # load config that sets prog supply - needed by serial number of carrier
+        print("Loading supply configuration")
+        self.root.LoadConfig(self.filenamePowerSupply)
+        print("Loading {}".format(self.filenamePowerSupply))
+
         #get serial numbers
         self.App.AsicTop.RegisterControlDualClock.enable.set(True)
         self.App.AsicTop.RegisterControlDualClock.IDreset.set(0x7)
@@ -583,9 +590,13 @@ class Root(pr.Root):
         # Get serial number for digital board and formulate file names
         DigIDLow = self.App.AsicTop.RegisterControlDualClock.DigIDLow.get()
         DigIDHigh = self.App.AsicTop.RegisterControlDualClock.DigIDHigh.get()
+        PowerAndCommIDLow = self.App.AsicTop.RegisterControlDualClock.PowerAndCommIDLow.get()
+        PowerAndCommIDHigh = self.App.AsicTop.RegisterControlDualClock.PowerAndCommIDHigh.get()
+        CarrierIDLow = self.App.AsicTop.RegisterControlDualClock.CarrierIDLow.get()
+        CarrierIDHigh = self.App.AsicTop.RegisterControlDualClock.CarrierIDHigh.get()
 
         # Use digital board serial number until carrier serial number gets fixed
-        prefix = f'{DigIDHigh:x}{DigIDLow:x}'
+        prefix = f'{DigIDHigh:x}{DigIDLow:x}_{PowerAndCommIDHigh:x}{PowerAndCommIDLow:x}_{CarrierIDHigh:x}{CarrierIDLow:x}'
 
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
@@ -593,25 +604,27 @@ class Root(pr.Root):
         self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_SspMonGrp_carrier.yml"
         if (not os.path.isfile(self.filenameDESER)):
             #did not find file. Using default file
+            print("Did not find {} file. Using generic.".format(self.filenameDESER))
             self.filenameDESER       = self.root.top_level + "/config/ePixHRM320k_SspMonGrp_carrier.yml"
-            print("Did not find SspMonGrp_carrier file. Using generic.")
+            
 
         self.filenamePacketReg       = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_PacketRegisters.yml"
         if (not os.path.isfile(self.filenamePacketReg)):
             #did not find file. Using default file
+            print("Did not find {} file. Using generic.".format(self.filenamePacketReg))
             self.filenamePacketReg   = self.root.top_level + "/config/ePixHRM320k_PacketRegisters.yml"
-            print("Did not find PacketRegisters file. Using generic.")
+            
         
-        self.filenamePowerSupply = self.root.top_level + "/config/ePixHRM320k_PowerSupply_Enable.yml"
+
         self.filenameWaveForms   = self.root.top_level + "/config/ePixHRM320k_RegisterControl.yml"
 
         for i in range(self.numOfAsics) :
             self.filenameASIC[i]        = self.root.top_level + "/config/ePixHRM320k_"+prefix+"_ASIC_u{}.yml".format(i+1)
             if not os.path.isfile(self.filenameASIC[i]):
                 #did not find file. Using default file
+                print("Did not find specific {} file. Using generic.".format(self.filenameASIC[i]))
                 self.filenameASIC[i]        = self.root.top_level + "/config/ePixHRM320k_ASIC_u{}.yml".format(i+1)
-                print("Did not find specific ASIC{} file. Using generic.".format(i+1))
-
+                
         
         self.filenameBatcher     = self.root.top_level + "/config/ePixHRM320k_BatcherEventBuilder.yml"      
         if arguments[0] == 1:
@@ -694,11 +707,6 @@ class Root(pr.Root):
                 time.sleep(6) 
                 self.App.enable.set(True)
                 self.Core.Si5345Pll.enable.set(False)
-
-        # load config that sets prog supply
-        print("Loading supply configuration")
-        self.root.LoadConfig(self.filenamePowerSupply)
-        print("Loading {}".format(self.filenamePowerSupply))
 
 
         if (not self.sim):
