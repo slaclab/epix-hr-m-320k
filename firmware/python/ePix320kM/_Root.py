@@ -214,13 +214,6 @@ class Root(pr.Root):
                         ))
                     self.streamUnbatchers[asicIndex] >> self.fullRateDataReceiver[asicIndex]
 
-
-#        AdcChannelEnum =[   ["THERM_IN", "THERM_SENSE", "HUMIDITY", "IA_0",     "IA_ASIC0", "6AV",  "VA1V8_0", "VA2V5_ASIC0" ],
-#                            ["THERM_IN", "THERM_SENSE", "HUMIDITY", "IA_1",     "IA_ASIC1", "VCCA", "VA1V8_1", "VA2V5_ASIC1" ],
-#                            ["THERM_IN", "THERM_SENSE", "HUMIDITY", "ID",       "IA_ASIC2", "6DV",  "VD2V5",   "VA2V5_ASIC2" ],
-#                            ["THERM_IN", "THERM_SENSE", "HUMIDITY", "DS_PLL_I", "IA_ASIC3", "VCC",  "VDS_PLL", "VA2V5_ASIC3" ] ]
-        
-
             # Check if not VCS simulation
             envConf = [
                 [   # GAIN: seems like there is some gain, so multiplying by 0.97647 obtained empirically vy all data values
