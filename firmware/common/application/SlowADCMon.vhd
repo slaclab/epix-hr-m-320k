@@ -233,7 +233,7 @@ begin
                     v.txMaster(r.adcDeviceSel_r) := axiStreamMasterInit(PGP4_AXIS_CONFIG_C);
                     ssiSetUserSof(PGP4_AXIS_CONFIG_C, v.txMaster(r.adcDeviceSel_r), '1');
                     v.txMaster(r.adcDeviceSel_r).tLast              := '0';
-                    v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := std_logic_vector(r.tick(31 downto 0));
+                    v.txMaster(r.adcDeviceSel_r).tData(31 downto 0) := "1111" & std_logic_vector(r.tick(31 downto 4));
                     v.txMaster(r.adcDeviceSel_r).tValid             := '1';
                 end if;
             end if;   
