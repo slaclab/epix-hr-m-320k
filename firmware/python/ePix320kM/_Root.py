@@ -589,7 +589,7 @@ class Root(pr.Root):
         CarrierIDHigh = self.App.AsicTop.RegisterControlDualClock.CarrierIDHigh.get()
 
         # Use digital board serial number until carrier serial number gets fixed
-        prefix = f'{DigIDHigh:x}{DigIDLow:x}_{PowerAndCommIDHigh:x}{PowerAndCommIDLow:x}_{CarrierIDHigh:x}{CarrierIDLow:x}'
+        prefix = f'{DigIDHigh:08x}{DigIDLow:08x}_{PowerAndCommIDHigh:08x}{PowerAndCommIDLow:08x}_{CarrierIDHigh:08x}{CarrierIDLow:08x}'
 
         print("Rysync ASIC started")
         arguments = np.asarray(arg)
